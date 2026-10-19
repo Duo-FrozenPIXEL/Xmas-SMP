@@ -10,3 +10,6 @@ Anweisung an Claude code falls du dieses repo anfässt beachte:
 Grundidee:
 Erstellung eines Plugins  das für ein Minecraft Server ist.
 In den Versionen 1.21.11 bis 26.3 Java  für Paper , Forge und Fabric.
+
+Das Plugin soll 5 magische Crystalle haben und eine Kopie des (Bliss Youtuber SMP) Plugins sein.
+Es soll Feuer, Wind, Erde, Schatten und Natur geben
