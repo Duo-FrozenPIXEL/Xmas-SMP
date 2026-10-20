@@ -21,4 +21,4 @@ Benutze auch das Breaking Prisitin  system, das gem auf level system und den gem
 
 Füge die oben gennanten Grundlagen und Verknüpfungen hinzu.
 In Zukunft folgt auch der Christmas Twist zu dem noch in einem anderen File Sachen kommen zu dem ich dich informieren werde sobald es fertig ist.
-Füge aber schonmal ein System hinzu um den Server zu moderieren also das es ein Admin/op command gibt der eine gui für konfigurationen liefert und 
+Füge aber schonmal ein System hinzu um den Server zu moderieren also das es ein Admin/op command gibt der eine gui für konfigurationen liefert und programmier schon mal die Grundlage für ein System um Events an bestimmten Tagen an bestimmten Uhrzeiten ausführen zulassen(Weihnachtswoche) 
