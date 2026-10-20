@@ -1,0 +1,148 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/astra1.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE010"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/astra2.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE011"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/fire1.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE012"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/fire2.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE013"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/flux1.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE014"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/flux2.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE015"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/life1.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE016"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/life2.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE017"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/puff1.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE018"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/puff2.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE019"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/speed1.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE01A"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/speed2.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE01B"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/strength1.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE01C"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/strength2.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE01D"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/wealth1.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE01E"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blissgems:icons/wealth2.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE01F"
+      ]
+    }
+  ]
+}

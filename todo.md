@@ -27,43 +27,47 @@ Legende: `[ ]` offen · `[x]` erledigt · **(V)** = vor Umsetzung verifizieren (
 | **Schatten** | Astra | lila | `astra1` (Dolch), `astra2` (Geist) |
 | **Natur** | Wealth | grün | `wealth1` (Kleeblatt), `wealth2` (Ranke) |
 
-- [ ] `Instructions.md` an die neue Zuordnung anpassen (dort steht noch „Feuer = Fire gem texturen“) – **nur nach Freigabe durch den Owner**
+- [x] `Instructions.md` an die neue Zuordnung anpassen (dort steht noch „Feuer = Fire gem texturen“) – **nur nach Freigabe durch den Owner**
 - [ ] Entscheiden, ob die Icons wie oben „überkreuz“ verwendet werden (Feuer bekommt die Feuer-Icons, obwohl es die Strength-Gem-Textur nutzt) oder ob neue Icons gezeichnet werden
 
 ---
 
 ## 1. Befunde aus dem Asset-Abgleich (Texturpack reparieren)
 
+Korrigierte Quelle liegt in `resourcepack/`, Details und CMD-Schema in `docs/resourcepack.md`, Prüfen/Bauen mit `python3 tools/resourcepack.py validate|build`.
+
 Das Pack ist `pack_format 34` (= 1.21–1.21.1), nutzt aber bereits das Item-Definitions-Format (`assets/minecraft/items/*.json`) ab 1.21.4. Folgende Probleme wurden gefunden:
 
 ### 1.1 Fehler, die zu fehlenden (lila-schwarzen) Texturen führen
-- [ ] `strength_gem_tier1_pristine4.json` verweist auf `item/strengthgemtier1` → **Datei fehlt**
-- [ ] `strength_gem_tier2_pristine4.json` verweist auf `item/strengthgemtier2` → **Datei fehlt**
-- [ ] Ursache: Strength-Dateien sind anders benannt als alle anderen Gems:
+- [x] `strength_gem_tier1_pristine4.json` verweist auf `item/strengthgemtier1` → **Datei fehlt**
+- [x] `strength_gem_tier2_pristine4.json` verweist auf `item/strengthgemtier2` → **Datei fehlt**
+- [x] Ursache: Strength-Dateien sind anders benannt als alle anderen Gems:
   - `strengthgemtier1pristine.png` = stark gebrochene Variante (entspricht bei anderen Gems `…pristine2`)
   - `strengthgemtier1pristine2.png` = intakte Variante (entspricht bei anderen Gems `…tier1`)
   - gleiches Muster bei Tier 2
   - **Fix:** Strength-Texturen auf das Schema der anderen Gems umbenennen. Da Strength = **Feuer**, ist das Pflicht.
-- [ ] `echo_shard.json` CMD 9001/9002 verweisen auf `minecraft:item/allforone_gem_t1/_t2` → **Modelle existieren nicht** (Texturen `allforone_gem_t1/_t2.png` liegen aber vor). Entweder Modelle anlegen oder Einträge entfernen (für die 5 Kristalle nicht nötig).
+- [x] `echo_shard.json` CMD 9001/9002 verweisen auf `minecraft:item/allforone_gem_t1/_t2` → **Modelle existieren nicht** (Texturen `allforone_gem_t1/_t2.png` liegen aber vor). Entweder Modelle anlegen oder Einträge entfernen (für die 5 Kristalle nicht nötig).
 
 ### 1.2 Inkonsistenzen / Altlasten
-- [ ] Namens-Versatz dokumentieren: Modell `*_tier1` nutzt Textur `*tier1pristine2` (am stärksten gebrochen), Modell `*_pristine4` nutzt die intakte Textur `*tier1`. Modellname und Texturname sind also um eine Stufe verschoben → im Code eine eindeutige Tabelle „Energiestufe → Modell“ pflegen (oder Texturen/Modelle sauber umbenennen).
-- [ ] `nether_star.json` **und** `ghast_tear.json` mappen beide CMD 4001 auf `energy_bottle` → auf ein Basis-Item festlegen.
-- [ ] `enchanted_book.json`: `revival_tome` hat Schwelle `1` → jedes Buch mit CMD 1–3000 zeigt die Revival-Tome-Textur. Schwellen sauber setzen.
+- [x] Namens-Versatz dokumentieren: Modell `*_tier1` nutzt Textur `*tier1pristine2` (am stärksten gebrochen), Modell `*_pristine4` nutzt die intakte Textur `*tier1`. Modellname und Texturname sind also um eine Stufe verschoben → im Code eine eindeutige Tabelle „Energiestufe → Modell“ pflegen (oder Texturen/Modelle sauber umbenennen).
+- [x] `nether_star.json` **und** `ghast_tear.json` mappen beide CMD 4001 auf `energy_bottle` → auf ein Basis-Item festlegen.
+- [x] `enchanted_book.json`: `revival_tome` hat Schwelle `1` → jedes Buch mit CMD 1–3000 zeigt die Revival-Tome-Textur. Schwellen sauber setzen.
+- [x] Ungültiges `"parent": "generated"` in `energy_bottle`, `gem_trader`, `trader`, `upgrader`
 - [ ] `trader.json` (Modell) wird nirgends referenziert; nur `gem_trader.json` ist gemappt → eines wählen, das andere entfernen oder als Gem-Trader-Block/-Station nutzen.
 - [ ] `repair_kit.json` nutzt Textur `revivalkit.png` (Verbandskasten); `repairitem.png` wird nicht genutzt (sieht nach UI-Atlas-Fragment aus) → klären/entfernen.
 - [ ] `empty.png` (400×400, RGB, magenta) wird nirgends genutzt → entfernen oder als GUI-Hintergrund-Platzhalter dokumentieren.
-- [ ] `assets/minecraft/items/white_dye-working.txt` ist eine Arbeitsdatei mit abweichendem Format → entfernen.
+- [x] `assets/minecraft/items/white_dye-working.txt` ist eine Arbeitsdatei mit abweichendem Format → entfernen.
+- [ ] `strengthgemtier2pristine3/4.png` haben graue Randpixel links → optisch nachbessern
 - [ ] `gem-breaking/*.png` (8 graue Riss-Overlays) werden nicht genutzt → als Basis für Bruch-Animation/Partikel oder für eingefärbte neue Texturen verwenden.
 - [ ] Nicht benötigte Gems (Flux, Life, Speed) aus dem eigenen Pack entfernen oder für spätere Erweiterungen (Christmas-Twist) markieren.
 
 ### 1.3 Pack für 1.21.11 – 26.3 fit machen
-- [ ] `pack.mcmeta` auf das neue Format mit `min_format` / `max_format` umstellen (ab 1.21.9 Pflicht). 1.21.11 ≈ Format 75, 26.1 ≈ 84 **(V)** – exakte Werte für 26.3 im Minecraft-Wiki prüfen.
-- [ ] Beschreibung im `pack.mcmeta` auf „Xmas-SMP“ ändern (aktuell „BlissGems V4 (1.21.x)“); `pack.png` ggf. ersetzen.
+- [x] `pack.mcmeta` auf das neue Format mit `min_format` / `max_format` umstellen (ab 1.21.9 Pflicht). 1.21.11 ≈ Format 75, 26.1 ≈ 84 **(V)** – exakte Werte für 26.3 im Minecraft-Wiki prüfen.
+- [x] Beschreibung im `pack.mcmeta` auf „Xmas-SMP“ ändern (aktuell „BlissGems V4 (1.21.x)“); `pack.png` ggf. ersetzen.
 - [ ] Umstieg von `custom_model_data` auf Basis-Items hin zur `item_model`-Komponente erwägen (je Kristall/Stufe eine eigene Item-Definition unter `assets/xmassmp/items/`) – sauberer und versionsstabiler.
 - [ ] Namespace von `blissgems` auf eigenen Namespace (z. B. `xmassmp`) umziehen.
 - [ ] Mit jeder Zielversion (1.21.11, 26.1, 26.2, 26.3) im Client laden und alle Modelle/Icons prüfen.
-- [ ] Automatischen Pack-Validator (Script/CI) bauen: alle Modell→Textur- und Item→Modell-Referenzen prüfen (die Fehler aus 1.1 wären damit sofort aufgefallen).
+- [x] Pack-Validator-Script `tools/resourcepack.py` bauen (CI-Anbindung offen, siehe 3.1): alle Modell→Textur- und Item→Modell-Referenzen prüfen (die Fehler aus 1.1 wären damit sofort aufgefallen).
 
 ### 1.4 Fehlende Assets (neu zu erstellen)
 - [ ] Texturen/Modelle für die Admin-GUI (Hintergrund über Custom-Font, Buttons/Icons)
