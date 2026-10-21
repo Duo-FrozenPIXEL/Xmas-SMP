@@ -1,7 +1,7 @@
 # Xmas-SMP – To-do-Liste
 
 Abgeleitet aus `Instructions.md` und einem Abgleich mit dem Texturpack `BlissGemsV4.1-fixed.zip`.
-Entscheidungen des Owners (Stand 2026-10-20) sind unter **0. Festgelegte Entscheidungen** festgehalten.
+Entscheidungen des Owners (Stand 2026-10-21) sind unter **0. Festgelegte Entscheidungen** festgehalten.
 
 Legende: `[ ]` offen · `[x]` erledigt · **(V)** = vor Umsetzung verifizieren (Versionsnummern, Original-Verhalten)
 
@@ -16,6 +16,16 @@ Legende: `[ ]` offen · `[x]` erledigt · **(V)** = vor Umsetzung verifizieren (
 | Versionen | Minecraft Java **1.21.11 bis 26.3** |
 | Kräfte | Werden selbst entworfen (Entwurf siehe Abschnitt 5), angelehnt ans Bliss-Original |
 | Grundregeln | Repo nie löschen · Grundidee + Qualitätslevel halten · **jede Kraft hochwertig animiert mit interessanten Partikeln** |
+| Energie | 0–10, **Start 5**, Kill +1 / Tod −1 · **1–2 Energie: nur Primärkraft** · **0 Energie: alle Fähigkeiten aus** |
+| Kräfte je Kristall | Passiv + Primär + Sekundär (Tier 1), **Ultimate ab Tier 2** |
+| Gem Trader | Craftbar mit Originalrezept (4 Diamantblöcke, 4 Drachenatem, 1 Sculk-Katalysator), **GUI mit freier Kristallwahl** |
+| Entfällt | Gem Fragments, All-for-One-Gem |
+| Repair Kit | Platzierbares Totem, Radius 15, 10 min durchgehend im Kreis → Energie unter 5 wird auf 5 gesetzt; Koordinaten in Chat + Title; kein Schutzschild |
+| Energy Bottle | Schleichen + Rechtsklick mit leerer Flasche ~5 s halten (Ladebalken am Fadenkreuz) → −1 Energie; Rechtsklick auf Flasche → +1 Energie (für jeden) |
+| HUD / Steuerung | Actionbar mit Icons + Cooldowns; Tasten in den Einstellungen belegbar (optionaler Client-Mod + Vanilla-Fallback) |
+| Erster Login | Jeder Spieler bekommt einen Kristall, auch Spätstarter |
+
+Recherche und Abweichungen vom Original: `docs/bliss-original.md` (inkl. offener Fragen in Abschnitt 11).
 
 ### Kristall → Textur-Zuordnung
 
@@ -78,20 +88,22 @@ Das Pack ist `pack_format 34` (= 1.21–1.21.1), nutzt aber bereits das Item-Def
 
 ---
 
-## 2. Recherche (Original-Bliss-Verhalten) **(V)**
+## 2. Recherche (Original-Bliss-Verhalten)
 
-Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktioniert (Foren)“.
+Ergebnisse: `docs/bliss-original.md`.
 
-- [ ] Energiesystem recherchieren: Wertebereich (meist 0–10), Gewinn bei Kill / Verlust bei Tod, Namen der Stufen (Broken … Pristine +X)
-- [ ] Verhalten bei 0 Energie (Gem zerbricht? Fähigkeiten aus? Bann/Revive?)
-- [ ] Tier-System: Wie wird Tier 2 erreicht (Upgrader), was schaltet Tier 2 frei?
-- [ ] Gem Trader: Gem gegen zufälligen/gewählten anderen Gem tauschen? Kosten? Trader-Token? Shrine/Station?
-- [ ] Gem Fragments: Wofür (Crafting des Traders/Upgraders/Repair)?
-- [ ] Energy Bottle: Energie abzapfen / übertragen
-- [ ] Repair-Kit / Revival-Tome: Gem reparieren, gebannte/tote Spieler wiederbeleben
-- [ ] Aktivierung der Fähigkeiten im Original (Tasten, Offhand, Klick-Kombinationen), Cooldown-Anzeige (Actionbar mit Font-Icons ``–``)
-- [ ] Startverhalten: Bekommt jeder Spieler beim ersten Join einen zufälligen Gem?
-- [ ] Ergebnisse als `docs/bliss-original.md` dokumentieren und Abweichungen begründen
+- [x] Energiesystem recherchieren: 0–10, Start 5, Kill +1 / Tod −1, Stufen Broken (0) … Pristine (5) … Pristine +5 (10)
+- [x] Verhalten bei 0 Energie: Fähigkeiten aus, seit S3 kein Deathban, Rettung über Ritual
+- [x] Tier-System: Upgrader (Rezept S3: Fragments + Wither-Schädel + Drachenatem), Tier 2 = mehr Kräfte
+- [x] Gem Trader: Original würfelt zufällig um; Rezept S3 4 Diamantblöcke + 4 Drachenatem + 1 Sculk-Katalysator
+- [x] Gem Fragments: Crafting-Material (Trader/Upgrader/Repair Kit) → entfällt
+- [x] Energy Bottle: `/bliss withdraw` bzw. Drop bei Killer mit 10 Energie, Verfall nach 1 h
+- [x] Repair-Kit / Restoration: Pedestal-Ritual mit Server-Pool bzw. 5 Flaschen für Broken-Gems
+- [x] Aktivierung: Offhand = Passiv, Haupthand + Rechtsklick / Schleichen + Rechtsklick; Client-Mods für Keybinds; Actionbar mit Font-Icons
+- [x] Startverhalten: zufälliger Gem beim ersten Join
+- [x] Ergebnisse als `docs/bliss-original.md` dokumentiert, Abweichungen begründet
+- [ ] Offene Fragen (Abschnitt 11 der Doku) mit dem Owner klären
+- [ ] **(V)** Exakte Anordnung des Trader-Rezepts im Original (nur Zutaten bekannt) – ggf. im Bliss-Discord prüfen
 
 ---
 
@@ -129,44 +141,48 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 ## 4. Gameplay-Systeme (aus dem Original)
 
 ### 4.1 Kristall-Items
-- [ ] Je Kristall: Tier 1 + Tier 2, je 4 Bruchstufen (Modelle/Texturen vorhanden, siehe 1.2)
+- [ ] Je Kristall: Tier 1 + Tier 2, je 4 Bruchstufen (Modelle/Texturen vorhanden, Zuordnung Energie → Modell in `docs/bliss-original.md` §1)
 - [ ] Item-Lore: Kristallname, Tier, Energie, Fähigkeiten, Farbcodes passend zur Kristallfarbe
 - [ ] Kristall ist seelengebunden: kann nicht gedroppt/in Kisten gelegt/verloren werden (konfigurierbar)
 - [ ] Nur ein Kristall pro Spieler aktiv
-- [ ] Erster Join → zufälliger Kristall (konfigurierbar)
+- [ ] Erster Login → Kristall für jeden Spieler, auch Spätstarter (zufällig oder ausgeglichen, konfigurierbar)
 
 ### 4.2 Breaking-Pristine-System (Energie)
-- [ ] Energie-Wert pro Spieler (Standard 0–10 **(V)**)
+- [ ] Energie-Wert pro Spieler (0–10, Start 5)
 - [ ] Kill eines Spielers → +Energie, eigener Tod → −Energie (konfigurierbar, Anti-Farming: gleicher Gegner Cooldown)
 - [ ] Energie → Bruchstufe → Modell (4 sichtbare Stufen: zerbrochen, beschädigt, zerkratzt, makellos)
-- [ ] Energie skaliert Fähigkeitsstärke (Schaden, Dauer, Radius) und schaltet bei 0 Fähigkeiten ab
+- [ ] Freischaltung nach Energie: 3–10 alles, 1–2 nur Primärkraft (+ Passiv), 0 alles aus
 - [ ] **Bruch-Animation** beim Stufenwechsel: Riss-Partikel (Overlay-Texturen `gem-breaking/*`), Glas-Sound, Item-Shards in Kristallfarbe
 - [ ] **Reparatur-/Aufwertungs-Animation** beim Aufstieg
-- [ ] Energy Bottle: Energie abfüllen (Rechtsklick/Befehl) und an andere übertragen
-- [ ] Repair-Kit: Kristall-Energie wiederherstellen (Rezept + Effekt)
-- [ ] Revival-Tome: Verhalten bei 0 Energie (Revive-Mechanik laut Recherche) **(V)**
+- [ ] Energy Bottle: Schleichen + Rechtsklick mit leerer Flasche ~5 s halten (Ladebalken als Title am Fadenkreuz) → −1 Energie; Rechtsklick auf die Flasche → +1 Energie
+- [ ] Repair-Kit-Totem: platzieren, Radius 15 mit Partikelring, Koordinaten in Chat + Title, 10 min durchgehend im Kreis → Energie < 5 wird 5, Totem zerbricht am Ende; kein Schutzschild
+- [ ] Revival-Tome: entfällt (Repair Kit deckt 0 Energie ab), Modell für Christmas-Twist reservieren
 
 ### 4.3 Level-/Tier-System
-- [ ] Tier 1 → Tier 2 über **Upgrader**-Item (Rezept, ggf. aus Gem Fragments)
-- [ ] Tier 2 schaltet zweite aktive Fähigkeit und stärkere Passive frei
+- [ ] Tier 1 → Tier 2 über **Upgrader**-Item (Rezept ohne Gem Fragments, Vorschlag in `docs/bliss-original.md` §2)
+- [ ] Tier 2 schaltet die **Ultimative Attacke** (und ggf. stärkere Passive) frei
 - [ ] Upgrade-Animation (Partikelsäule, Lichtblitz, Sound)
 - [ ] Optional: Gem-Level/XP innerhalb eines Tiers (klären, ob gewünscht – „gem auf level system“)
 
 ### 4.4 Gem Trader
 - [ ] Gem-Trader-Item (Modell `gem_trader`): Kristall gegen anderen tauschen
-- [ ] GUI zur Auswahl (oder zufällig, konfigurierbar), Tier/Energie bleiben erhalten (konfigurierbar)
+- [ ] Rezept wie Original S3: 4 Diamantblöcke + 4 Drachenatem + 1 Sculk-Katalysator
+- [ ] GUI mit **freier Wahl** des neuen Kristalls, Tier/Energie bleiben erhalten (konfigurierbar), Tausch-Cooldown gegen „Cycling“
 - [ ] Tausch-Animation (Kristall verschwindet in Partikelwirbel, neuer erscheint in neuer Farbe)
-- [ ] Gem Fragments als Crafting-Material (Rezepte definieren)
 - [ ] Optional: platzierbare Trader-Station (Modell `trader`)
 
 ### 4.5 Fähigkeits-Steuerung & HUD
-- [ ] Aktivierung festlegen (z. B. Offhand-Swap-Taste `F` = Fähigkeit 1, Schleichen + `F` = Fähigkeit 2) – funktioniert ohne Client-Mod
-- [ ] Actionbar-HUD mit Font-Icons (``–``) + Cooldown-Anzeige in Sekunden
+- [ ] Optionaler Client-Companion-Mod mit in den Einstellungen belegbaren Tasten (Primär / Sekundär / Ultimate), Custom-Payload an den Server (Fabric, NeoForge, Paper)
+- [ ] Vanilla-Fallback ohne Mod: Rechtsklick = Primär, Schleichen + Rechtsklick = Sekundär, Schleichen + `F` = Ultimate
+- [ ] Actionbar-HUD mit Font-Icons (``–``) + Cooldown-Anzeige in Sekunden + Energie
+- [ ] Je Kristall ein drittes HUD-Icon für die Ultimate zeichnen (Pack hat nur 2 pro Gem)
 - [ ] Cooldown-Ende: kleiner Sound + Partikel-Puls
 
 ---
 
 ## 5. Kräfte (Entwurf) – jede Kraft hochwertig animiert
+
+Struktur je Kristall: Passiv · Primär · Sekundär (bei 1–2 Energie gesperrt) · Ultimate (nur Tier 2).
 
 Allgemeine Qualitätsanforderungen für **jede** Kraft:
 - [ ] Mehrphasige Animation (Aufladen → Auslösen → Nachklingen), nicht nur ein einzelner Partikel-Burst
@@ -180,32 +196,37 @@ Allgemeine Qualitätsanforderungen für **jede** Kraft:
 ### 5.1 Feuer (rot, Strength-Textur)
 - [ ] Passiv T1: Feuerresistenz
 - [ ] Passiv T2: Nahkampftreffer setzen Gegner kurz in Brand
-- [ ] Aktiv 1 – **Flammenstoß**: Sprung, bei Landung expandierender Feuerring (`flame`, `soul_fire_flame`-Akzent, `lava`, Rauch), Schaden + Brand
-- [ ] Aktiv 2 (T2) – **Meteor**: Glühender Block-Display fällt aus dem Himmel mit Rauch-/Funkenspur, Einschlag mit Schockwelle und Glut-Partikeln
+- [ ] Primär – **Flammenstoß**: Sprung, bei Landung expandierender Feuerring (`flame`, `soul_fire_flame`-Akzent, `lava`, Rauch), Schaden + Brand
+- [ ] Sekundär – **Meteor**: Glühender Block-Display fällt aus dem Himmel mit Rauch-/Funkenspur, Einschlag mit Schockwelle und Glut-Partikeln
+- [ ] Ultimate (T2) – *noch zu entwerfen*
 
 ### 5.2 Erde (orange, Fire-Textur)
 - [ ] Passiv T1: Kein Rückstoß / Resistenz I
 - [ ] Passiv T2: Eile beim Abbauen von Stein/Erze
-- [ ] Aktiv 1 – **Erdbeben**: Wellenförmige Schockwelle, Block-Displays springen aus dem Boden (`block`-Partikel des Untergrunds, `falling_dust`), Gegner werden hochgeworfen + verlangsamt
-- [ ] Aktiv 2 (T2) – **Steinwall/Felsbrocken**: Temporärer Wall aus Block-Displays oder geworfener Felsbrocken mit Trümmer-Partikeln
+- [ ] Primär – **Erdbeben**: Wellenförmige Schockwelle, Block-Displays springen aus dem Boden (`block`-Partikel des Untergrunds, `falling_dust`), Gegner werden hochgeworfen + verlangsamt
+- [ ] Sekundär – **Steinwall/Felsbrocken**: Temporärer Wall aus Block-Displays oder geworfener Felsbrocken mit Trümmer-Partikeln
+- [ ] Ultimate (T2) – *noch zu entwerfen*
 
 ### 5.3 Wind (weiß, Puff-Textur)
 - [ ] Passiv T1: Kein Fallschaden
 - [ ] Passiv T2: Doppelsprung
-- [ ] Aktiv 1 – **Böe**: Dash nach vorne, Gegner im Kegel werden weggestoßen (`gust`, `cloud`, spiralförmige weiße `dust`-Linien)
-- [ ] Aktiv 2 (T2) – **Tornado**: Wandernder Wirbel, zieht Gegner hoch (mehrlagige Partikelspirale, `sweep_attack`, Wind-Sounds)
+- [ ] Primär – **Böe**: Dash nach vorne, Gegner im Kegel werden weggestoßen (`gust`, `cloud`, spiralförmige weiße `dust`-Linien)
+- [ ] Sekundär – **Tornado**: Wandernder Wirbel, zieht Gegner hoch (mehrlagige Partikelspirale, `sweep_attack`, Wind-Sounds)
+- [ ] Ultimate (T2) – *noch zu entwerfen*
 
 ### 5.4 Schatten (lila, Astra-Textur)
 - [ ] Passiv T1: Nachtsicht
 - [ ] Passiv T2: In Dunkelheit beim Schleichen unsichtbar / Lebensraub nachts
-- [ ] Aktiv 1 – **Schattenschritt**: Teleport hinter das anvisierte Ziel (`portal`, `squid_ink`, `reverse_portal`, lila Farbverlauf), kurze Spur zwischen Start und Ziel
-- [ ] Aktiv 2 (T2) – **Seelenbann**: Dunkle Aura, Blindheit/Dunkelheit für Gegner (`sculk_soul`, `soul`, kreisende Geister-Partikel)
+- [ ] Primär – **Schattenschritt**: Teleport hinter das anvisierte Ziel (`portal`, `squid_ink`, `reverse_portal`, lila Farbverlauf), kurze Spur zwischen Start und Ziel
+- [ ] Sekundär – **Seelenbann**: Dunkle Aura, Blindheit/Dunkelheit für Gegner (`sculk_soul`, `soul`, kreisende Geister-Partikel)
+- [ ] Ultimate (T2) – *noch zu entwerfen*
 
 ### 5.5 Natur (grün, Wealth-Textur)
 - [ ] Passiv T1: Regeneration auf Gras/Laub
 - [ ] Passiv T2: Bonus-Ernte / Glück
-- [ ] Aktiv 1 – **Rankenfessel**: Wurzeln/Ranken (Block-Displays) wachsen um das Ziel und halten es fest (`happy_villager`, `composter`, `spore_blossom_air`)
-- [ ] Aktiv 2 (T2) – **Blütenheilung**: Heilkreis für Verbündete (`cherry_leaves`, grüne `dust`-Spiralen, aufsteigende Blüten)
+- [ ] Primär – **Rankenfessel**: Wurzeln/Ranken (Block-Displays) wachsen um das Ziel und halten es fest (`happy_villager`, `composter`, `spore_blossom_air`)
+- [ ] Sekundär – **Blütenheilung**: Heilkreis für Verbündete (`cherry_leaves`, grüne `dust`-Spiralen, aufsteigende Blüten)
+- [ ] Ultimate (T2) – *noch zu entwerfen*
 
 - [ ] Entwurf mit dem Owner abstimmen, bevor implementiert wird
 
