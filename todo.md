@@ -16,16 +16,17 @@ Legende: `[ ]` offen · `[x]` erledigt · **(V)** = vor Umsetzung verifizieren (
 | Versionen | Minecraft Java **1.21.11 bis 26.3** |
 | Kräfte | Werden selbst entworfen (Entwurf siehe Abschnitt 5), angelehnt ans Bliss-Original |
 | Grundregeln | Repo nie löschen · Grundidee + Qualitätslevel halten · **jede Kraft hochwertig animiert mit interessanten Partikeln** |
-| Energie | 0–10, **Start 5**, Kill +1 / Tod −1 · **1–2 Energie: nur Primärkraft** · **0 Energie: alle Fähigkeiten aus** |
+| Energie | 0–10, **Start 5**, Kill +1 / Tod −1 (Kill gibt auch bei 0 Energie +1) · **1–2 Energie: nur Primär** (Sekundär + Ultimate weg) · **0 Energie: keine aktiven Kräfte** · **Passive immer aktiv, überall im Inventar** |
 | Kräfte je Kristall | Passiv + Primär + Sekundär (Tier 1), **Ultimate ab Tier 2** |
-| Gem Trader | Craftbar mit Originalrezept (4 Diamantblöcke, 4 Drachenatem, 1 Sculk-Katalysator), **GUI mit freier Kristallwahl** |
-| Entfällt | Gem Fragments, All-for-One-Gem |
-| Repair Kit | Platzierbares Totem, Radius 15, 10 min durchgehend im Kreis → Energie unter 5 wird auf 5 gesetzt; Koordinaten in Chat + Title; kein Schutzschild |
-| Energy Bottle | Schleichen + Rechtsklick mit leerer Flasche ~5 s halten (Ladebalken am Fadenkreuz) → −1 Energie; Rechtsklick auf Flasche → +1 Energie (für jeden) |
+| Gem Trader | Rezept 4 Diamantblöcke + 4 Drachenatem + Gem Fragment (statt Sculk-Katalysator), **GUI mit freier Kristallwahl** |
+| Gem Fragments | Nur aus Energy Bottles: **1 Flasche → 9 Fragments** (2×2 oder Werkbank); Originalrezepte für Upgrader/Repair Kit bleiben |
+| Entfällt | All-for-One-Gem, Revival Tome |
+| Repair Kit | Platzierbares Totem, Radius 15, 10 min durchgehend im Kreis → Energie unter 5 wird 5; Tod/Logout = Verlassen; Koordinaten in Chat + Title; kein Schutzschild; zerstörbar (Abbauzeit wie Ominous Vault); global nur eins; Rezept: Diamantblöcke statt Netherit |
+| Energy Bottle | Schleichen + Rechtsklick mit leerer Flasche ~5 s halten (Ladebalken am Fadenkreuz) → −1 Energie; Rechtsklick auf Flasche → +1 Energie (für jeden, auch bei 0); **exploit-sicher** (Ledger, siehe `docs/bliss-original.md` §6) |
 | HUD / Steuerung | Actionbar mit Icons + Cooldowns; Tasten in den Einstellungen belegbar (optionaler Client-Mod + Vanilla-Fallback) |
 | Erster Login | Jeder Spieler bekommt einen Kristall, auch Spätstarter |
 
-Recherche und Abweichungen vom Original: `docs/bliss-original.md` (inkl. offener Fragen in Abschnitt 11).
+Recherche und Abweichungen vom Original: `docs/bliss-original.md` (offene Fragen in Abschnitt 12).
 
 ### Kristall → Textur-Zuordnung
 
@@ -96,13 +97,14 @@ Ergebnisse: `docs/bliss-original.md`.
 - [x] Verhalten bei 0 Energie: Fähigkeiten aus, seit S3 kein Deathban, Rettung über Ritual
 - [x] Tier-System: Upgrader (Rezept S3: Fragments + Wither-Schädel + Drachenatem), Tier 2 = mehr Kräfte
 - [x] Gem Trader: Original würfelt zufällig um; Rezept S3 4 Diamantblöcke + 4 Drachenatem + 1 Sculk-Katalysator
-- [x] Gem Fragments: Crafting-Material (Trader/Upgrader/Repair Kit) → entfällt
+- [x] Gem Fragments: Crafting-Material (Trader/Upgrader/Repair Kit) → kommen aus Energy Bottles (1 → 9)
 - [x] Energy Bottle: `/bliss withdraw` bzw. Drop bei Killer mit 10 Energie, Verfall nach 1 h
 - [x] Repair-Kit / Restoration: Pedestal-Ritual mit Server-Pool bzw. 5 Flaschen für Broken-Gems
 - [x] Aktivierung: Offhand = Passiv, Haupthand + Rechtsklick / Schleichen + Rechtsklick; Client-Mods für Keybinds; Actionbar mit Font-Icons
 - [x] Startverhalten: zufälliger Gem beim ersten Join
 - [x] Ergebnisse als `docs/bliss-original.md` dokumentiert, Abweichungen begründet
-- [ ] Offene Fragen (Abschnitt 11 der Doku) mit dem Owner klären
+- [x] Erste Runde Fragen mit dem Owner geklärt (2026-10-21)
+- [ ] Restliche Fragen (Abschnitt 12 der Doku) klären
 - [ ] **(V)** Exakte Anordnung des Trader-Rezepts im Original (nur Zutaten bekannt) – ggf. im Bliss-Discord prüfen
 
 ---
@@ -151,22 +153,34 @@ Ergebnisse: `docs/bliss-original.md`.
 - [ ] Energie-Wert pro Spieler (0–10, Start 5)
 - [ ] Kill eines Spielers → +Energie, eigener Tod → −Energie (konfigurierbar, Anti-Farming: gleicher Gegner Cooldown)
 - [ ] Energie → Bruchstufe → Modell (4 sichtbare Stufen: zerbrochen, beschädigt, zerkratzt, makellos)
-- [ ] Freischaltung nach Energie: 3–10 alles, 1–2 nur Primärkraft (+ Passiv), 0 alles aus
+- [ ] Freischaltung nach Energie: 3–10 alles, 1–2 nur Primär, 0 keine aktiven Kräfte; Passive immer (Gem irgendwo im Inventar)
+- [ ] Kill gibt auch bei 0 Energie +1; Anti-Exploit: nur wenn das Opfer Energie verloren hat (Owner-Bestätigung offen)
 - [ ] **Bruch-Animation** beim Stufenwechsel: Riss-Partikel (Overlay-Texturen `gem-breaking/*`), Glas-Sound, Item-Shards in Kristallfarbe
 - [ ] **Reparatur-/Aufwertungs-Animation** beim Aufstieg
-- [ ] Energy Bottle: Schleichen + Rechtsklick mit leerer Flasche ~5 s halten (Ladebalken als Title am Fadenkreuz) → −1 Energie; Rechtsklick auf die Flasche → +1 Energie
+- [ ] Energy Bottle: Schleichen + Rechtsklick mit leerer Flasche ~5 s halten (Ladebalken als Title am Fadenkreuz) → −1 Energie; Rechtsklick auf die Flasche → +1 Energie (auch bei 0)
+- [ ] Rezept: 1 Energy Bottle → 9 Gem Fragments (formlos, 2×2)
+- [ ] Anti-Exploit Energietransfer (`docs/bliss-original.md` §6):
+  - [ ] Flaschen-Ledger: UUID je Flasche, serverseitiger Status AKTIV/VERBRAUCHT, sofort persistiert
+  - [ ] Trinken/Zerlegen prüft + schließt Ledger-Eintrag atomar; Kopien/Fälschungen werden entfernt und geloggt
+  - [ ] Max. Stapelgröße 1; Vanilla-Verwendung (Werkbank, Brauen, Amboss, Werfer …) für Xmas-Items sperren
+  - [ ] Abzapfen: Server-Tick-Timer, Abschlussprüfung, alles in einem Tick
+  - [ ] Shift-Klick-Crafting prüft jede Flasche einzeln
+  - [ ] Audit-Log aller Energieänderungen + `/xmas energy audit`
+  - [ ] Tests für Dupe-Szenarien (Kopie trinken, Kopie zerlegen, Disconnect während Abzapfen, Inventar voll)
 - [ ] Repair-Kit-Totem: platzieren, Radius 15 mit Partikelring, Koordinaten in Chat + Title, 10 min durchgehend im Kreis → Energie < 5 wird 5, Totem zerbricht am Ende; kein Schutzschild
-- [ ] Revival-Tome: entfällt (Repair Kit deckt 0 Energie ab), Modell für Christmas-Twist reservieren
+- [ ] Totem: Tod/Logout = Verlassen; zerstörbar mit Härte 50 (wie Ominous Vault), droppt nichts; global nur ein Totem
+- [ ] Rezept Repair Kit: F A F / D T D / F A F (Fragment, Amboss, Diamantblock, Netherit-Vorlage)
+- [ ] Revival-Tome: entfällt, Modell für Christmas-Twist reservieren
 
 ### 4.3 Level-/Tier-System
-- [ ] Tier 1 → Tier 2 über **Upgrader**-Item (Rezept ohne Gem Fragments, Vorschlag in `docs/bliss-original.md` §2)
+- [ ] Tier 1 → Tier 2 über **Upgrader**-Item (Originalrezept: 4 Fragments, 4 Drachenatem, 1 Witherskelettschädel)
 - [ ] Tier 2 schaltet die **Ultimative Attacke** (und ggf. stärkere Passive) frei
 - [ ] Upgrade-Animation (Partikelsäule, Lichtblitz, Sound)
 - [ ] Optional: Gem-Level/XP innerhalb eines Tiers (klären, ob gewünscht – „gem auf level system“)
 
 ### 4.4 Gem Trader
 - [ ] Gem-Trader-Item (Modell `gem_trader`): Kristall gegen anderen tauschen
-- [ ] Rezept wie Original S3: 4 Diamantblöcke + 4 Drachenatem + 1 Sculk-Katalysator
+- [ ] Rezept: D B D / B F B / D B D (Diamantblock, Drachenatem, Gem Fragment statt Sculk-Katalysator)
 - [ ] GUI mit **freier Wahl** des neuen Kristalls, Tier/Energie bleiben erhalten (konfigurierbar), Tausch-Cooldown gegen „Cycling“
 - [ ] Tausch-Animation (Kristall verschwindet in Partikelwirbel, neuer erscheint in neuer Farbe)
 - [ ] Optional: platzierbare Trader-Station (Modell `trader`)
@@ -174,6 +188,7 @@ Ergebnisse: `docs/bliss-original.md`.
 ### 4.5 Fähigkeits-Steuerung & HUD
 - [ ] Optionaler Client-Companion-Mod mit in den Einstellungen belegbaren Tasten (Primär / Sekundär / Ultimate), Custom-Payload an den Server (Fabric, NeoForge, Paper)
 - [ ] Vanilla-Fallback ohne Mod: Rechtsklick = Primär, Schleichen + Rechtsklick = Sekundär, Schleichen + `F` = Ultimate
+- [ ] Server validiert jede Aktivierung selbst (Cooldown, Energie, Tier) – Client-Mod meldet nur Tastendruck
 - [ ] Actionbar-HUD mit Font-Icons (``–``) + Cooldown-Anzeige in Sekunden + Energie
 - [ ] Je Kristall ein drittes HUD-Icon für die Ultimate zeichnen (Pack hat nur 2 pro Gem)
 - [ ] Cooldown-Ende: kleiner Sound + Partikel-Puls
@@ -182,7 +197,7 @@ Ergebnisse: `docs/bliss-original.md`.
 
 ## 5. Kräfte (Entwurf) – jede Kraft hochwertig animiert
 
-Struktur je Kristall: Passiv · Primär · Sekundär (bei 1–2 Energie gesperrt) · Ultimate (nur Tier 2).
+Struktur je Kristall: Passiv (immer) · Primär (ab 1 Energie) · Sekundär (ab 3 Energie) · Ultimate (nur Tier 2, ab 3 Energie).
 
 Allgemeine Qualitätsanforderungen für **jede** Kraft:
 - [ ] Mehrphasige Animation (Aufladen → Auslösen → Nachklingen), nicht nur ein einzelner Partikel-Burst

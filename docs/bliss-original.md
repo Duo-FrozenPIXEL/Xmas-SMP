@@ -1,7 +1,7 @@
 # Bliss-Original vs. Xmas-SMP
 
 Recherche zum Verhalten des Bliss-SMP-Gem-Plugins (Stand: Season 3 / BlissGems 5.x) und die daraus abgeleiteten Regeln für Xmas-SMP.
-Festlegungen des Owners vom 2026-10-21 sind mit **[Owner]** markiert, eigene Vorschläge mit **[Vorschlag]**, offene Punkte stehen in Abschnitt 11.
+Festlegungen des Owners (2026-10-21) sind mit **[Owner]** markiert, eigene Vorschläge mit **[Vorschlag]**. Noch offene Punkte stehen in Abschnitt 12.
 
 ## Quellenlage
 
@@ -14,7 +14,7 @@ Das echte Bliss-Plugin ist **closed source** und nur auf dem Bliss-Server im Ein
 | [BlissGems auf Modrinth](https://modrinth.com/plugin/bliss-smp-plugin) + [Doku](https://docs.xoperr.dev/plugins/blissgems/) | Nachbau (Paper) | Herkunft des Texturpacks `BlissGemsV4.1-fixed.zip` |
 | [UltimateBlissSMP](https://modrinth.com/plugin/ultimateblisssmp), [BlissKeyBinds](https://modrinth.com/mod/blisskeybinds), [GitHub-Fork STRSC](https://github.com/afridy125/STRSC-Bliss-gem-5.0.2/releases/tag/BlissSmpPatch) | Nachbauten / Client-Mod | Nur zum Vergleich der Steuerung |
 
-Bei Widersprüchen gilt: Miraheze > Fandom > Nachbauten. Die Seiten selbst konnten aus der Build-Umgebung nicht abgerufen werden; die Angaben stammen aus Suchauszügen und sind daher mit **(V)** markiert, wo eine Prüfung im Spiel/Discord sinnvoll ist.
+Bei Widersprüchen gilt: Miraheze > Fandom > Nachbauten. Die Seiten selbst konnten aus der Build-Umgebung nicht abgerufen werden; die Angaben stammen aus Suchauszügen und sind mit **(V)** markiert, wo eine Prüfung im Spiel sinnvoll ist.
 
 ---
 
@@ -24,10 +24,10 @@ Bei Widersprüchen gilt: Miraheze > Fandom > Nachbauten. Die Seiten selbst konnt
 
 - Wertebereich **0–10**, Start **5** (Pristine).
 - **Jeder Tod −1** (auch natürliche Tode), **jeder Spieler-Kill +1**.
-- Bei 10 (Pristine +5) kann keine Energie mehr aufgenommen werden; wer von einem Spieler mit 10 Energie getötet wird, droppt seine Energie als **Energy Bottle**.
-- Ab Season 3 **kein Deathban** mehr bei 0 Energie – der Gem bleibt einfach zerbrochen.
-- Mit Broken-Gem kann man weder per Kill noch per Flasche Energie aufnehmen; Rettung nur über Restoration-Ritual.
-- Abstufung der Fähigkeiten (Miraheze): Scratched/Cracked = längere Cooldowns, Damaged = keine aktiven Kräfte mehr, Ruined = keine Passiven mehr, Broken = alles aus.
+- Bei 10 (Pristine +5) keine Aufnahme mehr; wer von einem Spieler mit 10 Energie getötet wird, droppt seine Energie als **Energy Bottle**.
+- Seit Season 3 **kein Deathban** bei 0 Energie.
+- Mit Broken-Gem keine Aufnahme per Kill oder Flasche; Rettung nur per Restoration-Ritual.
+- Abstufung (Miraheze): Scratched/Cracked = längere Cooldowns, Damaged = keine aktiven Kräfte, Ruined = keine Passiven, Broken = alles aus.
 
 | Energie | Stufe (Original) | Hinweis |
 |---|---|---|
@@ -42,21 +42,20 @@ Bei Widersprüchen gilt: Miraheze > Fandom > Nachbauten. Die Seiten selbst konnt
 
 ### Xmas-SMP
 
-- 0–10, **Start 5** **[Owner]**, Kill +1, Tod −1, Tod bei 0 kostet nichts mehr – wie Original **[Owner: „wie vermutet“]**.
-- Natürliche Tode kosten wie im Original 1 Energie **[Vorschlag, konfigurierbar]**.
-- Anti-Farming: derselbe Gegner gibt innerhalb von z. B. 30 min nur einmal Energie **[Vorschlag, konfigurierbar]**.
+- 0–10, **Start 5**, Kill +1, Tod −1 (auch natürliche Tode, konfigurierbar) **[Owner]**.
+- **Auch mit 0 Energie bekommt man per Kill wieder Energie** **[Owner]** (Abweichung vom Original).
 - Killer mit 10 Energie → die Energie des Opfers fällt als Energy Bottle auf den Boden (wie Original) **[Vorschlag]**.
 - Fähigkeiten nach Energie **[Owner]**:
 
 | Energie | Stufe | Passiv | Primär | Sekundär | Ultimate (nur Tier 2) |
 |---|---|---|---|---|---|
-| 5–10 | Makellos (+X) | ✔ | ✔ | ✔ | ✔ |
-| 3–4 | Zerkratzt / Gerissen | ✔ | ✔ | ✔ | ✔ |
-| 1–2 | Ruiniert / Beschädigt | ✔ | ✔ | ✘ | ✘ (Annahme, s. Frage 1) |
-| 0 | Zerbrochen | ✘ | ✘ | ✘ | ✘ |
+| 3–10 | Gerissen (3) · Zerkratzt (4) · Makellos (5) · Makellos +1…+5 (6–10) | ✔ | ✔ | ✔ | ✔ |
+| 1–2 | Ruiniert (1) · Beschädigt (2) | ✔ | ✔ | ✘ | ✘ |
+| 0 | Zerbrochen | ✔ | ✘ | ✘ | ✘ |
 
-- Stufennamen: englisch wie Original im Item-Namen (`Pristine +2`, `Cracked` …), deutsche Übersetzung über `de_de.json` **[Vorschlag]**.
-- **Abweichung:** Das Original sperrt aktive Kräfte schon bei 2 und Passive bei 1. Der Owner möchte mehr Spielbarkeit bei niedriger Energie: Primärkraft bleibt bis 1, alles fällt erst bei 0 weg.
+- **Passive Kräfte sind immer aktiv** – unabhängig von der Energie und davon, wo der Gem im Inventar liegt **[Owner]**.
+- Stufennamen englisch wie im Original im Item-Namen (`Pristine +2`, `Cracked` …), deutsche Übersetzung über `de_de.json` **[Vorschlag]**.
+- **Abweichung:** Das Original sperrt aktive Kräfte schon bei 2 und Passive bei 1. Hier bleibt die Primärkraft bis 1 nutzbar, und Passive gehen nie verloren.
 
 ### Energie → Modell (vorhandene Texturen)
 
@@ -75,23 +74,22 @@ Das Pack hat je Tier nur 4 Optikstufen (siehe `docs/resourcepack.md`):
 
 ### Original
 
-- Upgrader macht aus einem Tier-1- einen Tier-2-Gem; Tier 2 = mehr/stärkere Fähigkeiten.
-- Rezept S3 (Progression 3, laut Wiki „unsicher“): **4 Gem Fragments + 1 Wither Skull + 4 Dragon's Breath** (V).
-- In frühen Progressionen gab es Upgrader nur als Boss-Drop (Wither: 4 Upgrader).
+- Upgrader macht aus Tier 1 einen Tier-2-Gem, Tier 2 = mehr/stärkere Fähigkeiten.
+- Rezept S3 (laut Wiki „unsicher“): **4 Gem Fragments + 1 Witherskelettschädel + 4 Drachenatem** (V).
 
 ### Xmas-SMP
 
-- Tier 1: Passiv + **Primärkraft** + **Sekundärkraft**. Tier 2: zusätzlich **Ultimative Attacke** (und ggf. stärkere Passive) **[Owner]**.
-- Upgrader-Item (`enchanted_book`, CMD 3001) bleibt, Upgrade behält Kristalltyp und Energie.
-- Da Gem Fragments entfallen **[Owner]**, braucht das Rezept einen Ersatz – Vorschlag (Form an das Original angelehnt):
+- Tier 1: Passiv + **Primär** + **Sekundär**. Tier 2: zusätzlich **Ultimate** **[Owner]**.
+- Upgrader (`enchanted_book`, CMD 3001) behält Kristalltyp und Energie.
+- **Rezept wie Original** **[Owner]** (Fragments kommen aus Energy Bottles, siehe Abschnitt 4):
 
 ```
-D B D        D = Diamantblock (ersetzt Gem Fragment)
+F B F        F = Gem Fragment
 B W B        B = Drachenatem
-D B D        W = Witherskelettschädel
+F B F        W = Witherskelettschädel
 ```
 
-- **Folge für Kräfte-Entwurf (todo.md, Abschnitt 5):** Jeder Kristall braucht jetzt **3 aktive Kräfte** statt 2 – die bisherige „Aktiv 2 (T2)“ wird zur Sekundärkraft, eine Ultimate kommt neu dazu. Außerdem gibt es pro Kristall nur 2 HUD-Icons → ein drittes Icon (Ultimate) muss gezeichnet werden.
+- **Folge für die Kräfte (todo.md, Abschnitt 5):** Jeder Kristall braucht 3 aktive Kräfte. Im Pack gibt es nur 2 HUD-Icons pro Gem; für die Ultimate kommt je ein neues dazu.
 
 ---
 
@@ -99,33 +97,33 @@ D B D        W = Witherskelettschädel
 
 ### Original
 
-- Trader würfelt den eigenen Gem **zufällig** in einen anderen Typ um und wird verbraucht.
-- S3: lange Tausch-Animation (gegen „Cycling“, also schnelles Hin-und-Her-Tauschen für überlappende Effekte); Tausch mit vertrautem Teammitglied möglich.
-- Rezept S2: 4 Diamantblöcke + 1 Sculk-Katalysator. **Rezept S3: 4 Diamantblöcke + 4 Drachenatem + 1 Sculk-Katalysator.** Die genaue Anordnung ist in keiner Textquelle beschrieben (V); der STRSC-Fork nutzt das Muster unten.
+- Würfelt den Gem **zufällig** in einen anderen Typ um und wird verbraucht. S3: lange Tausch-Animation gegen „Cycling“ (schnelles Hin-und-Her-Tauschen für überlappende Effekte).
+- Rezept S3: 4 Diamantblöcke + 4 Drachenatem + 1 Sculk-Katalysator (Anordnung nicht dokumentiert, V).
 
 ### Xmas-SMP
 
-- **Freie Wahl** des neuen Kristalls über ein **GUI** (Chest-GUI mit den 5 Kristallen, aktueller Kristall ausgegraut) **[Owner]**.
-- **Craftbar mit dem Originalrezept (S3)** **[Owner]**:
+- **Freie Wahl** des neuen Kristalls über ein **Chest-GUI** (5 Kristalle, aktueller ausgegraut) **[Owner]**.
+- **Rezept:** Original, aber der Sculk-Katalysator wird durch ein **Gem Fragment** ersetzt **[Owner]**:
 
 ```
 D B D        D = Diamantblock
-B S B        B = Drachenatem
-D B D        S = Sculk-Katalysator
+B F B        B = Drachenatem
+D B D        F = Gem Fragment
 ```
 
-- Tier und Energie bleiben beim Tausch erhalten, Trader wird verbraucht **[Vorschlag]**.
-- Tausch-Animation mit Pflicht-Dauer (z. B. 3 s), Abbruch bei Schaden, plus Cooldown nach dem Tausch – verhindert Cycling wie im Original **[Vorschlag]**.
-- Textur: `gem_trader` (Smaragd, CMD 4002). Das ungenutzte Modell `trader` kann als GUI-Icon dienen.
-- **Abweichung:** freie Wahl statt Zufall (Owner-Wunsch). Dadurch fällt die Glückskomponente weg; die hohen Kosten (Drachenatem = End nötig) bremsen das.
+- Tier und Energie bleiben erhalten, Trader wird verbraucht **[Vorschlag]**.
+- Tausch-Animation mit Pflicht-Dauer (z. B. 3 s, Abbruch bei Schaden) plus Cooldown nach dem Tausch gegen Cycling **[Vorschlag]**.
+- Textur: `gem_trader` (CMD 4002). Das ungenutzte Modell `trader` kann als GUI-Icon dienen.
 
 ---
 
-## 4. Gem Fragments – entfällt
+## 4. Gem Fragments
 
-- Original: Crafting-Material für Trader (S3), Upgrader und Repair Kit; Rezept 4 Diamanten + 2 Amethyst-Cluster + 2 Smaragde + 1 Eisenblock.
-- **Xmas-SMP: entfällt [Owner].** Wo das Original Fragments verlangt, werden sie durch Diamantblöcke ersetzt (siehe Upgrader und Repair Kit). Modell/Textur `gem_fragment` bleibt im Pack, wird aber nicht vergeben.
-- Ebenso entfällt der **All-for-One-Gem** **[Owner]**.
+- Original: eigenes Rezept (4 Diamanten, 2 Amethyst-Cluster, 2 Smaragde, 1 Eisenblock), Zutat für Trader, Upgrader und Repair Kit.
+- **Xmas-SMP [Owner]:** Fragments gibt es **nur** aus Energy Bottles: **1 Energy Bottle → 9 Gem Fragments**, formlos im 2×2-Inventar oder an der Werkbank. Dadurch bleiben die Originalrezepte nutzbar, und jedes Fragment kostet echte Energie (1 Energie = 9 Fragments).
+- Es gibt **kein** Rückrezept (Fragments → Flasche) und kein Fragment-Rezept aus Erzen **[Vorschlag]**.
+- Textur: `gem_fragment` (CMD 4004).
+- Der **All-for-One-Gem entfällt** **[Owner]**.
 
 ---
 
@@ -133,108 +131,158 @@ D B D        S = Sculk-Katalysator
 
 ### Original
 
-- Entsteht per `/bliss withdraw` (freiwilliges Abzapfen, −1 Energie) oder als Drop, wenn der Killer schon bei 10 ist.
-- Rechtsklick → Energie aufnehmen (nicht bei 10 oder 0).
-- Flaschen **verfallen nach 1 Stunde**, die Energie geht in einen Server-Pool zurück.
+- `/bliss withdraw` (−1 Energie) oder Drop, wenn der Killer schon bei 10 ist. Rechtsklick → aufnehmen (nicht bei 10 oder 0). Verfall nach 1 h.
 
 ### Xmas-SMP
 
-- **Abzapfen [Owner]:** Leere Glasflasche in der Hand, **Schleichen + Rechtsklick gedrückt halten**. Am Fadenkreuz erscheint ein **Ladebalken**; nach **~5 s** wird die Flasche zur Energy Bottle und man verliert 1 Energie. Loslassen, Bewegung > 1 Block oder Schaden bricht ab **[Vorschlag]**.
-- **Trinken [Owner]:** Rechtsklick auf die Energy Bottle → +1 Energie. Die Flasche ist handelbar, also kann sie jeder Spieler trinken.
-- Abzapfen nur ab 1 Energie, Trinken nur unter 10 **[Vorschlag]**; Verhalten bei 0 Energie siehe Frage 3.
-- Kein Verfall nach 1 h und kein Server-Pool **[Vorschlag]** – das Original braucht den Pool nur für seine Repair-Kit-Mechanik, die hier anders läuft (Abschnitt 6).
+- **Abzapfen [Owner]:** Leere Glasflasche in der Hand, **Schleichen + Rechtsklick gedrückt halten**. Am Fadenkreuz erscheint ein **Ladebalken**; nach **5 s** wird eine Glasflasche zur Energy Bottle und man verliert 1 Energie. Abbruch bei Loslassen, Aufstehen, Slot-Wechsel, Bewegung > 1 Block oder Schaden **[Vorschlag]**. Abzapfen nur ab 1 Energie.
+- **Trinken [Owner]:** Rechtsklick → +1 Energie. Funktioniert **auch bei 0 Energie**, nicht bei 10. Jeder Spieler kann jede Flasche trinken.
+- **Zerlegen [Owner]:** Flasche → 9 Gem Fragments (Abschnitt 4).
+- Kein Verfall, kein Server-Pool **[Vorschlag]**.
 - Technik (Fabric serverseitig, ohne Client-Mod):
-  - Gehaltener Rechtsklick ist am Server erkennbar: der Client schickt alle 4 Ticks ein neues Use-Paket; bleibt es > 6 Ticks aus, gilt die Taste als losgelassen.
-  - Ladebalken: Font-Glyphen (11 Füllstufen) als **Title** mit negativem Abstand, damit er mittig auf dem Fadenkreuz liegt. Fade-In/Out = 0 Ticks.
-  - Vanilla-Verhalten der Flasche (Wasser schöpfen) wird beim Schleichen unterdrückt.
-  - Textur: `energy_bottle` auf `ghast_tear` (CMD 4001).
+  - Gehaltener Rechtsklick ist am Server erkennbar: der Client schickt alle 4 Ticks ein Use-Paket; bleibt es > 6 Ticks aus, gilt die Taste als losgelassen. Die 5 s werden in **Server-Ticks** gezählt.
+  - Ladebalken: Font-Glyphen (11 Füllstufen) als **Title** mit negativem Abstand, mittig auf dem Fadenkreuz, Fade 0 Ticks.
+  - Beim Schleichen wird das Vanilla-Verhalten der Flasche (Wasser schöpfen) unterdrückt.
+  - Textur: `energy_bottle` (CMD 4001).
+- Schutz vor Manipulation: siehe **Abschnitt 6**.
 
 ---
 
-## 6. Repair Kit / Revival Tome
+## 6. Schutz vor Exploits beim Energietransfer [Owner-Anforderung]
+
+Ziel: Energie darf nur auf genau den vorgesehenen Wegen entstehen, wandern oder verschwinden. Grundprinzip: **Der Server ist die einzige Wahrheit**. Item-Daten auf der Flasche sind nur ein Verweis; was sie wert ist, steht in einem serverseitigen Register.
+
+### 6.1 Flaschen-Register (Ledger)
+
+- Jede Energy Bottle bekommt beim Erzeugen eine **zufällige UUID** in `custom_data`. Der Server legt dazu einen Eintrag an: `id, Herkunft (Spieler/Grund), Zeit, Status = AKTIV`.
+- **Trinken oder Zerlegen** prüft und schließt den Eintrag in einem Schritt auf dem Server-Thread: Status `AKTIV` → `VERBRAUCHT`, erst danach gibt es Energie bzw. Fragments. Weil der Server-Thread einzeln läuft, können zwei Kopien nicht gleichzeitig durchrutschen.
+- Unbekannte oder schon verbrauchte ID → **keine Energie**, das Item wird entfernt, ein Eintrag geht ins Admin-Log (Spieler, Ort, ID) und optional eine Meldung an Online-Admins.
+- Damit sind wirkungslos: Dupe-Glitches (Disconnect-, Inventar-Desync-, Chunk-Dupes), Creative-Mittelklick-Kopien, per NBT-Editor gefälschte Flaschen.
+- Das Register wird bei jeder Änderung sofort gespeichert (Append-only-Log, beim Start kompaktiert), damit ein Absturz keine „Geister-Flaschen“ erzeugt.
+
+### 6.2 Item-Eigenschaften
+
+- **Max. Stapelgröße 1** – jede Flasche hat eine eigene ID, Stapeln/Zusammenführen ist so ausgeschlossen.
+- **Keine Vanilla-Verwendung:** Das Basis-Item (`ghast_tear`) ist im Vanilla-Spiel eine Zutat (Endkristall, Brauen). Auf Fabric sind Polymer-Items serverseitig eigene Items, Vanilla-Rezepte greifen also gar nicht. Auf Paper/NeoForge werden Werkbank, Brau- und Schmiedestand, Amboss, Schleifstein, Werfer und Trichter-Brauen explizit für Xmas-Items gesperrt. Das gilt genauso für Gem Fragments (`prismarine_shard`).
+- Umbenennen am Amboss ändert nur den Namen, nicht die ID – erlaubt.
+
+### 6.3 Abzapfen (Flasche → Energie runter)
+
+- Start nur mit einer **echten Vanilla-Glasflasche** (keine Custom-Daten), im Überleben/Abenteuer, lebendig.
+- Beim **Abschluss** wird alles noch einmal geprüft: Energie ≥ 1, gleicher Slot, immer noch Glasflasche, Spieler schleicht, keine laufende andere Aktion. Dann in **einem Tick**: Energie −1, eine Glasflasche aus dem Stapel entfernen, Flasche mit neuer ID erzeugen, Register-Eintrag anlegen.
+- Inventar voll → Flasche fällt vor die Füße, nur der Ersteller kann sie in den ersten 30 s aufheben.
+- Timer läuft in Server-Ticks: Speed-Hacks oder Makros können die 5 s nicht abkürzen.
+- Der Ladebalken ist reine Anzeige; der Server entscheidet.
+
+### 6.4 Trinken (Flasche → Energie hoch)
+
+- Nur Haupthand, nur bei Energie < 10, kurzer Cooldown (1 s) zwischen zwei Flaschen.
+- Reihenfolge: Register prüfen → Eintrag schließen → Item entfernen → Energie +1. Schlägt ein Schritt fehl, passiert nichts.
+
+### 6.5 Zerlegen (Flasche → 9 Fragments)
+
+- Das Rezept zeigt nur ein Ergebnis, wenn die Flasche im Register `AKTIV` ist.
+- Beim Herausnehmen (auch Shift-Klick mit mehreren Flaschen) wird **jede** Flasche einzeln geprüft und geschlossen. So kann man eine kopierte Flasche nicht über Fragments „waschen“.
+- Fragments sind stapelbar und haben deshalb keine eigene ID. Ihr Wert ist gering (1/9 Energie), und Creative ist Admins vorbehalten. Herkunft wird über das Register mitprotokolliert.
+
+### 6.6 Kills und Tode
+
+- Energie per Kill gibt es nur, wenn das **Opfer tatsächlich Energie verloren hat** (Opfer > 0). Sonst könnte man mit einem Zweitaccount auf 0 Energie beliebig Energie „erzeugen“ **[Vorschlag, siehe Frage 1]**.
+- Derselbe Gegner bringt innerhalb von 30 min nur einmal Energie (Anti-Farming), konfigurierbar.
+- Killer bei 10 → die Flasche des Opfers wird ganz normal mit Register-Eintrag erzeugt.
+
+### 6.7 Protokoll und Kontrolle
+
+- Jede Energieänderung landet im Audit-Log: `Zeit, Spieler, alt → neu, Grund (Kill/Tod/Abzapfen/Trinken/Repair Kit/Admin), Flaschen-ID`.
+- Prüfsumme: Energie aller Spieler + aktive Flaschen. Ein unerklärter Sprung wird den Admins gemeldet.
+- `/xmas energy audit <spieler>` zeigt die letzten Änderungen.
+
+---
+
+## 7. Repair Kit
 
 ### Original
 
-- **Repair Kit:** Ritual am zentralen *Pedestal* (Beacon auf Ancient Debris), nur zu festen Zeiten (Mi/Sa/So je 1 h). Heilt alle Gems im Umkreis, die **unter Pristine** sind, bis maximal 10 Energie aus dem Server-Pool verbraucht sind. Broken-Gems sind ausgeschlossen. Rezept S3: 4 Gem Fragments + 2 Ambosse + 2 Netheritbarren + 1 Netherit-Schmiedevorlage (V).
-- **Restoration Item / Revival:** Repariert Broken-Gems am Pedestal; der Spieler muss 5 Energy Bottles einzahlen und bekommt einen **zufälligen** neuen Gem auf Pristine.
+- Ritual an einem festen Pedestal (Beacon auf Ancient Debris), nur zu festen Zeiten; heilt alle Gems unter Pristine im Umkreis aus einem Server-Pool. Rezept S3: 4 Gem Fragments + 2 Ambosse + 2 Netheritbarren + 1 Netherit-Schmiedevorlage (V).
 
-### Xmas-SMP – Repair Kit [Owner]
+### Xmas-SMP [Owner]
 
-- Wird **auf den Boden platziert** und wird dort zum *Totem* (Item-/Block-Display, kein echter Beacon-Block).
-- **Radius 15 Blöcke**, Grenze als Partikelring sichtbar (plus aufsteigende Partikel am Totem).
-- **Koordinaten werden geleakt:** Chat-Nachricht an alle + Title für alle Spieler.
-- Läuft **10 Minuten**. Erst wenn das Totem nach den 10 min zerbricht, bekommen die berechtigten Spieler ihre Energie: **jede Energie unter 5 → 5**, auch 0. Spieler mit ≥ 5 bleiben unverändert.
-- **Unbegrenzte Spielerzahl.**
-- Berechtigt ist nur, wer **die vollen 10 Minuten** im Radius war. Wer den Kreis verlässt, fällt raus. Da das Totem nach 10 min zerbricht, kann nur profitieren, wer schon beim Platzieren im Kreis stand.
-- **Kein Schutzschild:** jeder kann hinein, PvP im Kreis ist normal möglich.
-- Rezept – Original ohne Fragments **[Vorschlag]**:
+- Wird **auf den Boden platziert** und wird zum *Totem*.
+- **Radius 15 Blöcke**, Grenze als Partikelring sichtbar.
+- **Koordinaten werden geleakt:** Chat-Nachricht + Title an alle.
+- Läuft **10 Minuten**. Erst wenn das Totem danach zerbricht, bekommen die berechtigten Spieler ihre Energie: **jede Energie unter 5 → 5** (auch 0). Spieler mit ≥ 5 bleiben unverändert.
+- **Unbegrenzte Spielerzahl.** Berechtigt ist nur, wer **die vollen 10 Minuten** im Radius war.
+- **Verlassen, Tod oder Ausloggen** = raus. Genau das ist das Ziel der Gegner – deshalb die geleakten Koordinaten.
+- **Kein Schutzschild:** jeder kann rein, PvP läuft normal.
+- **Zerstörbar** mit der Abbauzeit eines **Ominous Vault**: Härte 50, Spitzhacke nötig. Richtwerte (ohne Effizienz/Eile): Netherit ≈ 8,4 s, Diamant ≈ 9,4 s, ohne Spitzhacke ≈ 250 s; Explosionsresistenz 50 (TNT wirkungslos) (V). Wird es zerstört, scheitert das Ritual für alle; Meldung an alle, Kit ist verloren.
+- **Global nur ein Totem gleichzeitig.** Platzieren eines zweiten wird abgelehnt (mit Restzeit des laufenden).
+- Technik **[Vorschlag]:** Echter Server-Block mit Härte 50, Client sieht einen Block gleicher Härte (z. B. Vault), damit die Abbau-Animation passt; darüber schwebt das `repair_kit`-Modell als Item-Display mit Partikeln. Der Block droppt nichts.
+- **Rezept [Owner]:** Original, die 2 Netheritbarren werden durch **2 Diamantblöcke** ersetzt:
 
 ```
-N A N        N = Netheritbarren
+F A F        F = Gem Fragment
 D T D        A = Amboss
-N A N        D = Diamantblock (ersetzt Gem Fragment)
+F A F        D = Diamantblock
              T = Netherit-Aufwertungs-Schmiedevorlage
 ```
 
-  (Original: 4 Fragments, 2 Ambosse, 2 Netherit, 1 Vorlage. Mit 4 Netherit + 2 Diamantblöcken bleibt es teuer.)
-- Textur: `repair_kit` auf `beacon` (CMD 4003).
-- **Abweichung:** Kein festes Pedestal, keine Zeitfenster, kein Energie-Pool. Stattdessen ein riskantes Ritual an einem öffentlich bekannten Ort – das erzeugt PvP-Brennpunkte statt Terminplanung.
+- Textur: `repair_kit` (CMD 4003).
 
-### Xmas-SMP – Revival Tome
+### Revival Tome
 
-- Wird nicht gebraucht: Das Repair Kit holt auch Spieler mit 0 Energie zurück, und es gibt keinen Deathban. Modell `revival_tome` bleibt für den Christmas-Twist reserviert **[Vorschlag]**.
+- Wird nicht gebraucht (Repair Kit und Energy Bottles helfen auch bei 0, kein Deathban). Modell `revival_tome` bleibt für den Christmas-Twist reserviert **[Vorschlag]**.
 
 ---
 
-## 7. Fähigkeiten aktivieren & HUD
+## 8. Fähigkeiten aktivieren & HUD
 
 ### Original / Nachbauten
 
-- Gem in der **Offhand** = Passive aktiv. Aktivieren (BlissGems-Doku): Gem in der **Haupthand + Rechtsklick** = Primär, **Schleichen + Rechtsklick** = Sekundär (Tier 2).
-- Neuere Versionen nutzen zusätzlich `F` / `Schleichen + F` und Linksklick-Slots; Client-Mods wie *BlissKeyBinds* (V/R/G/X) oder der BlissGems-Fabric-Mod (R/G/V/H) legen **frei belegbare Tasten** in *Optionen → Steuerung* an.
-- Cooldowns stehen in der **Actionbar** mit Font-Icons pro Fähigkeit (die Glyphen ``… im Pack).
+- Gem in der **Offhand** = Passive. Gem in der **Haupthand + Rechtsklick** = Primär, **Schleichen + Rechtsklick** = Sekundär.
+- Client-Mods wie *BlissKeyBinds* oder der BlissGems-Fabric-Mod legen **frei belegbare Tasten** in *Optionen → Steuerung* an.
+- Cooldowns in der **Actionbar** mit Font-Icons.
 
 ### Xmas-SMP
 
-- **Actionbar mit Icons + Cooldown** **[Owner]**, z. B. `[Icon1] 12s  [Icon2] ✔  [Icon3] 1:40` plus Energie-Anzeige; bei Cooldown-Ende kurzer Sound + Partikel.
-- **Hotkeys in den Einstellungen setzbar [Owner]**. Das geht technisch nur mit einem **Client-Mod**, denn ein Server kann keine Tasten in *Optionen → Steuerung* anlegen. Plan:
-  1. **Optionaler Client-Companion-Mod** (Fabric, später NeoForge) mit drei Tasten (Primär / Sekundär / Ultimate, Standard z. B. `R`, `G`, `V`). Er schickt ein Custom-Payload-Paket an den Server – das funktioniert gegen Fabric-, NeoForge- **und** Paper-Server (Plugin-Messaging-Channel).
-  2. **Vanilla-Fallback** für Spieler ohne Mod: Gem in der Haupthand + Rechtsklick = Primär, Schleichen + Rechtsklick = Sekundär, Schleichen + `F` (Hand tauschen) = Ultimate. Passive wirken, solange der Gem im Inventar ist **[Vorschlag]** – siehe Frage 4.
-- Die Pack-Icons reichen für 2 Kräfte je Kristall; für die Ultimate kommt je ein neues Icon dazu (todo.md 1.4).
+- **Passive wirken immer**, egal wo der Gem im Inventar liegt **[Owner]**.
+- **Actionbar mit Icons + Cooldowns + Energie** **[Owner]**; bei Cooldown-Ende kurzer Sound + Partikel.
+- **Hotkeys in den Einstellungen setzbar [Owner]**. Ein Server kann keine Tasten in *Optionen → Steuerung* anlegen, deshalb:
+  1. **Optionaler Client-Companion-Mod** (Fabric, später NeoForge) mit drei Tasten (Primär / Sekundär / Ultimate, Standard `R`, `G`, `V`). Er schickt ein Custom-Payload-Paket – funktioniert gegen Fabric-, NeoForge- **und** Paper-Server. Der Server prüft dabei alles selbst (Cooldown, Energie, Tier); der Mod kann nur „Taste gedrückt“ melden.
+  2. **Vanilla-Fallback** ohne Mod: Gem in der Haupthand + Rechtsklick = Primär, Schleichen + Rechtsklick = Sekundär, Schleichen + `F` = Ultimate.
 
 ---
 
-## 8. Startverhalten
+## 9. Startverhalten
 
-- **Original:** Jeder Spieler bekommt beim ersten Betreten einen **zufälligen** Gem.
-- **Xmas-SMP [Owner]:** Jeder Spieler bekommt beim **ersten Login** einen Gem, auch wenn er erst später einsteigt. Start mit Tier 1 und 5 Energie.
-- Zuteilung zufällig, optional „ausgeglichen“ (der am seltensten vergebene Kristall wird bevorzugt) **[Vorschlag, konfigurierbar]**.
-- Der Gem ist seelengebunden (kein Drop beim Tod, nicht in Kisten, nicht wegwerfbar). Geht er trotzdem verloren, erhält man ihn beim nächsten Login bzw. per `/xmas` zurück **[Vorschlag]**.
+- **Original:** zufälliger Gem beim ersten Betreten.
+- **Xmas-SMP [Owner]:** Jeder Spieler bekommt beim **ersten Login** einen Gem, auch wenn er später einsteigt. Start: Tier 1, 5 Energie.
+- Zuteilung zufällig, optional ausgeglichen (seltenster Kristall bevorzugt) **[Vorschlag, konfigurierbar]**.
+- Gem ist seelengebunden (kein Drop, nicht in Kisten, nicht wegwerfbar). Geht er verloren, kommt er beim nächsten Login bzw. per Admin-Befehl zurück **[Vorschlag]**.
 
 ---
 
-## 9. Was aus dem Original übernommen wird / was nicht
+## 10. Übersicht Original ↔ Xmas-SMP
 
 | Feature | Übernommen | Anmerkung |
 |---|---|---|
-| Energie 0–10, Start 5, Kill +1 / Tod −1 | ✔ | |
+| Energie 0–10, Start 5, Kill +1 / Tod −1 | ✔ | Kill bringt auch bei 0 Energie +1 |
 | Stufennamen Broken … Pristine +5 | ✔ | Optik in 4 Stufen |
 | Kein Deathban | ✔ | |
-| Abstufung der Kräfte nach Energie | geändert | 1–2: nur Primär · 0: alles aus |
-| Tier 2 per Upgrader | ✔ | Tier 2 = Ultimate; Rezept ohne Fragments |
-| Gem Trader | geändert | GUI mit freier Wahl, Originalrezept S3 |
-| Gem Fragments | ✘ | |
+| Abstufung der Kräfte | geändert | 1–2: nur Primär · 0: nur Passiv · Passive immer |
+| Tier 2 per Upgrader | ✔ | Tier 2 = Ultimate, Originalrezept |
+| Gem Trader | geändert | GUI mit freier Wahl; Fragment statt Sculk-Katalysator |
+| Gem Fragments | geändert | nur aus Energy Bottles (1 → 9) |
 | All-for-One-Gem | ✘ | |
-| Energy Bottle | geändert | Abzapfen per Halten statt Befehl, kein Verfall |
-| Repair Kit | geändert | platzierbares Totem, 15 Blöcke, 10 min, Koordinaten-Leak |
-| Restoration/Revival | ✘ | vom Repair Kit abgedeckt |
-| Server-Energie-Pool, Pedestal, Zeitfenster | ✘ | |
+| Energy Bottle | geändert | Abzapfen per Halten, auch bei 0 trinkbar, Ledger gegen Dupes |
+| Repair Kit | geändert | Totem, 15 Blöcke, 10 min, Koordinaten-Leak, zerstörbar, global nur eins; Diamantblöcke statt Netherit |
+| Restoration/Revival | ✘ | |
+| Server-Pool, Pedestal, Zeitfenster | ✘ | |
 | Zufälliger Gem beim ersten Join | ✔ | auch für Spätstarter |
 | Steuerung per Klick-Kombination | ✔ | + optionaler Keybind-Mod |
 
 ---
 
-## 10. Konfigurationswerte (Vorschlag)
+## 11. Konfigurationswerte (Vorschlag)
 
 ```yaml
 energy:
@@ -244,17 +292,22 @@ energy:
   gainPerKill: 1
   lossPerDeath: 1
   naturalDeathCostsEnergy: true
+  killRequiresVictimEnergy: true   # Anti-Exploit, siehe 6.6
   sameVictimCooldownMinutes: 30
   dropBottleWhenKillerAtMax: true
-  secondaryMinEnergy: 3      # 1–2: nur Primär
-  abilitiesMinEnergy: 1      # 0: alles aus
+  secondaryMinEnergy: 3            # gilt auch für die Ultimate
+  primaryMinEnergy: 1
 energyBottle:
   extractSeconds: 5
+  drinkCooldownSeconds: 1
+  fragmentsPerBottle: 9
   expires: false
 repairKit:
   radius: 15
   durationMinutes: 10
   restoreTo: 5
+  hardness: 50                     # wie Ominous Vault
+  maxActiveGlobal: 1
   announceCoordinates: true
 trader:
   keepTier: true
@@ -262,17 +315,28 @@ trader:
   cooldownMinutes: 10
 firstJoin:
   giveGem: true
-  distribution: random       # random | balanced
+  distribution: random             # random | balanced
 ```
 
 ---
 
-## 11. Offene Fragen an den Owner
+## 12. Offene Fragen an den Owner
 
-1. **Ultimate bei 1–2 Energie:** Fällt die Ultimate zusammen mit der Sekundärkraft weg (Annahme), oder bleibt sie bis 0?
-2. **Passive bei 1–2 Energie:** Bleiben die Passiven bis 0 aktiv (Annahme)?
-3. **Energy Bottle bei 0 Energie:** Darf ein Spieler mit 0 Energie eine Flasche trinken, oder hilft bei 0 nur das Repair Kit (Original: nur Ritual)?
-4. **Passiv-Bedingung:** Gem nur in der Offhand (Original) oder irgendwo im Inventar?
-5. **Repair-Kit-Totem:** Darf man es zerstören, bevor die 10 min um sind (z. B. 10 Treffer)? Zählt Tod oder Logout im Kreis als „Kreis verlassen“ (Annahme: ja)? Dürfen mehrere Totems gleichzeitig laufen?
-6. **Kill mit 0 Energie:** Bekommt ein Spieler mit 0 Energie per Kill wieder Energie (Original: nein)?
-7. **Upgrader- und Repair-Kit-Rezept:** Sind die Ersatzrezepte oben (Diamantblock statt Gem Fragment) in Ordnung?
+1. **Kill eines Spielers mit 0 Energie:** Bekommt der Killer auch dann +1, wenn das Opfer selbst nichts verliert? Vorschlag: nein – sonst lässt sich mit einem Zweitaccount auf 0 Energie unbegrenzt Energie farmen (6.6).
+2. **Trader-Rezept:** Reicht **1** Gem Fragment in der Mitte (Ersatz für den einen Sculk-Katalysator)?
+3. **Passive bei 0 Energie:** Ursprünglich hieß es „bei 0 verliert man alle Fähigkeiten“, später „Passive sind immer verfügbar“. Umgesetzt ist: Passive wirken auch bei 0. Stimmt das?
+4. **Abbauzeit Totem:** Sollen Effizienz und Eile die Zeit verkürzen (wie beim echten Vault, mit Effizienz V nur ≈ 2,3 s) oder soll sie fest bei ca. 8–10 s liegen?
+
+### Beantwortet (2026-10-21)
+
+| Frage | Antwort |
+|---|---|
+| Ultimate bei 1–2 Energie | fällt weg |
+| Passive bei niedriger Energie | immer verfügbar |
+| Energy Bottle bei 0 Energie trinken | erlaubt |
+| Passiv-Bedingung | wirkt überall im Inventar |
+| Totem zerstörbar | ja, Abbauzeit wie Ominous Vault |
+| Tod / Logout im Kreis | zählt als Verlassen |
+| Mehrere Totems | global nur eins |
+| Kill mit 0 Energie | gibt Energie |
+| Rezepte | Flasche → 9 Fragments, Originalrezepte bleiben; Repair Kit: Diamantblöcke statt Netherit; Trader: Fragment statt Sculk-Katalysator |
