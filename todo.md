@@ -28,7 +28,7 @@ Legende: `[ ]` offen · `[x]` erledigt · **(V)** = vor Umsetzung verifizieren (
 | **Natur** | Wealth | grün | `wealth1` (Kleeblatt), `wealth2` (Ranke) |
 
 - [x] `Instructions.md` an die neue Zuordnung anpassen (dort steht noch „Feuer = Fire gem texturen“) – **nur nach Freigabe durch den Owner**
-- [ ] Entscheiden, ob die Icons wie oben „überkreuz“ verwendet werden (Feuer bekommt die Feuer-Icons, obwohl es die Strength-Gem-Textur nutzt) oder ob neue Icons gezeichnet werden
+- [x] Entscheiden, ob die Icons wie oben „überkreuz“ verwendet werden (Feuer bekommt die Feuer-Icons, obwohl es die Strength-Gem-Textur nutzt) oder ob neue Icons gezeichnet werden
 
 ---
 
