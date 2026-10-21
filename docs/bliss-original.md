@@ -43,7 +43,7 @@ Bei Widersprüchen gilt: Miraheze > Fandom > Nachbauten. Die Seiten selbst konnt
 ### Xmas-SMP
 
 - 0–10, **Start 5**, Kill +1, Tod −1 (auch natürliche Tode, konfigurierbar) **[Owner]**.
-- **Auch mit 0 Energie bekommt man per Kill wieder Energie** **[Owner]** (Abweichung vom Original).
+- **Auch mit 0 Energie bekommt man per Kill wieder Energie** **[Owner]** (Abweichung vom Original) – aber nur, wenn das Opfer selbst Energie verliert. Ein Kill an einem Spieler mit 0 Energie bringt nichts **[Owner]**.
 - Killer mit 10 Energie → die Energie des Opfers fällt als Energy Bottle auf den Boden (wie Original) **[Vorschlag]**.
 - Fähigkeiten nach Energie **[Owner]**:
 
@@ -111,6 +111,7 @@ B F B        B = Drachenatem
 D B D        F = Gem Fragment
 ```
 
+- 1 Fragment in der Mitte genügt – Trader sollen **günstig** bleiben, damit Ausprobieren Spaß macht **[Owner]**.
 - Tier und Energie bleiben erhalten, Trader wird verbraucht **[Vorschlag]**.
 - Tausch-Animation mit Pflicht-Dauer (z. B. 3 s, Abbruch bei Schaden) plus Cooldown nach dem Tausch gegen Cycling **[Vorschlag]**.
 - Textur: `gem_trader` (CMD 4002). Das ungenutzte Modell `trader` kann als GUI-Icon dienen.
@@ -187,7 +188,7 @@ Ziel: Energie darf nur auf genau den vorgesehenen Wegen entstehen, wandern oder 
 
 ### 6.6 Kills und Tode
 
-- Energie per Kill gibt es nur, wenn das **Opfer tatsächlich Energie verloren hat** (Opfer > 0). Sonst könnte man mit einem Zweitaccount auf 0 Energie beliebig Energie „erzeugen“ **[Vorschlag, siehe Frage 1]**.
+- Energie per Kill gibt es nur, wenn das **Opfer tatsächlich Energie verloren hat** (Opfer > 0). Sonst könnte man mit einem Zweitaccount auf 0 Energie beliebig Energie „erzeugen“ **[Owner]**.
 - Derselbe Gegner bringt innerhalb von 30 min nur einmal Energie (Anti-Farming), konfigurierbar.
 - Killer bei 10 → die Flasche des Opfers wird ganz normal mit Register-Eintrag erzeugt.
 
@@ -214,9 +215,15 @@ Ziel: Energie darf nur auf genau den vorgesehenen Wegen entstehen, wandern oder 
 - **Unbegrenzte Spielerzahl.** Berechtigt ist nur, wer **die vollen 10 Minuten** im Radius war.
 - **Verlassen, Tod oder Ausloggen** = raus. Genau das ist das Ziel der Gegner – deshalb die geleakten Koordinaten.
 - **Kein Schutzschild:** jeder kann rein, PvP läuft normal.
-- **Zerstörbar** mit der Abbauzeit eines **Ominous Vault**: Härte 50, Spitzhacke nötig. Richtwerte (ohne Effizienz/Eile): Netherit ≈ 8,4 s, Diamant ≈ 9,4 s, ohne Spitzhacke ≈ 250 s; Explosionsresistenz 50 (TNT wirkungslos) (V). Wird es zerstört, scheitert das Ritual für alle; Meldung an alle, Kit ist verloren.
+- **Zerstörbar** mit einer **festen Abbauzeit von 10 Sekunden** – unabhängig von Werkzeug, Effizienz, Eile oder Abbaulähmung **[Owner]**. Explosionen, Kolben und Feuer wirken nicht.
+- **Countdown beim Abbauversuch [Owner]:** Sobald ein Spieler das Totem anschlägt (Abbauen beginnt), startet ein 10-s-Countdown, danach zerbricht es:
+  - **Anzeige:** Riss-Animation am Block in 10 Stufen, Countdown über dem Totem (Text-Display „10 … 1“) und als Actionbar für alle im Radius; Chat-Meldung an alle Spieler „Totem wird angegriffen!“ mit Koordinaten.
+  - **Sound:** jede Sekunde ein Warnton mit steigender Tonhöhe (z. B. `block.note_block.bell` + `block.vault.deactivate`), in den letzten 3 s schneller; beim Bruch Glas-/Beacon-Abschaltsound.
+  - **Partikel:** rote/violette `dust`-Spirale, die sich um das Totem zusammenzieht, Block-Bruchpartikel bei jedem Schlag; beim Bruch Explosion aus `totem_of_undying`-, `end_rod`- und Splitterpartikeln, und der Partikelring am Radius fällt in sich zusammen.
+  - **Abbruch [Vorschlag]:** Hört der Angreifer auf abzubauen (> 1 s kein Schlag), stirbt oder entfernt sich mehr als 5 Blöcke, wird der Countdown zurückgesetzt (Risse verschwinden, „Abgewehrt“-Sound). So können Verteidiger den Angreifer stoppen – siehe Frage 1.
+  - Wird es zerstört, scheitert das Ritual für alle; Meldung an alle, Kit ist verloren.
 - **Global nur ein Totem gleichzeitig.** Platzieren eines zweiten wird abgelehnt (mit Restzeit des laufenden).
-- Technik **[Vorschlag]:** Echter Server-Block mit Härte 50, Client sieht einen Block gleicher Härte (z. B. Vault), damit die Abbau-Animation passt; darüber schwebt das `repair_kit`-Modell als Item-Display mit Partikeln. Der Block droppt nichts.
+- Technik **[Vorschlag]:** Server-Block, den der Client als unzerstörbar sieht (damit er nicht selbst „fertig abbaut“). Der Server wertet die Abbau-Pakete aus, zählt die 10 s in Ticks und schickt die Riss-Stufen selbst. Darüber schwebt das `repair_kit`-Modell als Item-Display. Der Block droppt nichts.
 - **Rezept [Owner]:** Original, die 2 Netheritbarren werden durch **2 Diamantblöcke** ersetzt:
 
 ```
@@ -306,7 +313,8 @@ repairKit:
   radius: 15
   durationMinutes: 10
   restoreTo: 5
-  hardness: 50                     # wie Ominous Vault
+  breakSeconds: 10                 # fest, ignoriert Werkzeug/Effizienz
+  breakResetAfterIdleTicks: 20
   maxActiveGlobal: 1
   announceCoordinates: true
 trader:
@@ -322,10 +330,8 @@ firstJoin:
 
 ## 12. Offene Fragen an den Owner
 
-1. **Kill eines Spielers mit 0 Energie:** Bekommt der Killer auch dann +1, wenn das Opfer selbst nichts verliert? Vorschlag: nein – sonst lässt sich mit einem Zweitaccount auf 0 Energie unbegrenzt Energie farmen (6.6).
-2. **Trader-Rezept:** Reicht **1** Gem Fragment in der Mitte (Ersatz für den einen Sculk-Katalysator)?
-3. **Passive bei 0 Energie:** Ursprünglich hieß es „bei 0 verliert man alle Fähigkeiten“, später „Passive sind immer verfügbar“. Umgesetzt ist: Passive wirken auch bei 0. Stimmt das?
-4. **Abbauzeit Totem:** Sollen Effizienz und Eile die Zeit verkürzen (wie beim echten Vault, mit Effizienz V nur ≈ 2,3 s) oder soll sie fest bei ca. 8–10 s liegen?
+1. **Countdown abbrechen:** Bricht der Countdown ab, wenn der Angreifer aufhört abzubauen, stirbt oder weggestoßen wird (Vorschlag), oder läuft er nach dem ersten Schlag auf jeden Fall durch?
+2. **Trader noch günstiger?** Das Rezept enthält weiterhin 4 Diamantblöcke (= 36 Diamanten) und 4 Drachenatem (End nötig). Soll es für „günstig“ z. B. 4 Diamanten statt Diamantblöcken sein?
 
 ### Beantwortet (2026-10-21)
 
@@ -335,8 +341,11 @@ firstJoin:
 | Passive bei niedriger Energie | immer verfügbar |
 | Energy Bottle bei 0 Energie trinken | erlaubt |
 | Passiv-Bedingung | wirkt überall im Inventar |
-| Totem zerstörbar | ja, Abbauzeit wie Ominous Vault |
+| Totem zerstörbar | ja, fest 10 s mit Countdown, Sound und Partikeln |
 | Tod / Logout im Kreis | zählt als Verlassen |
 | Mehrere Totems | global nur eins |
-| Kill mit 0 Energie | gibt Energie |
+| Kill mit 0 Energie (Killer) | gibt Energie |
+| Kill an Opfer mit 0 Energie | gibt keine Energie |
+| Passive bei 0 Energie | aktiv |
+| Trader-Rezept | 1 Fragment in der Mitte, Trader sollen günstig sein |
 | Rezepte | Flasche → 9 Fragments, Originalrezepte bleiben; Repair Kit: Diamantblöcke statt Netherit; Trader: Fragment statt Sculk-Katalysator |

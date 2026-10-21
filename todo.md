@@ -21,7 +21,7 @@ Legende: `[ ]` offen · `[x]` erledigt · **(V)** = vor Umsetzung verifizieren (
 | Gem Trader | Rezept 4 Diamantblöcke + 4 Drachenatem + Gem Fragment (statt Sculk-Katalysator), **GUI mit freier Kristallwahl** |
 | Gem Fragments | Nur aus Energy Bottles: **1 Flasche → 9 Fragments** (2×2 oder Werkbank); Originalrezepte für Upgrader/Repair Kit bleiben |
 | Entfällt | All-for-One-Gem, Revival Tome |
-| Repair Kit | Platzierbares Totem, Radius 15, 10 min durchgehend im Kreis → Energie unter 5 wird 5; Tod/Logout = Verlassen; Koordinaten in Chat + Title; kein Schutzschild; zerstörbar (Abbauzeit wie Ominous Vault); global nur eins; Rezept: Diamantblöcke statt Netherit |
+| Repair Kit | Platzierbares Totem, Radius 15, 10 min durchgehend im Kreis → Energie unter 5 wird 5; Tod/Logout = Verlassen; Koordinaten in Chat + Title; kein Schutzschild; zerstörbar (fest 10 s, Countdown mit Sound + Partikeln); global nur eins; Rezept: Diamantblöcke statt Netherit |
 | Energy Bottle | Schleichen + Rechtsklick mit leerer Flasche ~5 s halten (Ladebalken am Fadenkreuz) → −1 Energie; Rechtsklick auf Flasche → +1 Energie (für jeden, auch bei 0); **exploit-sicher** (Ledger, siehe `docs/bliss-original.md` §6) |
 | HUD / Steuerung | Actionbar mit Icons + Cooldowns; Tasten in den Einstellungen belegbar (optionaler Client-Mod + Vanilla-Fallback) |
 | Erster Login | Jeder Spieler bekommt einen Kristall, auch Spätstarter |
@@ -154,7 +154,7 @@ Ergebnisse: `docs/bliss-original.md`.
 - [ ] Kill eines Spielers → +Energie, eigener Tod → −Energie (konfigurierbar, Anti-Farming: gleicher Gegner Cooldown)
 - [ ] Energie → Bruchstufe → Modell (4 sichtbare Stufen: zerbrochen, beschädigt, zerkratzt, makellos)
 - [ ] Freischaltung nach Energie: 3–10 alles, 1–2 nur Primär, 0 keine aktiven Kräfte; Passive immer (Gem irgendwo im Inventar)
-- [ ] Kill gibt auch bei 0 Energie +1; Anti-Exploit: nur wenn das Opfer Energie verloren hat (Owner-Bestätigung offen)
+- [ ] Kill gibt auch bei 0 Energie +1, aber nur wenn das Opfer Energie verloren hat (Opfer mit 0 → keine Energie)
 - [ ] **Bruch-Animation** beim Stufenwechsel: Riss-Partikel (Overlay-Texturen `gem-breaking/*`), Glas-Sound, Item-Shards in Kristallfarbe
 - [ ] **Reparatur-/Aufwertungs-Animation** beim Aufstieg
 - [ ] Energy Bottle: Schleichen + Rechtsklick mit leerer Flasche ~5 s halten (Ladebalken als Title am Fadenkreuz) → −1 Energie; Rechtsklick auf die Flasche → +1 Energie (auch bei 0)
@@ -168,7 +168,8 @@ Ergebnisse: `docs/bliss-original.md`.
   - [ ] Audit-Log aller Energieänderungen + `/xmas energy audit`
   - [ ] Tests für Dupe-Szenarien (Kopie trinken, Kopie zerlegen, Disconnect während Abzapfen, Inventar voll)
 - [ ] Repair-Kit-Totem: platzieren, Radius 15 mit Partikelring, Koordinaten in Chat + Title, 10 min durchgehend im Kreis → Energie < 5 wird 5, Totem zerbricht am Ende; kein Schutzschild
-- [ ] Totem: Tod/Logout = Verlassen; zerstörbar mit Härte 50 (wie Ominous Vault), droppt nichts; global nur ein Totem
+- [ ] Totem: Tod/Logout = Verlassen; global nur ein Totem; droppt nichts; immun gegen Explosionen/Kolben/Feuer
+- [ ] Totem-Abbau: fest 10 s (Werkzeug egal), Countdown ab dem ersten Schlag mit Riss-Stufen, Text-Display, Actionbar, steigenden Warntönen, Partikelspirale und Bruch-Explosion; Abbruch-Regel klären (Doku §12)
 - [ ] Rezept Repair Kit: F A F / D T D / F A F (Fragment, Amboss, Diamantblock, Netherit-Vorlage)
 - [ ] Revival-Tome: entfällt, Modell für Christmas-Twist reservieren
 
