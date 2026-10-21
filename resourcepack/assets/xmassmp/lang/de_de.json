@@ -1,0 +1,24 @@
+{
+  "crystal.xmassmp.fire": "Feuer",
+  "crystal.xmassmp.earth": "Erde",
+  "crystal.xmassmp.wind": "Wind",
+  "crystal.xmassmp.shadow": "Schatten",
+  "crystal.xmassmp.nature": "Natur",
+
+  "stage.xmassmp.broken": "zerbrochen",
+  "stage.xmassmp.damaged": "beschädigt",
+  "stage.xmassmp.scratched": "zerkratzt",
+  "stage.xmassmp.pristine": "makellos",
+
+  "item.xmassmp.crystal": "%s-Kristall",
+  "item.xmassmp.revival_tome": "Wiederbelebungs-Foliant",
+  "item.xmassmp.upgrader": "Upgrader",
+  "item.xmassmp.energy_bottle": "Energieflasche",
+  "item.xmassmp.gem_trader": "Kristall-Händler",
+  "item.xmassmp.repair_kit": "Reparatur-Set",
+  "item.xmassmp.gem_fragment": "Kristall-Splitter",
+
+  "lore.xmassmp.tier": "Tier %s",
+  "lore.xmassmp.stage": "Zustand: %s",
+  "lore.xmassmp.soulbound": "Seelengebunden"
+}

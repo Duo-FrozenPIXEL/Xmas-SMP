@@ -9,6 +9,10 @@ python3 tools/resourcepack.py build      # prüfen + build/Xmas-SMP-resourcepack
 
 Ziel-Versionen: `pack.mcmeta` mit `min_format` 75 (1.21.11) bis `max_format` 97 (26.3 laut einer Quelle, noch zu verifizieren).
 
+## Sprachdateien
+
+`assets/xmassmp/lang/de_de.json` (Referenz) und `en_us.json`. Der Code nutzt übersetzbare Texte mit deutschem Fallback, d. h. ohne Pack sehen Spieler die deutschen Namen. Der Validator prüft, dass alle Sprachen dieselben Schlüssel haben; ein Test im Kern prüft, dass jeder im Code verwendete Schlüssel existiert.
+
 ## Kristalle
 
 | Kristall | Gem-Textur | Gem-Index |
@@ -56,15 +60,17 @@ Beispiel: Feuer (strength), Tier 2, makellos → `2047`.
 ## Korrekturen gegenüber dem Original
 
 - Strength-Texturen auf das Namensschema der anderen Gems umbenannt (`strengthgemtierNpristine2.png` → `strengthgemtierN.png`, `strengthgemtierNpristine.png` → `strengthgemtierNpristine2.png`). Vorher fehlte die makellose Textur und Stufe 1 war makellos statt zerbrochen.
-- All-for-One: fehlende Modelle `blissgems:item/allforone_gem_t1/_t2` angelegt, Verweise in `echo_shard.json` korrigiert (zeigten auf nicht existierende `minecraft:item/…`).
+- All-for-One: fehlende Modelle `xmassmp:item/allforone_gem_t1/_t2` angelegt, Verweise in `echo_shard.json` korrigiert (zeigten auf nicht existierende `minecraft:item/…`).
 - Ungültiges `"parent": "generated"` aus `energy_bottle`, `gem_trader`, `trader`, `upgrader` entfernt (Modelle definieren eigene `elements`).
 - `enchanted_book.json`: Schutz-Schwellen 2 und 3002 → nur CMD 1 und 3001 zeigen Custom-Modelle, andere Bücher bleiben normal.
 - Energy Bottle nur noch auf `ghast_tear` (doppelte Belegung von `nether_star` entfernt).
 - `white_dye-working.txt` (Arbeitsdatei im `items`-Ordner) entfernt.
 - `pack.mcmeta` auf `min_format`/`max_format` für 1.21.11 – 26.3 umgestellt, Beschreibung auf Xmas-SMP.
+- Namespace `blissgems` → `xmassmp` (Ordner `assets/xmassmp/`, alle Verweise in Items, Modellen und Font).
+- Ungenutzte Dateien `empty.png` (magenta Platzhalter) und `repairitem.png` (UI-Atlas-Fragment) entfernt; im Original-ZIP weiterhin enthalten.
 
 ## Offen
 
 - `trader.json` (Modell) ist noch keinem Item zugeordnet → für eine spätere Trader-Station reserviert.
-- `repairitem.png`, `empty.png`, `gem-breaking/*` werden nicht verwendet (Riss-Overlays für die Bruch-Animation vorgesehen).
+- `gem-breaking/*` werden nicht verwendet (Riss-Overlays für die Bruch-Animation vorgesehen).
 - `strengthgemtier2pristine3/4.png` haben graue Randpixel links – optisch nachbessern.

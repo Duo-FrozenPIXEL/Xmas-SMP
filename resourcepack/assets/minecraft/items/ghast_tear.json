@@ -7,7 +7,7 @@
         "threshold": 4001,
         "model": {
           "type": "model",
-          "model": "blissgems:item/energy_bottle"
+          "model": "xmassmp:item/energy_bottle"
         }
       }
     ],

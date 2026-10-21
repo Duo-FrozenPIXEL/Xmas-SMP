@@ -2,7 +2,7 @@
   "providers": [
     {
       "type": "bitmap",
-      "file": "blissgems:icons/astra1.png",
+      "file": "xmassmp:icons/astra1.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -11,7 +11,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/astra2.png",
+      "file": "xmassmp:icons/astra2.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -20,7 +20,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/fire1.png",
+      "file": "xmassmp:icons/fire1.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -29,7 +29,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/fire2.png",
+      "file": "xmassmp:icons/fire2.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -38,7 +38,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/flux1.png",
+      "file": "xmassmp:icons/flux1.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -47,7 +47,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/flux2.png",
+      "file": "xmassmp:icons/flux2.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -56,7 +56,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/life1.png",
+      "file": "xmassmp:icons/life1.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -65,7 +65,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/life2.png",
+      "file": "xmassmp:icons/life2.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -74,7 +74,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/puff1.png",
+      "file": "xmassmp:icons/puff1.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -83,7 +83,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/puff2.png",
+      "file": "xmassmp:icons/puff2.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -92,7 +92,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/speed1.png",
+      "file": "xmassmp:icons/speed1.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -101,7 +101,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/speed2.png",
+      "file": "xmassmp:icons/speed2.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -110,7 +110,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/strength1.png",
+      "file": "xmassmp:icons/strength1.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -119,7 +119,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/strength2.png",
+      "file": "xmassmp:icons/strength2.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -128,7 +128,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/wealth1.png",
+      "file": "xmassmp:icons/wealth1.png",
       "ascent": 8,
       "height": 16,
       "chars": [
@@ -137,7 +137,7 @@
     },
     {
       "type": "bitmap",
-      "file": "blissgems:icons/wealth2.png",
+      "file": "xmassmp:icons/wealth2.png",
       "ascent": 8,
       "height": 16,
       "chars": [

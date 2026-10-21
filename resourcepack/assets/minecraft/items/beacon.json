@@ -7,7 +7,7 @@
         "threshold": 4003,
         "model": {
           "type": "model",
-          "model": "blissgems:item/repair_kit"
+          "model": "xmassmp:item/repair_kit"
         }
       }
     ],

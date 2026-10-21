@@ -1,0 +1,24 @@
+{
+  "crystal.xmassmp.fire": "Fire",
+  "crystal.xmassmp.earth": "Earth",
+  "crystal.xmassmp.wind": "Wind",
+  "crystal.xmassmp.shadow": "Shadow",
+  "crystal.xmassmp.nature": "Nature",
+
+  "stage.xmassmp.broken": "broken",
+  "stage.xmassmp.damaged": "damaged",
+  "stage.xmassmp.scratched": "scratched",
+  "stage.xmassmp.pristine": "pristine",
+
+  "item.xmassmp.crystal": "%s Crystal",
+  "item.xmassmp.revival_tome": "Revival Tome",
+  "item.xmassmp.upgrader": "Upgrader",
+  "item.xmassmp.energy_bottle": "Energy Bottle",
+  "item.xmassmp.gem_trader": "Crystal Trader",
+  "item.xmassmp.repair_kit": "Repair Kit",
+  "item.xmassmp.gem_fragment": "Crystal Fragment",
+
+  "lore.xmassmp.tier": "Tier %s",
+  "lore.xmassmp.stage": "Condition: %s",
+  "lore.xmassmp.soulbound": "Soulbound"
+}

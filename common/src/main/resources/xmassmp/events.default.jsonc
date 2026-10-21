@@ -1,0 +1,103 @@
+// Xmas-SMP – Events
+//
+// Events laufen an bestimmten Tagen zu bestimmten Uhrzeiten (Zeitzone: config.jsonc → events.timezone).
+// Änderungen übernehmen: /xmas reload · Testen: /xmas event simulate 2026-12-24 17:55 dry
+//
+// Felder eines Events:
+//   id               a-z, 0-9, _ und -; für Befehle (/xmas event start <id>)
+//   name             Anzeigename, Platzhalter {name}
+//   enabled          false = wird nicht automatisch gestartet (manuell aber schon)
+//   dates            Liste von Tagen: "2026-12-24" (einmalig), "12-24" (jedes Jahr)
+//                    oder Bereiche { "from": "12-24", "to": "12-31" }. Weglassen = jeden Tag.
+//                    Jährliche Bereiche dürfen über Silvester gehen: { "from": "12-31", "to": "01-01" }
+//   weekdays         optional, z. B. ["SATURDAY", "SUNDAY"]
+//   times            Startzeiten "HH:mm" – an jedem passenden Tag startet das Event zu jeder Zeit
+//   durationMinutes  Dauer; 0 = punktuell (nur onStart, keine Modifikatoren)
+//   announceMinutes  Ankündigungen so viele Minuten vorher, z. B. [10, 1]
+//   countdownSeconds Sekunden-Countdown als Titel vor dem Start (0–60)
+//   onStart / onEnd  Aktionen:
+//                      { "type": "broadcast", "message": "..." }
+//                      { "type": "title", "title": "...", "subtitle": "...", "fadeIn": 10, "stay": 70, "fadeOut": 20 }
+//                      { "type": "sound", "sound": "minecraft:...", "volume": 1.0, "pitch": 1.0 }
+//                      { "type": "command", "command": "weather clear" }   (läuft als Konsole)
+//   modifiers        Multiplikatoren, solange das Event läuft:
+//                      "cooldown_multiplier": 0.5   halbe Fähigkeits-Cooldowns
+//                      "energy_multiplier": 2.0     reserviert für das Energiesystem
+//
+// Texte: &-Farbcodes; Platzhalter {name}, {id}, {duration}, bei Ankündigungen {minutes}, im Countdown {seconds}.
+//
+// Die Weihnachtswoche unten ist ein PLATZHALTER – alle Events sind deaktiviert, bis der
+// Christmas-Twist feststeht.
+{
+  "messages": {
+    "announce": "&6✦ &e{name} &6beginnt in &e{minutes} &6Minute(n)!",
+    "announceSound": "minecraft:block.note_block.bell",
+    "countdownTitle": "&c{seconds}",
+    "countdownSubtitle": "&e{name}",
+    "countdownSound": "minecraft:block.note_block.hat"
+  },
+
+  "events": [
+    {
+      "id": "xmas_week",
+      "name": "Weihnachtswoche",
+      "enabled": false,
+      "dates": ["12-24"],
+      "times": ["00:00"],
+      "durationMinutes": 11520,   // 8 Tage: 24.12. 00:00 bis 01.01. 00:00
+      "onStart": [
+        { "type": "broadcast", "message": "&c❄ &fDie &cWeihnachtswoche &fhat begonnen! &c❄" }
+      ],
+      "onEnd": [
+        { "type": "broadcast", "message": "&7Die Weihnachtswoche ist vorbei." }
+      ],
+      "modifiers": {}
+    },
+    {
+      "id": "xmas_eve",
+      "name": "Heiligabend",
+      "enabled": false,
+      "dates": ["12-24"],
+      "times": ["18:00"],
+      "durationMinutes": 120,
+      "announceMinutes": [10, 1],
+      "countdownSeconds": 5,
+      "onStart": [
+        { "type": "title", "title": "&cFrohe Weihnachten!", "subtitle": "&f{name} beginnt" },
+        { "type": "sound", "sound": "minecraft:entity.player.levelup", "volume": 1.0, "pitch": 0.8 }
+      ],
+      "onEnd": []
+    },
+    {
+      "id": "advent_evening",
+      "name": "Weihnachtsabend-Bonus",
+      "enabled": false,
+      "dates": [{ "from": "12-25", "to": "12-30" }],
+      "times": ["20:00"],
+      "durationMinutes": 60,
+      "announceMinutes": [5],
+      "onStart": [
+        { "type": "broadcast", "message": "&a{name}: &fFähigkeiten laden doppelt so schnell – {duration} Minuten lang!" }
+      ],
+      "onEnd": [
+        { "type": "broadcast", "message": "&7{name} ist vorbei." }
+      ],
+      "modifiers": { "cooldown_multiplier": 0.5 }
+    },
+    {
+      "id": "new_year",
+      "name": "Neujahr",
+      "enabled": false,
+      "dates": ["01-01"],
+      "times": ["00:00"],
+      "durationMinutes": 0,
+      "announceMinutes": [10, 1],
+      "countdownSeconds": 10,
+      "onStart": [
+        { "type": "title", "title": "&6Frohes neues Jahr!", "subtitle": "&e✦ ✦ ✦" },
+        { "type": "sound", "sound": "minecraft:entity.firework_rocket.large_blast", "volume": 1.0, "pitch": 1.0 },
+        { "type": "sound", "sound": "minecraft:entity.firework_rocket.twinkle", "volume": 1.0, "pitch": 1.0 }
+      ]
+    }
+  ]
+}

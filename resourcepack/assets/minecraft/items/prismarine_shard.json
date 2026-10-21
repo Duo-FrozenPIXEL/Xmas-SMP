@@ -7,7 +7,7 @@
         "threshold": 4004,
         "model": {
           "type": "model",
-          "model": "blissgems:item/gem_fragment"
+          "model": "xmassmp:item/gem_fragment"
         }
       }
     ],

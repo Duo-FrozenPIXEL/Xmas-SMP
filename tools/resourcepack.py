@@ -121,6 +121,22 @@ def validate():
         if tex not in used_textures:
             warnings.append(f"{tex.relative_to(PACK)}: wird nicht verwendet")
 
+    # Alle Sprachen eines Namespaces müssen dieselben Schlüssel haben (de_de ist die Referenz).
+    for lang_dir in sorted(assets.glob("*/lang")):
+        langs = {f.stem: load_json(f, errors) for f in sorted(lang_dir.glob("*.json"))}
+        reference = langs.get("de_de")
+        if reference is None:
+            errors.append(f"{lang_dir.relative_to(PACK)}: de_de.json fehlt")
+            continue
+        for name, data in langs.items():
+            if data is None or name == "de_de":
+                continue
+            rel = lang_dir.relative_to(PACK) / f"{name}.json"
+            for key in sorted(reference.keys() - data.keys()):
+                errors.append(f"{rel}: Schlüssel fehlt: {key}")
+            for key in sorted(data.keys() - reference.keys()):
+                warnings.append(f"{rel}: Schlüssel nicht in de_de.json: {key}")
+
     for w in warnings:
         print(f"WARNUNG {w}")
     for e in errors:

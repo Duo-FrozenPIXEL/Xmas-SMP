@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "xmassmp",
+  "version": "${version}",
+  "name": "Xmas-SMP",
+  "description": "Fünf magische Kristalle, Breaking-Pristine-System, Admin-Werkzeuge und Event-Planer für den Xmas-SMP. Server-seitig – Spieler brauchen keinen Mod.",
+  "authors": ["Duo-FrozenPIXEL"],
+  "license": "All-Rights-Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["de.xmassmp.fabric.XmasSmpFabric"]
+  },
+  "depends": {
+    "fabricloader": ">=0.17.0",
+    "fabric-api": "*",
+    "minecraft": ">=1.21.11",
+    "java": ">=21"
+  }
+}

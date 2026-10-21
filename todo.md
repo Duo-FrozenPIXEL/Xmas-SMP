@@ -54,8 +54,8 @@ Das Pack ist `pack_format 34` (= 1.21–1.21.1), nutzt aber bereits das Item-Def
 - [x] `enchanted_book.json`: `revival_tome` hat Schwelle `1` → jedes Buch mit CMD 1–3000 zeigt die Revival-Tome-Textur. Schwellen sauber setzen.
 - [x] Ungültiges `"parent": "generated"` in `energy_bottle`, `gem_trader`, `trader`, `upgrader`
 - [ ] `trader.json` (Modell) wird nirgends referenziert; nur `gem_trader.json` ist gemappt → eines wählen, das andere entfernen oder als Gem-Trader-Block/-Station nutzen.
-- [ ] `repair_kit.json` nutzt Textur `revivalkit.png` (Verbandskasten); `repairitem.png` wird nicht genutzt (sieht nach UI-Atlas-Fragment aus) → klären/entfernen.
-- [ ] `empty.png` (400×400, RGB, magenta) wird nirgends genutzt → entfernen oder als GUI-Hintergrund-Platzhalter dokumentieren.
+- [x] `repair_kit.json` nutzt Textur `revivalkit.png` (Verbandskasten); `repairitem.png` wird nicht genutzt (sieht nach UI-Atlas-Fragment aus) → entfernt (liegt weiter im Original-ZIP).
+- [x] `empty.png` (400×400, RGB, magenta) wird nirgends genutzt → entfernt (liegt weiter im Original-ZIP).
 - [x] `assets/minecraft/items/white_dye-working.txt` ist eine Arbeitsdatei mit abweichendem Format → entfernen.
 - [ ] `strengthgemtier2pristine3/4.png` haben graue Randpixel links → optisch nachbessern
 - [ ] `gem-breaking/*.png` (8 graue Riss-Overlays) werden nicht genutzt → als Basis für Bruch-Animation/Partikel oder für eingefärbte neue Texturen verwenden.
@@ -65,16 +65,16 @@ Das Pack ist `pack_format 34` (= 1.21–1.21.1), nutzt aber bereits das Item-Def
 - [x] `pack.mcmeta` auf das neue Format mit `min_format` / `max_format` umstellen (ab 1.21.9 Pflicht). 1.21.11 ≈ Format 75, 26.1 ≈ 84 **(V)** – exakte Werte für 26.3 im Minecraft-Wiki prüfen.
 - [x] Beschreibung im `pack.mcmeta` auf „Xmas-SMP“ ändern (aktuell „BlissGems V4 (1.21.x)“); `pack.png` ggf. ersetzen.
 - [ ] Umstieg von `custom_model_data` auf Basis-Items hin zur `item_model`-Komponente erwägen (je Kristall/Stufe eine eigene Item-Definition unter `assets/xmassmp/items/`) – sauberer und versionsstabiler.
-- [ ] Namespace von `blissgems` auf eigenen Namespace (z. B. `xmassmp`) umziehen.
+- [x] Namespace von `blissgems` auf eigenen Namespace `xmassmp` umziehen.
 - [ ] Mit jeder Zielversion (1.21.11, 26.1, 26.2, 26.3) im Client laden und alle Modelle/Icons prüfen.
-- [x] Pack-Validator-Script `tools/resourcepack.py` bauen (CI-Anbindung offen, siehe 3.1): alle Modell→Textur- und Item→Modell-Referenzen prüfen (die Fehler aus 1.1 wären damit sofort aufgefallen).
+- [x] Pack-Validator-Script `tools/resourcepack.py` bauen (läuft in der CI, prüft auch die Sprachdateien): alle Modell→Textur- und Item→Modell-Referenzen prüfen (die Fehler aus 1.1 wären damit sofort aufgefallen).
 
 ### 1.4 Fehlende Assets (neu zu erstellen)
 - [ ] Texturen/Modelle für die Admin-GUI (Hintergrund über Custom-Font, Buttons/Icons)
 - [ ] Icons für Event-System (Kalender, Uhr, Event-Status)
 - [ ] Ggf. eigene Partikel-Texturen (falls Vanilla-Partikel nicht reichen; nur mit Client-Pack möglich)
 - [ ] Platzhalter für Christmas-Twist-Items (folgt in separater Datei)
-- [ ] Lokalisierung: `assets/xmassmp/lang/de_de.json` und `en_us.json` für alle Itemnamen/Texte
+- [x] Lokalisierung: `assets/xmassmp/lang/de_de.json` und `en_us.json` für alle Itemnamen/Texte (Test prüft, dass jeder Schlüssel aus dem Code existiert)
 
 ---
 
@@ -98,31 +98,36 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 ## 3. Projekt-Setup & Architektur
 
 ### 3.1 Build-System
-- [ ] Gradle-Multi-Projekt anlegen:
+- [x] Gradle-Multi-Projekt anlegen (`paper/`, `neoforge/` vorerst nur README):
   - `common/` – plattformunabhängiger Kern (Kristalle, Energie, Level, Trader, Config, Event-Scheduler-Logik)
   - `fabric/` – **erste Plattform**
   - `paper/` – später
   - `neoforge/` – später
-- [ ] Multiloader-Ansatz wählen: Architectury **oder** eigenes `common`-Modul mit Plattform-Interfaces
+- [x] Multiloader-Ansatz wählen: eigenes `common`-Modul mit Plattform-Interfaces (`Platform`, `EffectSink`, `EventHost`), Fabric kompiliert die Kern-Quellen mit
 - [ ] Multi-Version-Builds 1.21.11 → 26.3 einrichten (z. B. **Stonecutter**) **(V)**
 - [ ] Java-Versionen beachten: 1.21.11 = Java 21, 26.x = vermutlich Java 25 **(V)**
 - [ ] Ab 26.1 ist Minecraft nicht mehr obfuskiert → Mappings/Loom-Setup je Version unterschiedlich **(V)**
-- [ ] CI (GitHub Actions): Build + Tests für jede Zielversion/Plattform, Pack-Validator, Artefakte als Release
-- [ ] `README.md` füllen (aktuell leer): Installation, Befehle, Permissions, Konfiguration, unterstützte Versionen
+- [x] CI (GitHub Actions): Pack-Validator, Kern-Tests, Fabric-Build (1.21.11), JARs als Workflow-Artefakte
+- [ ] CI: weitere Zielversionen (26.x) und Paper/NeoForge in die Matrix, Artefakte als GitHub-Release
+- [x] `README.md` füllen: Installation, Befehle, Permissions, Konfiguration, unterstützte Versionen
 
 ### 3.2 Fabric (Server-seitig, Vanilla-Clients)
-- [ ] Server-seitige Mod, damit Spieler **keinen** Client-Mod brauchen
-- [ ] **Polymer** (+ Polymer Resource Pack / AutoHost) für Custom Items und automatische Resource-Pack-Auslieferung
-- [ ] **sgui** für Chest-GUIs (Admin-GUI, Gem Trader)
-- [ ] **fabric-permissions-api** (LuckPerms-kompatibel) für Rechte
-- [ ] Fabric API für Events (Join, Tod, Kill, Tick, Interaktion)
+- [ ] **(V) Fabric-Modul erstmals bauen und starten** – konnte in der Entwicklungsumgebung nicht kompiliert werden (maven.fabricmc.net gesperrt). Versionen in `gradle.properties` prüfen, Mojang-Namen (z. B. `Identifier` statt `ResourceLocation` in `McIds`) gegen 1.21.11 abgleichen
+- [x] Server-seitige Mod, damit Spieler **keinen** Client-Mod brauchen
+- [x] **Polymer** (+ Polymer Resource Pack / AutoHost) für Custom Items und automatische Resource-Pack-Auslieferung (Pack-Assets registriert; AutoHost konfiguriert der Server-Betreiber)
+- [x] **sgui** für Chest-GUIs (Admin-GUI, Gem Trader) – als Abhängigkeit eingebunden, noch ungenutzt
+- [x] **fabric-permissions-api** (LuckPerms-kompatibel) für Rechte
+- [ ] Fabric API für Events (Join, Tod, Kill, Tick, Interaktion) – Join/Quit/Tick/Start/Stop angebunden, Tod/Kill/Interaktion folgen mit dem Gameplay
 
 ### 3.3 Kern-Abstraktionen (in `common`)
-- [ ] `Crystal`-Registry (5 Kristalle: Feuer, Erde, Wind, Schatten, Natur), erweiterbar für Christmas-Twist
-- [ ] `Ability`-Interface (Passive / Aktiv, Cooldown, Tier-Voraussetzung, Energie-Skalierung)
-- [ ] `EffectEngine` / Animations-API: Partikel-Formen (Ring, Spirale, Kugel, Linie, Welle), Keyframes über mehrere Ticks, Display-Entities, Sounds
-- [ ] `PlayerData` (Kristall, Tier, Energie, Cooldowns, Level) mit Persistenz (pro Spieler JSON/NBT, später ggf. DB)
-- [ ] Plattform-Adapter: Partikel senden, Entities spawnen, Items bauen, GUIs öffnen, Befehle registrieren, Scheduler
+- [x] `Crystal`-Registry (5 Kristalle: Feuer, Erde, Wind, Schatten, Natur), erweiterbar für Christmas-Twist
+- [x] `Ability`-Interface (Passive / Aktiv, Cooldown, Tier-Voraussetzung) + `AbilityService` (Schalter, Cooldown × Config × Event-Modifikator)
+- [ ] Energie-Skalierung der Fähigkeiten (wartet auf Recherche, Abschnitt 2)
+- [x] `EffectEngine` / Animations-API: Partikel-Formen (Ring, Spirale, Kugel, Linie, Welle), Keyframes/Phasen über mehrere Ticks mit Easing, geschichtete Sounds, Qualitätsstufe + Partikel-Budget
+- [ ] Display-Entities (Block-/Item-Display) in der `EffectEngine`
+- [x] `PlayerData` (Kristall, Tier, Energie, Cooldowns) mit Persistenz (pro Spieler JSON; defekte Dateien werden gesichert) – Level folgt, falls gewünscht (4.3)
+- [x] Plattform-Adapter: Partikel senden, Items bauen, Befehle registrieren, Tick-Takt (Fabric)
+- [ ] Plattform-Adapter: Entities spawnen, GUIs öffnen, `PlayerHandle` für Fähigkeiten
 
 ---
 
@@ -222,29 +227,29 @@ Allgemeine Qualitätsanforderungen für **jede** Kraft:
   - [ ] **Spieler**: Online-Spieler wählen → Kristall setzen, Tier setzen, Energie setzen, Cooldowns zurücksetzen
   - [ ] **Events**: geplante Events ansehen, aktivieren/deaktivieren, manuell starten/stoppen, Testmodus
   - [ ] **Items**: alle Custom-Items zum Herausnehmen (Kristalle, Trader, Upgrader, Energy Bottle, Repair-Kit, Fragments)
-- [ ] Änderungen aus der GUI sofort speichern (Config-Datei) und live anwenden
-- [ ] Zusätzliche Text-Befehle (für Konsole/Automatisierung): `/xmas give`, `/xmas set <spieler> crystal|tier|energy`, `/xmas reload`, `/xmas event start|stop|list`
-- [ ] Tab-Completion für alle Befehle
-- [ ] Audit-Log: Admin-Änderungen protokollieren (wer, was, wann)
-- [ ] Konfigurationsdatei dokumentiert (Kommentare/README)
+- [ ] Änderungen aus der GUI sofort speichern (Config-Datei) und live anwenden (Achtung: Speichern verwirft die Kommentare in `config.jsonc` – Vorlage neu rendern statt Gson-Dump)
+- [x] Zusätzliche Text-Befehle (für Konsole/Automatisierung): `/xmas give`, `/xmas set <spieler> crystal|tier|energy`, `/xmas reload`, `/xmas event start|stop|list|simulate`
+- [x] Tab-Completion für alle Befehle
+- [x] Audit-Log: Admin-Änderungen protokollieren (wer, was, wann) → `<welt>/xmassmp/audit.log`
+- [x] Konfigurationsdatei dokumentiert (Kommentare/README)
 
 ---
 
 ## 7. Event-System (Grundlage für die Weihnachtswoche)
 
-- [ ] Event-Scheduler: Events an **bestimmten Tagen zu bestimmten Uhrzeiten** ausführen
-- [ ] Zeitzone konfigurierbar (Standard `Europe/Berlin`)
-- [ ] Event-Definition in Config: ID, Name, Datum/Zeitraum (z. B. 24.12.–31.12.), Uhrzeit(en), Dauer, Wiederholung, Aktionen
+- [x] Event-Scheduler: Events an **bestimmten Tagen zu bestimmten Uhrzeiten** ausführen
+- [x] Zeitzone konfigurierbar (Standard `Europe/Berlin`), Sommerzeit-sicher
+- [x] Event-Definition in Config: ID, Name, Datum/Zeitraum (z. B. 24.12.–31.12.), Uhrzeit(en), Dauer, Wiederholung (jährlich `MM-dd`, Wochentage), Aktionen
 - [ ] Aktionstypen (erweiterbar):
-  - [ ] Broadcast/Titel/Sound an alle
-  - [ ] Befehl ausführen
-  - [ ] Globale Modifikatoren (z. B. doppelte Energie, verkürzte Cooldowns)
-  - [ ] Hook-Interface für spätere Christmas-Twist-Events
-- [ ] Ankündigungen vor Eventstart (z. B. 10 min, 1 min, Countdown)
-- [ ] Persistenz: Laufende Events überstehen Server-Neustart; verpasste Events beim Start nachholen oder überspringen (konfigurierbar)
-- [ ] Testmodus: Datum/Uhrzeit simulieren (`/xmas event simulate <datum> <uhrzeit>`)
+  - [x] Broadcast/Titel/Sound an alle
+  - [x] Befehl ausführen
+  - [x] Globale Modifikatoren (z. B. doppelte Energie, verkürzte Cooldowns) – `cooldown_multiplier` wirkt, `energy_multiplier` wartet aufs Energiesystem
+  - [x] Hook-Interface für spätere Christmas-Twist-Events (`EventActionRegistry`, `EventScheduler.Listener`)
+- [x] Ankündigungen vor Eventstart (z. B. 10 min, 1 min, Countdown)
+- [x] Persistenz: Laufende Events überstehen Server-Neustart; verpasste Events beim Start nachholen oder überspringen (konfigurierbar)
+- [x] Testmodus: Datum/Uhrzeit simulieren (`/xmas event simulate <datum> <uhrzeit> [dry]`)
 - [ ] Integration in Admin-GUI (Abschnitt 6)
-- [ ] Weihnachtswoche als Beispiel-Config mit leeren Platzhalter-Events anlegen
+- [x] Weihnachtswoche als Beispiel-Config mit leeren Platzhalter-Events anlegen
 
 ---
 
@@ -265,7 +270,8 @@ Allgemeine Qualitätsanforderungen für **jede** Kraft:
 
 ## 10. Qualitätssicherung
 
-- [ ] Unit-Tests für Kernlogik (Energie, Tier, Trader, Event-Scheduler inkl. Zeitzonen/Datumsgrenzen)
+- [x] Unit-Tests für vorhandene Kernlogik (Event-Scheduler inkl. Zeitzonen/Datumsgrenzen, Config, Spielerdaten, Effekte, Cooldowns, Admin, Pack-Abgleich) – 78 Tests
+- [ ] Unit-Tests für Energie, Tier-Upgrade und Trader, sobald implementiert
 - [ ] Testserver je Plattform und Version (1.21.11, 26.1, 26.2, 26.3) – **(V)** welche 26.x-Versionen tatsächlich existieren
 - [ ] Jede Kraft im Spiel testen und Video/GIF aufnehmen (Qualitäts-Check Animation/Partikel)
 - [ ] Performance-Test mit vielen Spielern und gleichzeitigen Fähigkeiten

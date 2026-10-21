@@ -1,2 +1,8 @@
 build/
 __pycache__/
+.gradle/
+.idea/
+*.iml
+out/
+run/
+.vscode/

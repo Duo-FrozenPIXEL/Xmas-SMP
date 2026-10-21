@@ -7,7 +7,7 @@
         "threshold": 4002,
         "model": {
           "type": "model",
-          "model": "blissgems:item/gem_trader"
+          "model": "xmassmp:item/gem_trader"
         }
       }
     ],

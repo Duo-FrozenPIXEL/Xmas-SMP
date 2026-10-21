@@ -1,0 +1,53 @@
+// Xmas-SMP – Hauptkonfiguration
+//
+// Kommentare mit // oder # sind erlaubt. Fehlende Einträge bekommen Standardwerte.
+// Änderungen übernehmen: /xmas reload
+// Ist die Datei fehlerhaft, bleibt die zuletzt gültige Konfiguration aktiv und der Fehler
+// steht in der Konsole bzw. in der Antwort auf /xmas reload.
+{
+  "general": {
+    // Hauptschalter für das ganze Plugin.
+    "enabled": true,
+    // Alle Kristall-Fähigkeiten global an/aus (z. B. für Bauphasen).
+    "abilitiesEnabled": true
+  },
+
+  // Einstellungen je Kristall. IDs: fire, earth, wind, shadow, nature.
+  // Nicht aufgeführte Kristalle verwenden die Standardwerte (aktiv, Multiplikatoren 1.0).
+  "crystals": {
+    "fire":   { "enabled": true, "cooldownMultiplier": 1.0, "damageMultiplier": 1.0 },
+    "earth":  { "enabled": true, "cooldownMultiplier": 1.0, "damageMultiplier": 1.0 },
+    "wind":   { "enabled": true, "cooldownMultiplier": 1.0, "damageMultiplier": 1.0 },
+    "shadow": { "enabled": true, "cooldownMultiplier": 1.0, "damageMultiplier": 1.0 },
+    "nature": { "enabled": true, "cooldownMultiplier": 1.0, "damageMultiplier": 1.0 }
+  },
+
+  // Energie (Breaking-Pristine-System).
+  // VORLÄUFIG: Die Werte werden an das Original angepasst, sobald es recherchiert ist.
+  "energy": {
+    "start": 5,   // Energie neuer Spieler
+    "min": 0,
+    "max": 10
+  },
+
+  "effects": {
+    // Partikel-Qualität: LOW, MEDIUM oder HIGH. Niedrigere Stufen dünnen die Partikel aus.
+    "quality": "HIGH",
+    // Obergrenze aller Fähigkeits-Partikel pro Server-Tick. Darüber hinaus wird verworfen.
+    "maxParticlesPerTick": 3000
+  },
+
+  "events": {
+    // Zeitzone für alle Event-Zeiten in events.jsonc (IANA-Name).
+    "timezone": "Europe/Berlin",
+    // true: Läuft ein Event gerade, obwohl sein Start in eine Server-Pause fiel,
+    //       wird es beim Hochfahren nachträglich gestartet.
+    // false: Verpasste Starts werden übersprungen.
+    "catchUpMissed": true
+  },
+
+  "audit": {
+    // Admin-Änderungen in audit.log protokollieren (wer, was, wann).
+    "enabled": true
+  }
+}
