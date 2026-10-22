@@ -1,9 +1,11 @@
 package de.xmassmp.fabric;
 
 import de.xmassmp.event.EventHost;
+import net.minecraft.core.Holder;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -37,9 +39,11 @@ final class FabricEventHost implements EventHost {
 
     @Override
     public void playSound(String sound, float volume, float pitch) {
-        SoundEvent event = SoundEvent.createVariableRangeEvent(McIds.parse(sound));
+        Holder<SoundEvent> event = Holder.direct(SoundEvent.createVariableRangeEvent(McIds.parse(sound)));
+        // Nur an den jeweiligen Spieler, damit Umstehende den Sound nicht mehrfach hören.
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            player.playNotifySound(event, SoundSource.MASTER, volume, pitch);
+            player.connection.send(new ClientboundSoundPacket(event, SoundSource.MASTER,
+                    player.getX(), player.getY(), player.getZ(), volume, pitch, player.getRandom().nextLong()));
         }
     }
 
