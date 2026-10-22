@@ -22,7 +22,7 @@
 //                      { "type": "command", "command": "weather clear" }   (läuft als Konsole)
 //   modifiers        Multiplikatoren, solange das Event läuft:
 //                      "cooldown_multiplier": 0.5   halbe Fähigkeits-Cooldowns
-//                      "energy_multiplier": 2.0     reserviert für das Energiesystem
+//                      "energy_multiplier": 2.0     doppelter Energiegewinn bei PvP-Kills
 //
 // Texte: &-Farbcodes; Platzhalter {name}, {id}, {duration}, bei Ankündigungen {minutes}, im Countdown {seconds}.
 //

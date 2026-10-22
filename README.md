@@ -56,6 +56,10 @@ Jede Änderung über `give`, `set`, `reload` und `event` landet in `<welt>/xmass
 | `crystalItem.giveOnJoin` | Spieler ohne Kristall bekommen beim Betreten einen zufälligen |
 | `crystalItem.soulbound` | Kristall kann nicht gedroppt, eingelagert oder beim Tod verloren werden |
 | `energy.start`, `min`, `max` | Energie (vorläufige Werte bis zur Recherche des Originals) |
+| `energy.killGain`, `deathLoss` | Gewinn beim PvP-Kill, Verlust bei jedem Tod |
+| `energy.sameVictimCooldownMinutes` | Anti-Farming: kein Gewinn für denselben Gegner innerhalb dieser Zeit |
+| `energy.stages` | ab welcher Energie der Kristall beschädigt/zerkratzt/makellos ist; darunter zerbrochen, Fähigkeiten aus |
+| `energy.minStrength` | Fähigkeitsstärke bei niedrigster Energie (steigt bis 1.0 bei `max`) |
 | `effects.quality` | `LOW`, `MEDIUM`, `HIGH` – dünnt Partikel aus |
 | `effects.maxParticlesPerTick` | Partikel-Budget aller Effekte pro Tick |
 | `effects.maxDisplays` | Obergrenze gleichzeitiger Display-Entities in Effekten |
@@ -70,7 +74,7 @@ Events laufen an festen Tagen zu festen Uhrzeiten. Beschrieben werden sie in `co
 - Termine als einmaliges Datum (`2026-12-24`), jährlich (`12-24`) oder als Bereich, auch über Silvester. Dazu optional Wochentage und mehrere Uhrzeiten pro Tag.
 - Ankündigungen X Minuten vorher und einen Sekunden-Countdown als Titel.
 - Aktionen beim Start und Ende: `broadcast`, `title`, `sound`, `command`. Eigene Typen lassen sich im Code registrieren.
-- Modifikatoren, solange ein Event läuft, z. B. `"cooldown_multiplier": 0.5`.
+- Modifikatoren, solange ein Event läuft, z. B. `"cooldown_multiplier": 0.5` oder `"energy_multiplier": 2.0`.
 - Laufende Events überstehen einen Neustart. Starts, die in eine Server-Pause fielen, werden je nach Config nachgeholt oder übersprungen.
 - Sommer-/Winterzeit: Jede Startzeit feuert genau einmal pro Tag.
 

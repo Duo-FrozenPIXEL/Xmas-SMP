@@ -37,7 +37,21 @@
   "energy": {
     "start": 5,   // Energie neuer Spieler
     "min": 0,
-    "max": 10
+    "max": 10,
+    // Gewinn für den Sieger bzw. Verlust für den Besiegten bei einem PvP-Kill.
+    // Läuft ein Event mit "energy_multiplier", wird der Gewinn damit multipliziert.
+    "killGain": 1,
+    // Verlust bei jedem Tod, auch ohne Gegner (Mob, Lava, Sturz …).
+    "deathLoss": 1,
+    // Anti-Farming: Wer denselben Spieler innerhalb dieser Minuten erneut besiegt, bekommt
+    // keine Energie. 0 = aus.
+    "sameVictimCooldownMinutes": 30,
+    // Ab welcher Energie der Kristall wie aussieht; darunter ist er zerbrochen und die
+    // Fähigkeiten sind aus. Es muss gelten: min ≤ damaged ≤ scratched ≤ pristine ≤ max.
+    "stages": { "damaged": 1, "scratched": 4, "pristine": 7 },
+    // Stärke der Fähigkeiten (Schaden, Dauer, Radius) bei der niedrigsten Energie über
+    // „zerbrochen“. Sie steigt linear bis 1.0 bei max.
+    "minStrength": 0.6
   },
 
   "effects": {

@@ -7,7 +7,7 @@ import de.xmassmp.admin.AuditLog;
 import de.xmassmp.config.ConfigManager;
 import de.xmassmp.crystal.CrystalRegistry;
 import de.xmassmp.crystal.CrystalService;
-import de.xmassmp.crystal.PristineStage;
+import de.xmassmp.energy.EnergyService;
 import de.xmassmp.effect.EffectEngine;
 import de.xmassmp.event.EventClock;
 import de.xmassmp.event.EventService;
@@ -54,6 +54,7 @@ public final class XmasCore {
     private final AuditLog audit;
     private final AdminService admin;
     private final CrystalService crystalService;
+    private final EnergyService energy;
     private final List<PlayerListener> playerListeners = new CopyOnWriteArrayList<>();
     private long ticks;
 
@@ -75,13 +76,16 @@ public final class XmasCore {
                 new Random(), logger);
         this.events = new EventService(platform.configDirectory(), platform.dataDirectory(),
                 platform.eventHost(), eventActions, new EventClock(clock), logger);
+        this.energy = new EnergyService(players, config::get, () -> events.modifier(EnergyService.ENERGY_MODIFIER),
+                clock::millis, effects, this::syncCrystalItem);
         this.abilityService = new AbilityService(config::get, effects, clock::millis,
-                () -> events.modifier(AbilityService.COOLDOWN_MODIFIER));
+                () -> events.modifier(AbilityService.COOLDOWN_MODIFIER), energy::strength);
         this.audit = new AuditLog(platform.dataDirectory(), () -> config.get().audit.enabled, clock, logger);
         this.crystalService = new CrystalService(platform, crystals, players, config::get,
-                data -> PristineStage.PRISTINE, effects, new Random());
+                energy::stage, effects, new Random());
         this.admin = new AdminService(crystals, players, config, events, audit, this::reload, crystalService::sync);
         addPlayerListener(crystalService);
+        addPlayerListener(energy);
     }
 
     /** Lädt Konfiguration und Events. Erst nach der Registrierung eigener Erweiterungen aufrufen. */
@@ -150,6 +154,11 @@ public final class XmasCore {
     /** @return {@code true}, wenn der Adapter das Vanilla-Verhalten unterdrücken soll */
     public boolean onUseItem(PlayerHandle player, Map<String, String> itemData) {
         return firstHandled("Item-Nutzung", l -> l.onUseItem(player, itemData));
+    }
+
+    /** Für Dienste, die vor dem {@link CrystalService} entstehen. */
+    private void syncCrystalItem(UUID uuid) {
+        crystalService.sync(uuid);
     }
 
     private void dispatch(String event, Consumer<PlayerListener> call) {
@@ -237,5 +246,9 @@ public final class XmasCore {
 
     public CrystalService crystalService() {
         return crystalService;
+    }
+
+    public EnergyService energy() {
+        return energy;
     }
 }

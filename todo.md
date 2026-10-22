@@ -123,7 +123,7 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 ### 3.3 Kern-Abstraktionen (in `common`)
 - [x] `Crystal`-Registry (5 Kristalle: Feuer, Erde, Wind, Schatten, Natur), erweiterbar für Christmas-Twist
 - [x] `Ability`-Interface (Passive / Aktiv, Cooldown, Tier-Voraussetzung) + `AbilityService` (Schalter, Cooldown × Config × Event-Modifikator)
-- [ ] Energie-Skalierung der Fähigkeiten (wartet auf Recherche, Abschnitt 2)
+- [x] Energie-Skalierung der Fähigkeiten: `AbilityContext.strength` (0 = zerbrochen, sonst `energy.minStrength`–1.0), Werte vorläufig bis zur Recherche (Abschnitt 2)
 - [x] `EffectEngine` / Animations-API: Partikel-Formen (Ring, Spirale, Kugel, Linie, Welle), Keyframes/Phasen über mehrere Ticks mit Easing, geschichtete Sounds, Qualitätsstufe + Partikel-Budget
 - [x] Display-Entities (Block-/Item-Display) in der `EffectEngine`: Größe, Drehung, Leuchten, weiche Bewegung; Fabric über Polymer Virtual Entities (nur Pakete, nie in der Welt gespeichert), Budget `effects.maxDisplays`
 - [x] `PlayerData` (Kristall, Tier, Energie, Cooldowns) mit Persistenz (pro Spieler JSON; defekte Dateien werden gesichert) – Level folgt, falls gewünscht (4.3)
@@ -145,11 +145,11 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 - [x] Erster Join → zufälliger aktivierter Kristall mit kleinem Effekt (`crystalItem.giveOnJoin`)
 
 ### 4.2 Breaking-Pristine-System (Energie)
-- [ ] Energie-Wert pro Spieler (Standard 0–10 **(V)**)
-- [ ] Kill eines Spielers → +Energie, eigener Tod → −Energie (konfigurierbar, Anti-Farming: gleicher Gegner Cooldown)
-- [ ] Energie → Bruchstufe → Modell (4 sichtbare Stufen: zerbrochen, beschädigt, zerkratzt, makellos)
-- [ ] Energie skaliert Fähigkeitsstärke (Schaden, Dauer, Radius) und schaltet bei 0 Fähigkeiten ab
-- [ ] **Bruch-Animation** beim Stufenwechsel: Riss-Partikel (Overlay-Texturen `gem-breaking/*`), Glas-Sound, Item-Shards in Kristallfarbe
+- [x] Energie-Wert pro Spieler (Standard 0–10 **(V)**)
+- [x] Kill eines Spielers → +Energie, eigener Tod → −Energie (`energy.killGain`/`deathLoss`, Anti-Farming `sameVictimCooldownMinutes`, Event-Modifikator `energy_multiplier`)
+- [x] Energie → Bruchstufe → Modell (4 sichtbare Stufen: zerbrochen, beschädigt, zerkratzt, makellos; Schwellen in `energy.stages`)
+- [x] Energie skaliert Fähigkeitsstärke (Schaden, Dauer, Radius) und schaltet bei „zerbrochen“ Fähigkeiten ab (`AbilityService.Result.BROKEN`)
+- [ ] **Bruch-Animation** beim Stufenwechsel (Hook `EnergyService.addStageListener` und Glas-Sound vorhanden): Riss-Partikel (Overlay-Texturen `gem-breaking/*`), Glas-Sound, Item-Shards in Kristallfarbe
 - [ ] **Reparatur-/Aufwertungs-Animation** beim Aufstieg
 - [ ] Energy Bottle: Energie abfüllen (Rechtsklick/Befehl) und an andere übertragen
 - [ ] Repair-Kit: Kristall-Energie wiederherstellen (Rezept + Effekt)
@@ -247,7 +247,7 @@ Allgemeine Qualitätsanforderungen für **jede** Kraft:
 - [ ] Aktionstypen (erweiterbar):
   - [x] Broadcast/Titel/Sound an alle
   - [x] Befehl ausführen
-  - [x] Globale Modifikatoren (z. B. doppelte Energie, verkürzte Cooldowns) – `cooldown_multiplier` wirkt, `energy_multiplier` wartet aufs Energiesystem
+  - [x] Globale Modifikatoren (z. B. doppelte Energie, verkürzte Cooldowns) – `cooldown_multiplier` und `energy_multiplier` wirken
   - [x] Hook-Interface für spätere Christmas-Twist-Events (`EventActionRegistry`, `EventScheduler.Listener`)
 - [x] Ankündigungen vor Eventstart (z. B. 10 min, 1 min, Countdown)
 - [x] Persistenz: Laufende Events überstehen Server-Neustart; verpasste Events beim Start nachholen oder überspringen (konfigurierbar)
