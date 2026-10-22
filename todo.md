@@ -118,7 +118,7 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 - [x] **Polymer** (+ Polymer Resource Pack / AutoHost) für Custom Items und automatische Resource-Pack-Auslieferung (Pack-Assets registriert; AutoHost konfiguriert der Server-Betreiber)
 - [x] **sgui** für Chest-GUIs (Admin-GUI, Gem Trader) – als Abhängigkeit eingebunden, noch ungenutzt
 - [x] **fabric-permissions-api** (LuckPerms-kompatibel) für Rechte
-- [ ] Fabric API für Events (Join, Tod, Kill, Tick, Interaktion) – Join/Quit/Tick/Start/Stop angebunden, Tod/Kill/Interaktion folgen mit dem Gameplay
+- [x] Fabric API für Events (Join, Quit, Tod, Kill, Respawn, Tick, Item-Nutzung) + Mixin für die Zweithand-Taste `F` → `PlayerListener` im Kern
 
 ### 3.3 Kern-Abstraktionen (in `common`)
 - [x] `Crystal`-Registry (5 Kristalle: Feuer, Erde, Wind, Schatten, Natur), erweiterbar für Christmas-Twist
@@ -128,7 +128,8 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 - [ ] Display-Entities (Block-/Item-Display) in der `EffectEngine`
 - [x] `PlayerData` (Kristall, Tier, Energie, Cooldowns) mit Persistenz (pro Spieler JSON; defekte Dateien werden gesichert) – Level folgt, falls gewünscht (4.3)
 - [x] Plattform-Adapter: Partikel senden, Items bauen, Befehle registrieren, Tick-Takt (Fabric)
-- [ ] Plattform-Adapter: Entities spawnen, GUIs öffnen, `PlayerHandle` für Fähigkeiten
+- [x] Plattform-Adapter: `PlayerHandle` (Position, Blickrichtung, Schleichen, Actionbar, Chat), Online-Spieler
+- [ ] Plattform-Adapter: Entities spawnen, GUIs öffnen
 
 ---
 

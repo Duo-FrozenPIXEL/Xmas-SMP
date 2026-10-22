@@ -1,5 +1,6 @@
 package de.xmassmp.ability;
 
+import de.xmassmp.TestPlatform;
 import de.xmassmp.config.XmasConfig;
 import de.xmassmp.crystal.Crystals;
 import de.xmassmp.effect.EffectEngine;
@@ -12,6 +13,7 @@ import de.xmassmp.player.PlayerData;
 import de.xmassmp.util.Vec3;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Random;
 import java.util.UUID;
@@ -72,41 +74,7 @@ class AbilityServiceTest {
         }
     };
 
-    private final PlayerHandle player = new PlayerHandle() {
-        @Override
-        public UUID uuid() {
-            return UUID.randomUUID();
-        }
-
-        @Override
-        public String name() {
-            return "Tester";
-        }
-
-        @Override
-        public WorldRef world() {
-            return new WorldRef("overworld");
-        }
-
-        @Override
-        public Vec3 position() {
-            return Vec3.ZERO;
-        }
-
-        @Override
-        public Vec3 eyePosition() {
-            return Vec3.UP;
-        }
-
-        @Override
-        public Vec3 lookDirection() {
-            return new Vec3(1, 0, 0);
-        }
-
-        @Override
-        public void sendActionBar(String legacyText) {
-        }
-    };
+    private final PlayerHandle player = new TestPlatform(Path.of(".")).join("Tester");
 
     private PlayerData fireTier(int tier) {
         PlayerData data = new PlayerData(UUID.randomUUID(), 5);

@@ -96,10 +96,11 @@ Die GitHub Actions bauen und prüfen bei jedem Push das Ressourcenpaket, den Ker
 
 Der Kern (`XmasCore`) kennt keine Minecraft-Klassen. Jede Plattform implementiert:
 
-- `Platform`: Ordner und Logger
+- `Platform`: Ordner, Logger, Online-Spieler
+- `PlayerHandle`: Sicht auf einen Spieler (Position, Blickrichtung, Schleichen, Actionbar, Chat)
 - `EffectSink`: Partikel und Sounds senden
 - `EventHost`: Broadcast, Titel, Sound, Konsolenbefehl
 
-Außerdem ruft sie `XmasCore#tick()` jeden Server-Tick auf. Den Befehlsbaum baut sie selbst, die Logik dahinter liegt in `AdminService`.
+Außerdem ruft sie `XmasCore#tick()` jeden Server-Tick auf und meldet Spieler-Ereignisse (`onPlayerJoin`, `onPlayerQuit`, `onPlayerDeath`, `onPlayerRespawn`, `onSwapHands`, `onUseItem`). Eigene Systeme reagieren darauf über einen `PlayerListener`. Für die Zweithand-Taste nutzt Fabric einen Mixin, weil die Fabric API dafür kein Event hat. Den Befehlsbaum baut sie selbst, die Logik dahinter liegt in `AdminService`.
 
 Kräfte entstehen als `ActiveAbility` / `PassiveAbility`. Animationen baut man mit `EffectTimeline` (Phasen *Aufladen → Auslösen → Nachklingen*) aus `Shapes` (Ring, Spirale, Kugel, Linie, Welle), `ParticleSpec` (inkl. Farbverläufen) und `SoundStack` (geschichtete Sounds mit Tonhöhen-Variation).

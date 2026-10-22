@@ -12,7 +12,9 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.component.ItemLore;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Baut Item-Stacks aus {@link ItemSpec}: Vanilla-Basis-Item + Komponenten, kein Client-Mod nötig. */
 final class FabricItems {
@@ -38,6 +40,20 @@ final class FabricItems {
         root.put(ItemSpec.DATA_ROOT, data);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
         return stack;
+    }
+
+    /** Markierungen aus {@code custom_data.xmassmp}; leer bei Vanilla-Items. */
+    static Map<String, String> data(ItemStack stack) {
+        CustomData custom = stack.get(DataComponents.CUSTOM_DATA);
+        if (custom == null) {
+            return Map.of();
+        }
+        CompoundTag data = custom.copyTag().getCompoundOrEmpty(ItemSpec.DATA_ROOT);
+        Map<String, String> out = new HashMap<>();
+        for (String key : data.keySet()) {
+            data.getString(key).ifPresent(value -> out.put(key, value));
+        }
+        return out;
     }
 
     /** Ins Inventar oder, wenn voll, vor die Füße. */

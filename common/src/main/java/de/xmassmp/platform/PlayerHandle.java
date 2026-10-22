@@ -4,7 +4,12 @@ import de.xmassmp.util.Vec3;
 
 import java.util.UUID;
 
-/** Plattformneutrale Sicht auf einen Online-Spieler, z. B. für Fähigkeiten. */
+/**
+ * Plattformneutrale Sicht auf einen Online-Spieler, z. B. für Fähigkeiten.
+ *
+ * <p>Ein Handle bleibt über Respawns hinweg gültig. Ist der Spieler offline, liefern die
+ * Abfragen den letzten bekannten Stand und Ausgaben werden verworfen.
+ */
 public interface PlayerHandle {
 
     UUID uuid();
@@ -22,6 +27,11 @@ public interface PlayerHandle {
     /** Normalisierte Blickrichtung. */
     Vec3 lookDirection();
 
+    boolean isSneaking();
+
     /** Text in der Actionbar (Legacy-Farbcodes mit §). */
     void sendActionBar(String legacyText);
+
+    /** Chat-Nachricht nur an diesen Spieler (Legacy-Farbcodes mit §). */
+    void sendMessage(String legacyText);
 }

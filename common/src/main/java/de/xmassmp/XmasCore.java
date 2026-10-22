@@ -11,15 +11,21 @@ import de.xmassmp.event.EventClock;
 import de.xmassmp.event.EventService;
 import de.xmassmp.event.action.EventActionRegistry;
 import de.xmassmp.platform.Platform;
+import de.xmassmp.platform.PlayerHandle;
 import de.xmassmp.platform.XmasLogger;
 import de.xmassmp.player.PlayerDataStore;
+import de.xmassmp.player.PlayerListener;
 
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Wurzel des plattformneutralen Kerns. Der Adapter erzeugt ihn beim Serverstart, ruft
@@ -45,6 +51,7 @@ public final class XmasCore {
     private final AbilityService abilityService;
     private final AuditLog audit;
     private final AdminService admin;
+    private final List<PlayerListener> playerListeners = new CopyOnWriteArrayList<>();
     private long ticks;
 
     public XmasCore(Platform platform) {
@@ -99,12 +106,74 @@ public final class XmasCore {
         }
     }
 
-    public void onPlayerJoin(UUID uuid) {
-        players.get(uuid).pruneCooldowns(clock.millis());
+    /** Eigene Reaktionen auf Spieler-Ereignisse; Reihenfolge = Registrierungsreihenfolge. */
+    public void addPlayerListener(PlayerListener listener) {
+        playerListeners.add(listener);
+    }
+
+    // ------------------------------------------------------------------ Spieler-Ereignisse (vom Adapter)
+
+    public void onPlayerJoin(PlayerHandle player) {
+        players.get(player.uuid()).pruneCooldowns(clock.millis());
+        dispatch("Join", l -> l.onJoin(player));
     }
 
     public void onPlayerQuit(UUID uuid) {
+        // Auch bei abgeschaltetem Plugin, damit keine Daten verloren gehen.
+        forEachListener("Quit", l -> l.onQuit(uuid));
         players.unload(uuid);
+    }
+
+    /** @param killer verursachender Spieler oder {@code null} */
+    public void onPlayerDeath(PlayerHandle victim, PlayerHandle killer) {
+        PlayerHandle realKiller = killer != null && killer.uuid().equals(victim.uuid()) ? null : killer;
+        dispatch("Tod", l -> l.onDeath(victim, realKiller));
+    }
+
+    public void onPlayerRespawn(PlayerHandle player) {
+        dispatch("Respawn", l -> l.onRespawn(player));
+    }
+
+    /** @return {@code true}, wenn der Adapter den Zweithand-Tausch abbrechen soll */
+    public boolean onSwapHands(PlayerHandle player) {
+        return firstHandled("Zweithand-Tausch", l -> l.onSwapHands(player));
+    }
+
+    /** @return {@code true}, wenn der Adapter das Vanilla-Verhalten unterdrücken soll */
+    public boolean onUseItem(PlayerHandle player, Map<String, String> itemData) {
+        return firstHandled("Item-Nutzung", l -> l.onUseItem(player, itemData));
+    }
+
+    private void dispatch(String event, Consumer<PlayerListener> call) {
+        if (config.get().general.enabled) {
+            forEachListener(event, call);
+        }
+    }
+
+    private void forEachListener(String event, Consumer<PlayerListener> call) {
+        for (PlayerListener listener : playerListeners) {
+            try {
+                call.accept(listener);
+            } catch (RuntimeException e) {
+                logger.error("Fehler beim Verarbeiten von " + event + " in " + listener.getClass().getName(), e);
+            }
+        }
+    }
+
+    private boolean firstHandled(String event, Predicate<PlayerListener> call) {
+        if (!config.get().general.enabled) {
+            return false;
+        }
+        for (PlayerListener listener : playerListeners) {
+            try {
+                if (call.test(listener)) {
+                    return true;
+                }
+            } catch (RuntimeException e) {
+                logger.error("Fehler beim Verarbeiten von " + event + " in " + listener.getClass().getName(), e);
+            }
+        }
+        return false;
     }
 
     public void shutdown() {

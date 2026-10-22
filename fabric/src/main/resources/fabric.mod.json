@@ -10,6 +10,7 @@
   "entrypoints": {
     "main": ["de.xmassmp.fabric.XmasSmpFabric"]
   },
+  "mixins": ["xmassmp.mixins.json"],
   "depends": {
     "fabricloader": ">=0.17.0",
     "fabric-api": "*",
