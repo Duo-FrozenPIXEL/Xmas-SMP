@@ -42,6 +42,7 @@ public final class XmasConfig {
     public static final class Effects {
         public EffectQuality quality = EffectQuality.HIGH;
         public int maxParticlesPerTick = 3000;
+        public int maxDisplays = 256;
     }
 
     public static final class Events {
@@ -87,6 +88,10 @@ public final class XmasConfig {
         if (effects.maxParticlesPerTick < 100) {
             warnings.add("effects.maxParticlesPerTick < 100 – auf 100 gesetzt");
             effects.maxParticlesPerTick = 100;
+        }
+        if (effects.maxDisplays < 0) {
+            warnings.add("effects.maxDisplays < 0 – auf 0 gesetzt (keine Displays)");
+            effects.maxDisplays = 0;
         }
         try {
             ZoneId.of(events.timezone);

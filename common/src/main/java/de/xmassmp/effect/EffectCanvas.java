@@ -10,12 +10,14 @@ import java.util.random.RandomGenerator;
 public final class EffectCanvas {
 
     private final EffectEngine engine;
+    private final EffectEngine.Running owner;
     private final WorldRef world;
     private Vec3 origin;
     private int age;
 
-    EffectCanvas(EffectEngine engine, WorldRef world) {
+    EffectCanvas(EffectEngine engine, EffectEngine.Running owner, WorldRef world) {
         this.engine = engine;
+        this.owner = owner;
         this.world = world;
     }
 
@@ -62,5 +64,19 @@ public final class EffectCanvas {
 
     public void sound(SoundStack sounds) {
         engine.playSounds(world, origin, sounds);
+    }
+
+    /**
+     * Spawnt ein Display relativ zum Ursprung. Es lebt, bis {@link DisplayHandle#remove()} aufgerufen
+     * wird oder der Effekt endet. Ist {@code effects.maxDisplays} erreicht, kommt ein wirkungsloses
+     * Handle zurück.
+     */
+    public DisplayHandle display(DisplaySpec spec, Vec3 offset) {
+        return displayAt(spec, origin.add(offset));
+    }
+
+    /** Display an einer absoluten Weltposition. */
+    public DisplayHandle displayAt(DisplaySpec spec, Vec3 position) {
+        return engine.spawnDisplay(owner, world, position, spec);
     }
 }

@@ -68,7 +68,8 @@ public final class XmasCore {
         this.eventActions = EventActionRegistry.withDefaults();
         this.players = new PlayerDataStore(platform.dataDirectory(), () -> config.get().energy.start, logger);
         this.effects = new EffectEngine(platform.effectSink(), () -> config.get().effects.quality,
-                () -> config.get().effects.maxParticlesPerTick, new Random(), logger);
+                () -> config.get().effects.maxParticlesPerTick, () -> config.get().effects.maxDisplays,
+                new Random(), logger);
         this.events = new EventService(platform.configDirectory(), platform.dataDirectory(),
                 platform.eventHost(), eventActions, new EventClock(clock), logger);
         this.abilityService = new AbilityService(config::get, effects, clock::millis,

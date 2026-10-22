@@ -34,7 +34,9 @@
     // Partikel-Qualität: LOW, MEDIUM oder HIGH. Niedrigere Stufen dünnen die Partikel aus.
     "quality": "HIGH",
     // Obergrenze aller Fähigkeits-Partikel pro Server-Tick. Darüber hinaus wird verworfen.
-    "maxParticlesPerTick": 3000
+    "maxParticlesPerTick": 3000,
+    // Obergrenze gleichzeitiger Display-Entities (3D-Blöcke/Items in Effekten). 0 = keine.
+    "maxDisplays": 256
   },
 
   "events": {
