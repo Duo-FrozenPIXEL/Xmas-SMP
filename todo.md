@@ -125,22 +125,24 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 - [x] `Ability`-Interface (Passive / Aktiv, Cooldown, Tier-Voraussetzung) + `AbilityService` (Schalter, Cooldown × Config × Event-Modifikator)
 - [ ] Energie-Skalierung der Fähigkeiten (wartet auf Recherche, Abschnitt 2)
 - [x] `EffectEngine` / Animations-API: Partikel-Formen (Ring, Spirale, Kugel, Linie, Welle), Keyframes/Phasen über mehrere Ticks mit Easing, geschichtete Sounds, Qualitätsstufe + Partikel-Budget
-- [ ] Display-Entities (Block-/Item-Display) in der `EffectEngine`
+- [x] Display-Entities (Block-/Item-Display) in der `EffectEngine`: Größe, Drehung, Leuchten, weiche Bewegung; Fabric über Polymer Virtual Entities (nur Pakete, nie in der Welt gespeichert), Budget `effects.maxDisplays`
 - [x] `PlayerData` (Kristall, Tier, Energie, Cooldowns) mit Persistenz (pro Spieler JSON; defekte Dateien werden gesichert) – Level folgt, falls gewünscht (4.3)
 - [x] Plattform-Adapter: Partikel senden, Items bauen, Befehle registrieren, Tick-Takt (Fabric)
 - [x] Plattform-Adapter: `PlayerHandle` (Position, Blickrichtung, Schleichen, Actionbar, Chat), Online-Spieler
-- [ ] Plattform-Adapter: Entities spawnen, GUIs öffnen
+- [x] Plattform-Adapter: Display-Entities spawnen
+- [ ] Plattform-Adapter: GUIs öffnen
 
 ---
 
 ## 4. Gameplay-Systeme (aus dem Original)
 
 ### 4.1 Kristall-Items
-- [ ] Je Kristall: Tier 1 + Tier 2, je 4 Bruchstufen (Modelle/Texturen vorhanden, siehe 1.2)
-- [ ] Item-Lore: Kristallname, Tier, Energie, Fähigkeiten, Farbcodes passend zur Kristallfarbe
-- [ ] Kristall ist seelengebunden: kann nicht gedroppt/in Kisten gelegt/verloren werden (konfigurierbar)
-- [ ] Nur ein Kristall pro Spieler aktiv
-- [ ] Erster Join → zufälliger Kristall (konfigurierbar)
+- [x] Je Kristall: Tier 1 + Tier 2, je 4 Bruchstufen (Modelle/Texturen vorhanden, siehe 1.2) – Item folgt automatisch den Spielerdaten
+- [x] Item-Lore: Kristallname, Tier, Zustand, Energie, Farbcodes passend zur Kristallfarbe
+- [ ] Item-Lore: Fähigkeiten (sobald die Kräfte feststehen, Abschnitt 5)
+- [x] Kristall ist seelengebunden: kann nicht gedroppt/in Kisten gelegt/verloren werden (`crystalItem.soulbound`) – Abgleich jede Sekunde, Kopien in Behältern/Item-Rahmen sind wirkungslos
+- [x] Nur ein Kristall pro Spieler aktiv (Spielerdaten sind die Wahrheit, das Item nur Anzeige)
+- [x] Erster Join → zufälliger aktivierter Kristall mit kleinem Effekt (`crystalItem.giveOnJoin`)
 
 ### 4.2 Breaking-Pristine-System (Energie)
 - [ ] Energie-Wert pro Spieler (Standard 0–10 **(V)**)

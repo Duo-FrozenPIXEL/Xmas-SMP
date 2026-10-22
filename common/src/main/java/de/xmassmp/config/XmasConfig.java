@@ -16,6 +16,7 @@ public final class XmasConfig {
 
     public General general = new General();
     public Map<String, CrystalSettings> crystals = new LinkedHashMap<>();
+    public CrystalItem crystalItem = new CrystalItem();
     public Energy energy = new Energy();
     public Effects effects = new Effects();
     public Events events = new Events();
@@ -30,6 +31,11 @@ public final class XmasConfig {
         public boolean enabled = true;
         public double cooldownMultiplier = 1.0;
         public double damageMultiplier = 1.0;
+    }
+
+    public static final class CrystalItem {
+        public boolean giveOnJoin = true;
+        public boolean soulbound = true;
     }
 
     /** (V) Vorläufige Werte, bis das Original-Energiesystem recherchiert ist (todo.md, 2). */
@@ -65,6 +71,7 @@ public final class XmasConfig {
         List<String> warnings = new ArrayList<>();
         if (general == null) general = new General();
         if (crystals == null) crystals = new LinkedHashMap<>();
+        if (crystalItem == null) crystalItem = new CrystalItem();
         if (energy == null) energy = new Energy();
         if (effects == null) effects = new Effects();
         if (events == null) events = new Events();

@@ -57,15 +57,21 @@ public final class AdminService {
     private final EventService events;
     private final AuditLog audit;
     private final Supplier<List<String>> reloader;
+    private final Consumer<UUID> playerChanged;
 
+    /**
+     * @param playerChanged wird nach jeder Änderung an Spielerdaten aufgerufen (z. B. Item-Abgleich)
+     */
     public AdminService(CrystalRegistry crystals, PlayerDataStore players, ConfigManager config,
-                        EventService events, AuditLog audit, Supplier<List<String>> reloader) {
+                        EventService events, AuditLog audit, Supplier<List<String>> reloader,
+                        Consumer<UUID> playerChanged) {
         this.crystals = crystals;
         this.players = players;
         this.config = config;
         this.events = events;
         this.audit = audit;
         this.reloader = reloader;
+        this.playerChanged = playerChanged;
     }
 
     public static List<String> help() {
@@ -121,6 +127,7 @@ public final class AdminService {
         data.setCrystalId(crystalId);
         players.save(uuid);
         audit.record(actor, "set_crystal", name, before + " -> " + crystalId);
+        playerChanged.accept(uuid);
         String note = config.get().crystal(crystalId).enabled ? "" : " §e(Kristall ist in der Config deaktiviert)";
         return Result.ok("Kristall von " + name + " ist jetzt " + crystal.get().nameFallback() + note);
     }
@@ -134,6 +141,7 @@ public final class AdminService {
         data.setTier(tier);
         players.save(uuid);
         audit.record(actor, "set_tier", name, before + " -> " + tier);
+        playerChanged.accept(uuid);
         return Result.ok("Tier von " + name + " ist jetzt " + tier);
     }
 
@@ -148,6 +156,7 @@ public final class AdminService {
         data.setEnergy(energy);
         players.save(uuid);
         audit.record(actor, "set_energy", name, before + " -> " + energy);
+        playerChanged.accept(uuid);
         return Result.ok("Energie von " + name + " ist jetzt " + energy);
     }
 

@@ -22,6 +22,16 @@
     "nature": { "enabled": true, "cooldownMultiplier": 1.0, "damageMultiplier": 1.0 }
   },
 
+  "crystalItem": {
+    // Spieler ohne Kristall bekommen beim Betreten einen zufälligen, aktivierten Kristall.
+    "giveOnJoin": true,
+    // Seelengebunden: Der Kristall kann nicht gedroppt, in Behälter gelegt, verbaut oder beim
+    // Tod verloren werden – er taucht sofort wieder im Inventar auf. Kopien in Behältern oder
+    // Item-Rahmen sind wirkungslos und verschwinden, sobald jemand sie anfasst.
+    // false: Das Item ist reine Anzeige und kann verloren gehen; die Kräfte bleiben trotzdem.
+    "soulbound": true
+  },
+
   // Energie (Breaking-Pristine-System).
   // VORLÄUFIG: Die Werte werden an das Original angepasst, sobald es recherchiert ist.
   "energy": {

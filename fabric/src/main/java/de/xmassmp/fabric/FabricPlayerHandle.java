@@ -1,5 +1,6 @@
 package de.xmassmp.fabric;
 
+import de.xmassmp.item.ItemSpec;
 import de.xmassmp.platform.PlayerHandle;
 import de.xmassmp.platform.WorldRef;
 import de.xmassmp.util.Vec3;
@@ -85,5 +86,25 @@ final class FabricPlayerHandle implements PlayerHandle {
         if (online()) {
             player().sendSystemMessage(FabricText.legacy(legacyText));
         }
+    }
+
+    @Override
+    public void giveItem(ItemSpec item) {
+        if (online()) {
+            FabricItems.give(player(), item);
+        }
+    }
+
+    @Override
+    public void syncCrystalItem(ItemSpec expected, boolean soulbound) {
+        if (online()) {
+            FabricItems.syncCrystal(player(), expected, soulbound);
+        }
+    }
+
+    @Override
+    public void removeDroppedCrystals(double radius) {
+        // Auch direkt nach dem Tod, solange der Spieler noch an der Todesstelle ist.
+        FabricItems.removeDroppedCrystals(player(), radius);
     }
 }

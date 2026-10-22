@@ -3,6 +3,8 @@ package de.xmassmp;
 import de.xmassmp.effect.EffectSink;
 import de.xmassmp.effect.ParticleSpec;
 import de.xmassmp.event.EventHost;
+import de.xmassmp.item.ItemCatalog;
+import de.xmassmp.item.ItemSpec;
 import de.xmassmp.platform.Platform;
 import de.xmassmp.platform.PlayerHandle;
 import de.xmassmp.platform.WorldRef;
@@ -125,6 +127,13 @@ public final class TestPlatform implements Platform {
         public boolean sneaking;
         public final List<String> actionBar = new ArrayList<>();
         public final List<String> messages = new ArrayList<>();
+        /** Vereinfachtes Inventar: eine Liste von Stacks, höchstens {@link #capacity} Einträge. */
+        public final List<ItemSpec> inventory = new ArrayList<>();
+        public int capacity = 36;
+        /** Items, die im Umkreis auf dem Boden liegen. */
+        public final List<ItemSpec> dropped = new ArrayList<>();
+        /** Inhalt eines gerade geöffneten Behälters. */
+        public final List<ItemSpec> openContainer = new ArrayList<>();
 
         FakePlayer(UUID uuid, String name) {
             this.uuid = uuid;
@@ -174,6 +183,51 @@ public final class TestPlatform implements Platform {
         @Override
         public void sendMessage(String legacyText) {
             messages.add(legacyText);
+        }
+
+        @Override
+        public void giveItem(ItemSpec item) {
+            (inventory.size() < capacity ? inventory : dropped).add(item);
+        }
+
+        /** Gleiche Regeln wie der Fabric-Adapter, siehe {@link PlayerHandle#syncCrystalItem}. */
+        @Override
+        public void syncCrystalItem(ItemSpec expected, boolean soulbound) {
+            boolean kept = false;
+            for (int i = 0; i < inventory.size(); i++) {
+                ItemSpec stack = inventory.get(i);
+                if (!ItemCatalog.isOwnedCrystal(stack.data())) {
+                    continue;
+                }
+                boolean mine = uuid.toString().equals(stack.data().get(ItemCatalog.DATA_OWNER));
+                boolean outdated = expected != null && !stack.data().equals(expected.data());
+                if (mine && expected != null && !kept) {
+                    kept = true;
+                    if (outdated) {
+                        inventory.set(i, expected);
+                    }
+                } else if (soulbound) {
+                    inventory.remove(i--);
+                } else if (mine && outdated) {
+                    inventory.set(i, expected);
+                }
+            }
+            if (soulbound) {
+                openContainer.removeIf(stack -> ItemCatalog.isOwnedCrystal(stack.data()));
+                if (!kept && expected != null && inventory.size() < capacity) {
+                    inventory.add(expected);
+                }
+            }
+        }
+
+        @Override
+        public void removeDroppedCrystals(double radius) {
+            dropped.removeIf(stack -> ItemCatalog.isOwnedCrystal(stack.data()));
+        }
+
+        public List<ItemSpec> crystals() {
+            return inventory.stream().filter(stack -> ItemCatalog.TYPE_CRYSTAL.equals(stack.data().get(ItemSpec.DATA_TYPE)))
+                    .toList();
         }
 
         public String lastActionBar() {

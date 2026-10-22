@@ -53,9 +53,12 @@ Jede Änderung über `give`, `set`, `reload` und `event` landet in `<welt>/xmass
 |---|---|
 | `general.enabled` / `general.abilitiesEnabled` | Hauptschalter / alle Fähigkeiten |
 | `crystals.<id>.enabled`, `cooldownMultiplier`, `damageMultiplier` | pro Kristall |
+| `crystalItem.giveOnJoin` | Spieler ohne Kristall bekommen beim Betreten einen zufälligen |
+| `crystalItem.soulbound` | Kristall kann nicht gedroppt, eingelagert oder beim Tod verloren werden |
 | `energy.start`, `min`, `max` | Energie (vorläufige Werte bis zur Recherche des Originals) |
 | `effects.quality` | `LOW`, `MEDIUM`, `HIGH` – dünnt Partikel aus |
 | `effects.maxParticlesPerTick` | Partikel-Budget aller Effekte pro Tick |
+| `effects.maxDisplays` | Obergrenze gleichzeitiger Display-Entities in Effekten |
 | `events.timezone` | Zeitzone der Event-Zeiten (Standard `Europe/Berlin`) |
 | `events.catchUpMissed` | Events nachholen, deren Start in eine Server-Pause fiel |
 | `audit.enabled` | Audit-Log an/aus |
@@ -103,4 +106,6 @@ Der Kern (`XmasCore`) kennt keine Minecraft-Klassen. Jede Plattform implementier
 
 Außerdem ruft sie `XmasCore#tick()` jeden Server-Tick auf und meldet Spieler-Ereignisse (`onPlayerJoin`, `onPlayerQuit`, `onPlayerDeath`, `onPlayerRespawn`, `onSwapHands`, `onUseItem`). Eigene Systeme reagieren darauf über einen `PlayerListener`. Für die Zweithand-Taste nutzt Fabric einen Mixin, weil die Fabric API dafür kein Event hat. Den Befehlsbaum baut sie selbst, die Logik dahinter liegt in `AdminService`.
 
-Kräfte entstehen als `ActiveAbility` / `PassiveAbility`. Animationen baut man mit `EffectTimeline` (Phasen *Aufladen → Auslösen → Nachklingen*) aus `Shapes` (Ring, Spirale, Kugel, Linie, Welle), `ParticleSpec` (inkl. Farbverläufen) und `SoundStack` (geschichtete Sounds mit Tonhöhen-Variation).
+Kräfte entstehen als `ActiveAbility` / `PassiveAbility`. Animationen baut man mit `EffectTimeline` (Phasen *Aufladen → Auslösen → Nachklingen*) aus `Shapes` (Ring, Spirale, Kugel, Linie, Welle), `ParticleSpec` (inkl. Farbverläufen) und `SoundStack` (geschichtete Sounds mit Tonhöhen-Variation). Für 3D-Effekte spawnt `EffectCanvas#display` Block- oder Item-Displays (`DisplaySpec`), die sich weich bewegen, drehen und skalieren lassen und mit dem Effekt verschwinden.
+
+Die Spielerdaten (`PlayerData`) sind die Wahrheit über Kristall, Tier und Energie. `CrystalService` hält das Kristall-Item im Inventar passend dazu und gleicht es jede Sekunde ab.
