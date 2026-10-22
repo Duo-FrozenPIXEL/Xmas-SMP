@@ -112,7 +112,8 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 - [x] `README.md` füllen: Installation, Befehle, Permissions, Konfiguration, unterstützte Versionen
 
 ### 3.2 Fabric (Server-seitig, Vanilla-Clients)
-- [ ] **(V) Fabric-Modul erstmals bauen und starten** – konnte in der Entwicklungsumgebung nicht kompiliert werden (maven.fabricmc.net gesperrt). Versionen in `gradle.properties` prüfen, Mojang-Namen (z. B. `Identifier` statt `ResourceLocation` in `McIds`) gegen 1.21.11 abgleichen
+- [x] Fabric-Modul baut in der CI (1.21.11, Versionen in `gradle.properties` bestätigt)
+- [ ] Fabric-Mod auf einem Testserver starten und `/xmas`-Befehle, Items und Events im Spiel prüfen
 - [x] Server-seitige Mod, damit Spieler **keinen** Client-Mod brauchen
 - [x] **Polymer** (+ Polymer Resource Pack / AutoHost) für Custom Items und automatische Resource-Pack-Auslieferung (Pack-Assets registriert; AutoHost konfiguriert der Server-Betreiber)
 - [x] **sgui** für Chest-GUIs (Admin-GUI, Gem Trader) – als Abhängigkeit eingebunden, noch ungenutzt
