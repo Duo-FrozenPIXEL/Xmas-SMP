@@ -169,9 +169,9 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 - [ ] Optional: platzierbare Trader-Station (Modell `trader`)
 
 ### 4.5 Fähigkeits-Steuerung & HUD
-- [ ] Aktivierung festlegen (z. B. Offhand-Swap-Taste `F` = Fähigkeit 1, Schleichen + `F` = Fähigkeit 2) – funktioniert ohne Client-Mod
-- [ ] Actionbar-HUD mit Font-Icons (``–``) + Cooldown-Anzeige in Sekunden
-- [ ] Cooldown-Ende: kleiner Sound + Partikel-Puls
+- [x] Aktivierung: Zweithand-Taste `F` = Fähigkeit 1, Schleichen + `F` = Fähigkeit 2 – ohne Client-Mod, abschaltbar (`controls.swapHandsActivates`); Kristalle ohne Kräfte tauschen normal
+- [x] Actionbar-HUD mit Font-Icons + Cooldown-Anzeige in Sekunden, Tier-Sperre, zerbrochen, Energie (`hud.enabled`, `hud.updateTicks`); Rückmeldungen (Cooldown, gesperrt, zerbrochen) überdecken das HUD kurz
+- [x] Cooldown-Ende: kleiner Sound + Partikel-Puls in Kristallfarbe
 
 ---
 

@@ -25,6 +25,13 @@ Java 21.
    - `<welt>/xmassmp/` – Spielerdaten, Event-Zustand, `audit.log`
 3. Das Ressourcenpaket stellt Polymer bereit. Für die automatische Auslieferung an Spieler Polymers AutoHost einrichten (siehe Polymer-Doku) oder das Paket aus `python3 tools/resourcepack.py build` selbst hosten.
 
+## Spielen
+
+- Wer noch keinen Kristall hat, bekommt beim Betreten einen zufälligen. Er ist seelengebunden: Er lässt sich nicht droppen, einlagern oder beim Tod verlieren.
+- **F** (Zweithand-Taste) löst Fähigkeit 1 aus, **Schleichen + F** Fähigkeit 2 (ab Tier 2).
+- Die Actionbar zeigt beide Fähigkeiten (bereit ✔, Cooldown in Sekunden, gesperrt `T2`, zerbrochen ✖) und die Energie ✦.
+- PvP-Siege bringen Energie, jeder Tod kostet welche. Die Energie bestimmt, wie zerbrochen der Kristall aussieht und wie stark die Fähigkeiten sind. Bei „zerbrochen“ ruhen sie.
+
 ## Befehle
 
 Alle Befehle brauchen das Recht `xmassmp.admin`. Ohne Permission-Plugin (z. B. LuckPerms) gilt OP-Level 2. Alle Befehle haben Tab-Completion.
@@ -60,6 +67,8 @@ Jede Änderung über `give`, `set`, `reload` und `event` landet in `<welt>/xmass
 | `energy.sameVictimCooldownMinutes` | Anti-Farming: kein Gewinn für denselben Gegner innerhalb dieser Zeit |
 | `energy.stages` | ab welcher Energie der Kristall beschädigt/zerkratzt/makellos ist; darunter zerbrochen, Fähigkeiten aus |
 | `energy.minStrength` | Fähigkeitsstärke bei niedrigster Energie (steigt bis 1.0 bei `max`) |
+| `controls.swapHandsActivates` | F / Schleichen + F lösen Fähigkeiten aus statt die Hände zu tauschen |
+| `hud.enabled`, `hud.updateTicks` | Actionbar-HUD an/aus und wie oft es aktualisiert wird |
 | `effects.quality` | `LOW`, `MEDIUM`, `HIGH` – dünnt Partikel aus |
 | `effects.maxParticlesPerTick` | Partikel-Budget aller Effekte pro Tick |
 | `effects.maxDisplays` | Obergrenze gleichzeitiger Display-Entities in Effekten |
@@ -112,4 +121,4 @@ Außerdem ruft sie `XmasCore#tick()` jeden Server-Tick auf und meldet Spieler-Er
 
 Kräfte entstehen als `ActiveAbility` / `PassiveAbility`. Animationen baut man mit `EffectTimeline` (Phasen *Aufladen → Auslösen → Nachklingen*) aus `Shapes` (Ring, Spirale, Kugel, Linie, Welle), `ParticleSpec` (inkl. Farbverläufen) und `SoundStack` (geschichtete Sounds mit Tonhöhen-Variation). Für 3D-Effekte spawnt `EffectCanvas#display` Block- oder Item-Displays (`DisplaySpec`), die sich weich bewegen, drehen und skalieren lassen und mit dem Effekt verschwinden.
 
-Die Spielerdaten (`PlayerData`) sind die Wahrheit über Kristall, Tier und Energie. `CrystalService` hält das Kristall-Item im Inventar passend dazu und gleicht es jede Sekunde ab.
+Die Spielerdaten (`PlayerData`) sind die Wahrheit über Kristall, Tier und Energie. `CrystalService` hält das Kristall-Item im Inventar passend dazu und gleicht es jede Sekunde ab. `EnergyService` verteilt Energie bei Kills und Toden und liefert Bruchstufe und Fähigkeitsstärke. `AbilityControls` setzt die F-Taste in Fähigkeiten um, `HudService` zeichnet die Actionbar.
