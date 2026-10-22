@@ -1,5 +1,6 @@
 package de.xmassmp;
 
+import de.xmassmp.ability.AbilityControls;
 import de.xmassmp.ability.AbilityRegistry;
 import de.xmassmp.ability.AbilityService;
 import de.xmassmp.admin.AdminService;
@@ -12,6 +13,7 @@ import de.xmassmp.effect.EffectEngine;
 import de.xmassmp.event.EventClock;
 import de.xmassmp.event.EventService;
 import de.xmassmp.event.action.EventActionRegistry;
+import de.xmassmp.hud.HudService;
 import de.xmassmp.platform.Platform;
 import de.xmassmp.platform.PlayerHandle;
 import de.xmassmp.platform.XmasLogger;
@@ -55,6 +57,7 @@ public final class XmasCore {
     private final AdminService admin;
     private final CrystalService crystalService;
     private final EnergyService energy;
+    private final HudService hud;
     private final List<PlayerListener> playerListeners = new CopyOnWriteArrayList<>();
     private long ticks;
 
@@ -84,8 +87,13 @@ public final class XmasCore {
         this.crystalService = new CrystalService(platform, crystals, players, config::get,
                 energy::stage, effects, new Random());
         this.admin = new AdminService(crystals, players, config, events, audit, this::reload, crystalService::sync);
+        this.hud = new HudService(platform, crystals, abilities, players, config::get, energy::stage, effects,
+                clock::millis);
         addPlayerListener(crystalService);
         addPlayerListener(energy);
+        addPlayerListener(hud);
+        addPlayerListener(new AbilityControls(crystals, abilities, abilityService, players, config::get, hud,
+                clock::millis));
     }
 
     /** Lädt Konfiguration und Events. Erst nach der Registrierung eigener Erweiterungen aufrufen. */
@@ -110,6 +118,7 @@ public final class XmasCore {
         }
         effects.tick();
         crystalService.tick(ticks);
+        hud.tick(ticks);
         if (ticks % TICKS_PER_SECOND == 0) {
             events.tick();
         }
@@ -250,5 +259,9 @@ public final class XmasCore {
 
     public EnergyService energy() {
         return energy;
+    }
+
+    public HudService hud() {
+        return hud;
     }
 }

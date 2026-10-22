@@ -18,6 +18,8 @@ public final class XmasConfig {
     public Map<String, CrystalSettings> crystals = new LinkedHashMap<>();
     public CrystalItem crystalItem = new CrystalItem();
     public Energy energy = new Energy();
+    public Controls controls = new Controls();
+    public Hud hud = new Hud();
     public Effects effects = new Effects();
     public Events events = new Events();
     public Audit audit = new Audit();
@@ -59,6 +61,15 @@ public final class XmasConfig {
         public int pristine = 7;
     }
 
+    public static final class Controls {
+        public boolean swapHandsActivates = true;
+    }
+
+    public static final class Hud {
+        public boolean enabled = true;
+        public int updateTicks = 10;
+    }
+
     public static final class Effects {
         public EffectQuality quality = EffectQuality.HIGH;
         public int maxParticlesPerTick = 3000;
@@ -87,6 +98,8 @@ public final class XmasConfig {
         if (crystals == null) crystals = new LinkedHashMap<>();
         if (crystalItem == null) crystalItem = new CrystalItem();
         if (energy == null) energy = new Energy();
+        if (controls == null) controls = new Controls();
+        if (hud == null) hud = new Hud();
         if (effects == null) effects = new Effects();
         if (events == null) events = new Events();
         if (audit == null) audit = new Audit();
@@ -122,6 +135,10 @@ public final class XmasConfig {
             int clamped = Math.max(energy.min, Math.min(energy.max, energy.start));
             warnings.add("energy.start " + energy.start + " liegt außerhalb min/max – auf " + clamped + " gesetzt");
             energy.start = clamped;
+        }
+        if (hud.updateTicks < 1 || hud.updateTicks > 40) {
+            warnings.add("hud.updateTicks muss 1–40 sein – 10 verwendet");
+            hud.updateTicks = 10;
         }
         if (effects.quality == null) {
             warnings.add("effects.quality ungültig – HIGH verwendet");

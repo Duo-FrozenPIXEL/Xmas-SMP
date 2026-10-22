@@ -54,6 +54,20 @@
     "minStrength": 0.6
   },
 
+  "controls": {
+    // Taste „Item mit Zweithand tauschen“ (Standard F) löst Fähigkeit 1 aus,
+    // Schleichen + F Fähigkeit 2. Funktioniert ohne Client-Mod. Der normale Zweithand-Tausch
+    // ist dann für Spieler mit Kristall abgeschaltet. false = F tauscht wieder normal.
+    "swapHandsActivates": true
+  },
+
+  "hud": {
+    // Actionbar mit Fähigkeits-Icons, Cooldowns und Energie für Spieler mit Kristall.
+    "enabled": true,
+    // Aktualisierung in Server-Ticks (20 = 1 Sekunde), 1–40.
+    "updateTicks": 10
+  },
+
   "effects": {
     // Partikel-Qualität: LOW, MEDIUM oder HIGH. Niedrigere Stufen dünnen die Partikel aus.
     "quality": "HIGH",
