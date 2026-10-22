@@ -73,6 +73,34 @@ class ConfigManagerTest {
     }
 
     @Test
+    void nullCrystalEntryGetsDefaults() throws IOException {
+        Files.writeString(dir.resolve(ConfigManager.FILE_NAME), """
+                { "crystals": { "fire": null, "ice": { "cooldownMultiplier": 2 } } }
+                """);
+        ConfigManager manager = new ConfigManager(dir);
+        ConfigManager.LoadResult result = manager.load();
+        assertTrue(result.success());
+        assertEquals(1, result.messages().size(), result.messages().toString());
+        assertTrue(result.messages().get(0).contains("crystals.fire"));
+        assertEquals(1.0, manager.get().crystal("fire").cooldownMultiplier);
+        assertTrue(manager.get().crystal("fire").enabled);
+        assertEquals(2.0, manager.get().crystal("ice").cooldownMultiplier);
+    }
+
+    @Test
+    void nullSectionsAndValuesDoNotThrow() throws IOException {
+        Files.writeString(dir.resolve(ConfigManager.FILE_NAME), """
+                { "general": null, "energy": null, "effects": { "quality": null },
+                  "events": { "timezone": null }, "audit": null }
+                """);
+        ConfigManager manager = new ConfigManager(dir);
+        assertTrue(manager.load().success());
+        assertEquals(EffectQuality.HIGH, manager.get().effects.quality);
+        assertEquals("Europe/Berlin", manager.get().events.timezone);
+        assertTrue(manager.get().general.enabled);
+    }
+
+    @Test
     void brokenFileKeepsPreviousConfig() throws IOException {
         ConfigManager manager = new ConfigManager(dir);
         AtomicInteger reloads = new AtomicInteger();

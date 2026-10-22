@@ -66,6 +66,12 @@ public final class ConfigManager {
             messages.add(FILE_NAME + " konnte nicht gelesen werden, alte Konfiguration bleibt aktiv: "
                     + rootMessage(e));
             return new LoadResult(false, messages);
+        } catch (RuntimeException e) {
+            // Unerwartete Werte (z. B. null an unvorhergesehener Stelle) dürfen Start und Reload
+            // nicht abbrechen.
+            messages.add(FILE_NAME + " enthält ungültige Werte, alte Konfiguration bleibt aktiv: "
+                    + rootMessage(e));
+            return new LoadResult(false, messages);
         }
     }
 

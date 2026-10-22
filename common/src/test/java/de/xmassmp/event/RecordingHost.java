@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Merkt sich alle Ausgaben als lesbare Zeilen. */
-final class RecordingHost implements EventHost {
+class RecordingHost implements EventHost {
 
     final List<String> log = new ArrayList<>();
 

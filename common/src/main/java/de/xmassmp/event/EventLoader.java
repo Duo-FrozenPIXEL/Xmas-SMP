@@ -7,6 +7,7 @@ import com.google.gson.JsonParseException;
 import de.xmassmp.event.action.EventAction;
 import de.xmassmp.event.action.EventActionRegistry;
 import de.xmassmp.util.JsonFiles;
+import de.xmassmp.util.ResourceIds;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -59,7 +60,7 @@ public final class EventLoader {
         }
 
         EventMessages messages = parseMessages(root.has("messages") && root.get("messages").isJsonObject()
-                ? root.getAsJsonObject("messages") : null);
+                ? root.getAsJsonObject("messages") : null, errors);
         List<EventDefinition> events = new ArrayList<>();
         Set<String> ids = new HashSet<>();
         JsonArray array = root.has("events") && root.get("events").isJsonArray()
@@ -84,17 +85,28 @@ public final class EventLoader {
         return new Result(messages, events, errors);
     }
 
-    private static EventMessages parseMessages(JsonObject json) {
+    private static EventMessages parseMessages(JsonObject json, List<String> errors) {
         EventMessages d = EventMessages.DEFAULTS;
         if (json == null) {
             return d;
         }
         return new EventMessages(
                 optString(json, "announce", d.announce()),
-                optString(json, "announceSound", d.announceSound()),
+                optSound(json, "announceSound", d.announceSound(), errors),
                 optString(json, "countdownTitle", d.countdownTitle()),
                 optString(json, "countdownSubtitle", d.countdownSubtitle()),
-                optString(json, "countdownSound", d.countdownSound()));
+                optSound(json, "countdownSound", d.countdownSound(), errors));
+    }
+
+    /** Leer = kein Sound. Ungültige IDs fallen auf den Standard zurück, statt zur Laufzeit zu werfen. */
+    private static String optSound(JsonObject json, String key, String fallback, List<String> errors) {
+        String sound = optString(json, key, fallback);
+        if (sound.isEmpty() || ResourceIds.isValid(sound)) {
+            return sound;
+        }
+        errors.add("messages." + key + ": ungültige Sound-ID '" + sound + "' (nur a-z, 0-9, _ . - /) – "
+                + fallback + " verwendet");
+        return fallback;
     }
 
     private EventDefinition parseEvent(JsonObject json) throws EventConfigException {

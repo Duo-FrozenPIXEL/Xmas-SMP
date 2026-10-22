@@ -17,8 +17,10 @@ import de.xmassmp.player.PlayerDataStore;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -45,6 +47,7 @@ public final class XmasCore {
     private final AbilityService abilityService;
     private final AuditLog audit;
     private final AdminService admin;
+    private final Set<String> failing = new HashSet<>();
     private long ticks;
 
     public XmasCore(Platform platform) {
@@ -90,12 +93,28 @@ public final class XmasCore {
         if (!config.get().general.enabled) {
             return;
         }
-        effects.tick();
+        guarded("Effekte", effects::tick);
         if (ticks % TICKS_PER_SECOND == 0) {
-            events.tick();
+            guarded("Events", events::tick);
         }
         if (ticks % AUTOSAVE_TICKS == 0) {
-            players.saveDirty();
+            guarded("Autosave", players::saveDirty);
+        }
+    }
+
+    /**
+     * Fängt Fehler ab, damit ein einzelner Teil nicht den Server-Tick und damit den Server
+     * abbrechen lässt. Geloggt wird nur der erste Fehler, bis der Teil wieder durchläuft.
+     */
+    private void guarded(String part, Runnable task) {
+        try {
+            task.run();
+            failing.remove(part);
+        } catch (RuntimeException e) {
+            if (failing.add(part)) {
+                logger.error(part + " im Server-Tick fehlgeschlagen (weitere Fehler bis zur Erholung "
+                        + "werden nicht geloggt)", e);
+            }
         }
     }
 
