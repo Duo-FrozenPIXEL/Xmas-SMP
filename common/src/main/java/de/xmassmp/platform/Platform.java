@@ -4,6 +4,9 @@ import de.xmassmp.effect.EffectSink;
 import de.xmassmp.event.EventHost;
 
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Alles, was der Kern von einer Server-Plattform (Fabric, Paper, NeoForge) braucht.
@@ -24,4 +27,9 @@ public interface Platform {
     EffectSink effectSink();
 
     EventHost eventHost();
+
+    /** Alle Spieler, die gerade online sind. */
+    List<PlayerHandle> onlinePlayers();
+
+    Optional<PlayerHandle> player(UUID uuid);
 }

@@ -17,19 +17,22 @@ import java.util.random.RandomGenerator;
  *
  * <p>Performance: Alle Effekte teilen sich ein Partikel-Budget pro Tick
  * ({@code effects.maxParticlesPerTick}); was darüber hinausgeht, wird verworfen. Die
- * {@link EffectQuality} dünnt Formen und Partikelzahlen zusätzlich aus.
+ * {@link EffectQuality} dünnt Formen und Partikelzahlen zusätzlich aus. Display-Entities zählen
+ * gegen {@code effects.maxDisplays} und werden mit dem Effekt entfernt, der sie erzeugt hat.
  */
 public final class EffectEngine {
 
     private final EffectSink sink;
     private final Supplier<EffectQuality> quality;
     private final IntSupplier particleBudget;
+    private final IntSupplier displayLimit;
     private final RandomGenerator random;
     private final XmasLogger logger;
 
     private final List<Running> running = new ArrayList<>();
     private final List<Running> starting = new ArrayList<>();
     private final List<ScheduledSound> sounds = new ArrayList<>();
+    private final List<TrackedDisplay> displays = new ArrayList<>();
     private long currentTick;
     private int budgetLeft;
     private int droppedThisTick;
@@ -37,9 +40,15 @@ public final class EffectEngine {
 
     public EffectEngine(EffectSink sink, Supplier<EffectQuality> quality, IntSupplier particleBudget,
                         RandomGenerator random, XmasLogger logger) {
+        this(sink, quality, particleBudget, () -> Integer.MAX_VALUE, random, logger);
+    }
+
+    public EffectEngine(EffectSink sink, Supplier<EffectQuality> quality, IntSupplier particleBudget,
+                        IntSupplier displayLimit, RandomGenerator random, XmasLogger logger) {
         this.sink = sink;
         this.quality = quality;
         this.particleBudget = particleBudget;
+        this.displayLimit = displayLimit;
         this.random = random;
         this.logger = logger;
         this.budgetLeft = particleBudget.getAsInt();
@@ -52,7 +61,7 @@ public final class EffectEngine {
 
     /** Effekt, der einem beweglichen Anker folgt (z. B. der Spielerposition). */
     public EffectHandle play(EffectTimeline timeline, WorldRef world, Supplier<Vec3> anchor) {
-        Running effect = new Running(timeline, new EffectCanvas(this, world), anchor);
+        Running effect = new Running(timeline, anchor, world);
         starting.add(effect);
         return effect;
     }
@@ -71,7 +80,7 @@ public final class EffectEngine {
         while (it.hasNext()) {
             Running effect = it.next();
             if (effect.cancelled || effect.age >= effect.timeline.length()) {
-                effect.done = true;
+                effect.finish();
                 it.remove();
                 continue;
             }
@@ -81,7 +90,7 @@ public final class EffectEngine {
                 effect.age++;
             } catch (RuntimeException e) {
                 logger.error("Effekt abgebrochen (Fehler in Tick " + effect.age + ")", e);
-                effect.done = true;
+                effect.finish();
                 it.remove();
             }
         }
@@ -96,10 +105,17 @@ public final class EffectEngine {
         return droppedLastTick;
     }
 
+    /** Anzahl aktiver Display-Entities aller Effekte. */
+    public int activeDisplays() {
+        return displays.size();
+    }
+
+    /** Bricht alle Effekte ab und entfernt ihre Displays sofort (z. B. beim Stoppen des Servers). */
     public void cancelAll() {
         running.forEach(Running::cancel);
         starting.forEach(Running::cancel);
         sounds.clear();
+        List.copyOf(displays).forEach(TrackedDisplay::remove);
     }
 
     RandomGenerator random() {
@@ -133,6 +149,23 @@ public final class EffectEngine {
         }
     }
 
+    DisplayHandle spawnDisplay(Running owner, WorldRef world, Vec3 position, DisplaySpec spec) {
+        if (displays.size() >= displayLimit.getAsInt()) {
+            return DisplayHandle.none();
+        }
+        DisplayHandle handle;
+        try {
+            handle = sink.spawnDisplay(world, position, spec);
+        } catch (RuntimeException e) {
+            logger.error("Display " + spec.id() + " konnte nicht gespawnt werden", e);
+            return DisplayHandle.none();
+        }
+        TrackedDisplay tracked = new TrackedDisplay(handle);
+        displays.add(tracked);
+        owner.ownDisplays.add(tracked);
+        return tracked;
+    }
+
     private void playDueSounds() {
         Iterator<ScheduledSound> it = sounds.iterator();
         while (it.hasNext()) {
@@ -154,18 +187,68 @@ public final class EffectEngine {
     private record ScheduledSound(long dueTick, WorldRef world, Vec3 position, SoundStack.Layer layer) {
     }
 
-    private static final class Running implements EffectHandle {
+    /** Zählt das Display gegen das Budget und entfernt es höchstens einmal. */
+    private final class TrackedDisplay implements DisplayHandle {
+        private final DisplayHandle delegate;
+        private boolean removed;
+
+        TrackedDisplay(DisplayHandle delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void moveTo(Vec3 position, int ticks) {
+            if (!removed) {
+                delegate.moveTo(position, Math.max(0, ticks));
+            }
+        }
+
+        @Override
+        public void transform(DisplayTransform transform, int ticks) {
+            if (!removed) {
+                delegate.transform(transform, Math.max(0, ticks));
+            }
+        }
+
+        @Override
+        public void remove() {
+            if (removed) {
+                return;
+            }
+            removed = true;
+            displays.remove(this);
+            try {
+                delegate.remove();
+            } catch (RuntimeException e) {
+                logger.error("Display konnte nicht entfernt werden", e);
+            }
+        }
+
+        @Override
+        public boolean isRemoved() {
+            return removed;
+        }
+    }
+
+    final class Running implements EffectHandle {
         final EffectTimeline timeline;
         final EffectCanvas canvas;
         final Supplier<Vec3> anchor;
+        final List<TrackedDisplay> ownDisplays = new ArrayList<>();
         int age;
         volatile boolean cancelled;
         volatile boolean done;
 
-        Running(EffectTimeline timeline, EffectCanvas canvas, Supplier<Vec3> anchor) {
+        Running(EffectTimeline timeline, Supplier<Vec3> anchor, WorldRef world) {
             this.timeline = timeline;
-            this.canvas = canvas;
+            this.canvas = new EffectCanvas(EffectEngine.this, this, world);
             this.anchor = anchor;
+        }
+
+        void finish() {
+            done = true;
+            List.copyOf(ownDisplays).forEach(TrackedDisplay::remove);
+            ownDisplays.clear();
         }
 
         @Override
