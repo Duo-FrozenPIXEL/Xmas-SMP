@@ -1,5 +1,6 @@
 package de.xmassmp.ability;
 
+import de.xmassmp.TestPlatform;
 import de.xmassmp.config.XmasConfig;
 import de.xmassmp.crystal.Crystals;
 import de.xmassmp.effect.EffectEngine;
@@ -12,6 +13,7 @@ import de.xmassmp.player.PlayerData;
 import de.xmassmp.util.Vec3;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Random;
 import java.util.UUID;
@@ -38,7 +40,11 @@ class AbilityServiceTest {
         }
     }, () -> EffectQuality.HIGH, () -> 1000, new Random(), XmasLogger.NOOP);
 
-    private final AbilityService service = new AbilityService(() -> config, effects, now::get, () -> eventMultiplier);
+    private double strength = 1.0;
+    private final java.util.List<Double> seenStrength = new java.util.ArrayList<>();
+
+    private final AbilityService service = new AbilityService(() -> config, effects, now::get, () -> eventMultiplier,
+            data -> strength);
 
     private final ActiveAbility meteor = new ActiveAbility() {
         @Override
@@ -69,44 +75,11 @@ class AbilityServiceTest {
         @Override
         public void activate(AbilityContext context) {
             activations.incrementAndGet();
+            seenStrength.add(context.strength());
         }
     };
 
-    private final PlayerHandle player = new PlayerHandle() {
-        @Override
-        public UUID uuid() {
-            return UUID.randomUUID();
-        }
-
-        @Override
-        public String name() {
-            return "Tester";
-        }
-
-        @Override
-        public WorldRef world() {
-            return new WorldRef("overworld");
-        }
-
-        @Override
-        public Vec3 position() {
-            return Vec3.ZERO;
-        }
-
-        @Override
-        public Vec3 eyePosition() {
-            return Vec3.UP;
-        }
-
-        @Override
-        public Vec3 lookDirection() {
-            return new Vec3(1, 0, 0);
-        }
-
-        @Override
-        public void sendActionBar(String legacyText) {
-        }
-    };
+    private final PlayerHandle player = new TestPlatform(Path.of(".")).join("Tester");
 
     private PlayerData fireTier(int tier) {
         PlayerData data = new PlayerData(UUID.randomUUID(), 5);
@@ -170,5 +143,16 @@ class AbilityServiceTest {
         assertEquals(1, registry.forCrystal("fire").size());
         assertEquals(0, registry.forCrystal("wind").size());
         assertThrows(IllegalArgumentException.class, () -> registry.register(meteor));
+    }
+
+    @Test
+    void brokenCrystalBlocksAndStrengthIsPassedOn() {
+        PlayerData data = fireTier(2);
+        strength = 0;
+        assertEquals(AbilityService.Result.BROKEN, service.tryActivate(player, data, Crystals.FIRE, meteor));
+        assertEquals(0, data.remainingCooldownMillis("fire.meteor", now.get()), "kein Cooldown verbraucht");
+        strength = 0.7;
+        assertEquals(AbilityService.Result.ACTIVATED, service.tryActivate(player, data, Crystals.FIRE, meteor));
+        assertEquals(java.util.List.of(0.7), seenStrength);
     }
 }

@@ -20,5 +20,6 @@
 
   "lore.xmassmp.tier": "Tier %s",
   "lore.xmassmp.stage": "Condition: %s",
+  "lore.xmassmp.energy": "Energy: %s",
   "lore.xmassmp.soulbound": "Soulbound"
 }

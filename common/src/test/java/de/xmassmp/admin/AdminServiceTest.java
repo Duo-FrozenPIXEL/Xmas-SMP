@@ -3,15 +3,9 @@ package de.xmassmp.admin;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.xmassmp.MutableClock;
+import de.xmassmp.TestPlatform;
 import de.xmassmp.XmasCore;
-import de.xmassmp.effect.EffectSink;
-import de.xmassmp.effect.ParticleSpec;
-import de.xmassmp.event.EventHost;
 import de.xmassmp.item.ItemSpec;
-import de.xmassmp.platform.Platform;
-import de.xmassmp.platform.WorldRef;
-import de.xmassmp.platform.XmasLogger;
-import de.xmassmp.util.Vec3;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -141,56 +135,5 @@ class AdminServiceTest {
         assertEquals(List.of("broken", "damaged", "scratched", "pristine"), AdminService.stageIds());
         assertEquals(4, admin.eventIds().size());
         assertTrue(admin.simulateDateSuggestions().contains("2026-12-24"));
-    }
-
-    private record TestPlatform(Path dir) implements Platform {
-        @Override
-        public Path configDirectory() {
-            return dir;
-        }
-
-        @Override
-        public Path dataDirectory() {
-            return dir.resolve("data");
-        }
-
-        @Override
-        public XmasLogger logger() {
-            return XmasLogger.NOOP;
-        }
-
-        @Override
-        public EffectSink effectSink() {
-            return new EffectSink() {
-                @Override
-                public void particle(WorldRef world, Vec3 position, ParticleSpec spec, int count) {
-                }
-
-                @Override
-                public void sound(WorldRef world, Vec3 position, String sound, float volume, float pitch) {
-                }
-            };
-        }
-
-        @Override
-        public EventHost eventHost() {
-            return new EventHost() {
-                @Override
-                public void broadcast(String legacyText) {
-                }
-
-                @Override
-                public void title(String title, String subtitle, int fadeIn, int stay, int fadeOut) {
-                }
-
-                @Override
-                public void playSound(String sound, float volume, float pitch) {
-                }
-
-                @Override
-                public void runCommand(String command) {
-                }
-            };
-        }
     }
 }

@@ -20,5 +20,6 @@
 
   "lore.xmassmp.tier": "Tier %s",
   "lore.xmassmp.stage": "Zustand: %s",
+  "lore.xmassmp.energy": "Energie: %s",
   "lore.xmassmp.soulbound": "Seelengebunden"
 }

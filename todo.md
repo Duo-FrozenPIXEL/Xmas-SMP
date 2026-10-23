@@ -118,35 +118,38 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 - [x] **Polymer** (+ Polymer Resource Pack / AutoHost) für Custom Items und automatische Resource-Pack-Auslieferung (Pack-Assets registriert; AutoHost konfiguriert der Server-Betreiber)
 - [x] **sgui** für Chest-GUIs (Admin-GUI, Gem Trader) – als Abhängigkeit eingebunden, noch ungenutzt
 - [x] **fabric-permissions-api** (LuckPerms-kompatibel) für Rechte
-- [ ] Fabric API für Events (Join, Tod, Kill, Tick, Interaktion) – Join/Quit/Tick/Start/Stop angebunden, Tod/Kill/Interaktion folgen mit dem Gameplay
+- [x] Fabric API für Events (Join, Quit, Tod, Kill, Respawn, Tick, Item-Nutzung) + Mixin für die Zweithand-Taste `F` → `PlayerListener` im Kern
 
 ### 3.3 Kern-Abstraktionen (in `common`)
 - [x] `Crystal`-Registry (5 Kristalle: Feuer, Erde, Wind, Schatten, Natur), erweiterbar für Christmas-Twist
 - [x] `Ability`-Interface (Passive / Aktiv, Cooldown, Tier-Voraussetzung) + `AbilityService` (Schalter, Cooldown × Config × Event-Modifikator)
-- [ ] Energie-Skalierung der Fähigkeiten (wartet auf Recherche, Abschnitt 2)
+- [x] Energie-Skalierung der Fähigkeiten: `AbilityContext.strength` (0 = zerbrochen, sonst `energy.minStrength`–1.0), Werte vorläufig bis zur Recherche (Abschnitt 2)
 - [x] `EffectEngine` / Animations-API: Partikel-Formen (Ring, Spirale, Kugel, Linie, Welle), Keyframes/Phasen über mehrere Ticks mit Easing, geschichtete Sounds, Qualitätsstufe + Partikel-Budget
-- [ ] Display-Entities (Block-/Item-Display) in der `EffectEngine`
+- [x] Display-Entities (Block-/Item-Display) in der `EffectEngine`: Größe, Drehung, Leuchten, weiche Bewegung; Fabric über Polymer Virtual Entities (nur Pakete, nie in der Welt gespeichert), Budget `effects.maxDisplays`
 - [x] `PlayerData` (Kristall, Tier, Energie, Cooldowns) mit Persistenz (pro Spieler JSON; defekte Dateien werden gesichert) – Level folgt, falls gewünscht (4.3)
 - [x] Plattform-Adapter: Partikel senden, Items bauen, Befehle registrieren, Tick-Takt (Fabric)
-- [ ] Plattform-Adapter: Entities spawnen, GUIs öffnen, `PlayerHandle` für Fähigkeiten
+- [x] Plattform-Adapter: `PlayerHandle` (Position, Blickrichtung, Schleichen, Actionbar, Chat), Online-Spieler
+- [x] Plattform-Adapter: Display-Entities spawnen
+- [ ] Plattform-Adapter: GUIs öffnen
 
 ---
 
 ## 4. Gameplay-Systeme (aus dem Original)
 
 ### 4.1 Kristall-Items
-- [ ] Je Kristall: Tier 1 + Tier 2, je 4 Bruchstufen (Modelle/Texturen vorhanden, siehe 1.2)
-- [ ] Item-Lore: Kristallname, Tier, Energie, Fähigkeiten, Farbcodes passend zur Kristallfarbe
-- [ ] Kristall ist seelengebunden: kann nicht gedroppt/in Kisten gelegt/verloren werden (konfigurierbar)
-- [ ] Nur ein Kristall pro Spieler aktiv
-- [ ] Erster Join → zufälliger Kristall (konfigurierbar)
+- [x] Je Kristall: Tier 1 + Tier 2, je 4 Bruchstufen (Modelle/Texturen vorhanden, siehe 1.2) – Item folgt automatisch den Spielerdaten
+- [x] Item-Lore: Kristallname, Tier, Zustand, Energie, Farbcodes passend zur Kristallfarbe
+- [ ] Item-Lore: Fähigkeiten (sobald die Kräfte feststehen, Abschnitt 5)
+- [x] Kristall ist seelengebunden: kann nicht gedroppt/in Kisten gelegt/verloren werden (`crystalItem.soulbound`) – Abgleich jede Sekunde, Kopien in Behältern/Item-Rahmen sind wirkungslos
+- [x] Nur ein Kristall pro Spieler aktiv (Spielerdaten sind die Wahrheit, das Item nur Anzeige)
+- [x] Erster Join → zufälliger aktivierter Kristall mit kleinem Effekt (`crystalItem.giveOnJoin`)
 
 ### 4.2 Breaking-Pristine-System (Energie)
-- [ ] Energie-Wert pro Spieler (Standard 0–10 **(V)**)
-- [ ] Kill eines Spielers → +Energie, eigener Tod → −Energie (konfigurierbar, Anti-Farming: gleicher Gegner Cooldown)
-- [ ] Energie → Bruchstufe → Modell (4 sichtbare Stufen: zerbrochen, beschädigt, zerkratzt, makellos)
-- [ ] Energie skaliert Fähigkeitsstärke (Schaden, Dauer, Radius) und schaltet bei 0 Fähigkeiten ab
-- [ ] **Bruch-Animation** beim Stufenwechsel: Riss-Partikel (Overlay-Texturen `gem-breaking/*`), Glas-Sound, Item-Shards in Kristallfarbe
+- [x] Energie-Wert pro Spieler (Standard 0–10 **(V)**)
+- [x] Kill eines Spielers → +Energie, eigener Tod → −Energie (`energy.killGain`/`deathLoss`, Anti-Farming `sameVictimCooldownMinutes`, Event-Modifikator `energy_multiplier`)
+- [x] Energie → Bruchstufe → Modell (4 sichtbare Stufen: zerbrochen, beschädigt, zerkratzt, makellos; Schwellen in `energy.stages`)
+- [x] Energie skaliert Fähigkeitsstärke (Schaden, Dauer, Radius) und schaltet bei „zerbrochen“ Fähigkeiten ab (`AbilityService.Result.BROKEN`)
+- [ ] **Bruch-Animation** beim Stufenwechsel (Hook `EnergyService.addStageListener` und Glas-Sound vorhanden): Riss-Partikel (Overlay-Texturen `gem-breaking/*`), Glas-Sound, Item-Shards in Kristallfarbe
 - [ ] **Reparatur-/Aufwertungs-Animation** beim Aufstieg
 - [ ] Energy Bottle: Energie abfüllen (Rechtsklick/Befehl) und an andere übertragen
 - [ ] Repair-Kit: Kristall-Energie wiederherstellen (Rezept + Effekt)
@@ -166,9 +169,9 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 - [ ] Optional: platzierbare Trader-Station (Modell `trader`)
 
 ### 4.5 Fähigkeits-Steuerung & HUD
-- [ ] Aktivierung festlegen (z. B. Offhand-Swap-Taste `F` = Fähigkeit 1, Schleichen + `F` = Fähigkeit 2) – funktioniert ohne Client-Mod
-- [ ] Actionbar-HUD mit Font-Icons (``–``) + Cooldown-Anzeige in Sekunden
-- [ ] Cooldown-Ende: kleiner Sound + Partikel-Puls
+- [x] Aktivierung: Zweithand-Taste `F` = Fähigkeit 1, Schleichen + `F` = Fähigkeit 2 – ohne Client-Mod, abschaltbar (`controls.swapHandsActivates`); Kristalle ohne Kräfte tauschen normal
+- [x] Actionbar-HUD mit Font-Icons + Cooldown-Anzeige in Sekunden, Tier-Sperre, zerbrochen, Energie (`hud.enabled`, `hud.updateTicks`); Rückmeldungen (Cooldown, gesperrt, zerbrochen) überdecken das HUD kurz
+- [x] Cooldown-Ende: kleiner Sound + Partikel-Puls in Kristallfarbe
 
 ---
 
@@ -244,7 +247,7 @@ Allgemeine Qualitätsanforderungen für **jede** Kraft:
 - [ ] Aktionstypen (erweiterbar):
   - [x] Broadcast/Titel/Sound an alle
   - [x] Befehl ausführen
-  - [x] Globale Modifikatoren (z. B. doppelte Energie, verkürzte Cooldowns) – `cooldown_multiplier` wirkt, `energy_multiplier` wartet aufs Energiesystem
+  - [x] Globale Modifikatoren (z. B. doppelte Energie, verkürzte Cooldowns) – `cooldown_multiplier` und `energy_multiplier` wirken
   - [x] Hook-Interface für spätere Christmas-Twist-Events (`EventActionRegistry`, `EventScheduler.Listener`)
 - [x] Ankündigungen vor Eventstart (z. B. 10 min, 1 min, Countdown)
 - [x] Persistenz: Laufende Events überstehen Server-Neustart; verpasste Events beim Start nachholen oder überspringen (konfigurierbar)

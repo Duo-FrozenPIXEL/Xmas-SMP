@@ -1,5 +1,7 @@
 package de.xmassmp.fabric;
 
+import de.xmassmp.effect.DisplayHandle;
+import de.xmassmp.effect.DisplaySpec;
 import de.xmassmp.effect.EffectSink;
 import de.xmassmp.effect.ParticleSpec;
 import de.xmassmp.platform.WorldRef;
@@ -20,7 +22,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/** Sendet Partikel und Sounds der {@link de.xmassmp.effect.EffectEngine} an die Clients. */
+/** Sendet Partikel, Sounds und Displays der {@link de.xmassmp.effect.EffectEngine} an die Clients. */
 final class FabricEffectSink implements EffectSink {
 
     private final FabricPlatform platform;
@@ -53,6 +55,12 @@ final class FabricEffectSink implements EffectSink {
         }
         level.playSound(null, position.x(), position.y(), position.z(),
                 SoundEvent.createVariableRangeEvent(McIds.parse(sound)), SoundSource.PLAYERS, volume, pitch);
+    }
+
+    @Override
+    public DisplayHandle spawnDisplay(WorldRef world, Vec3 position, DisplaySpec spec) {
+        ServerLevel level = platform.level(world);
+        return level == null ? DisplayHandle.none() : new FabricDisplay(level, position, spec);
     }
 
     private ParticleOptions options(ParticleSpec spec) {

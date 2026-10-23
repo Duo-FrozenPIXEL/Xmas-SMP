@@ -85,6 +85,8 @@ class CrystalPackTest {
             ItemSpec spec = ItemCatalog.crystal(crystal, 1, PristineStage.BROKEN);
             texts.add(spec.name());
             texts.addAll(spec.lore());
+            texts.addAll(ItemCatalog.ownedCrystal(crystal, 2, PristineStage.PRISTINE, 3, 10,
+                    java.util.UUID.randomUUID(), true).lore());
         }
         for (PristineStage stage : PristineStage.values()) {
             texts.add(stage.displayName());

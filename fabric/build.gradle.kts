@@ -24,6 +24,8 @@ dependencies {
     // Server-seitig für Vanilla-Clients: Resource-Pack-Auslieferung, Chest-GUIs, Rechte.
     modImplementation(include("eu.pb4:polymer-core:${property("polymer_version")}")!!)
     modImplementation(include("eu.pb4:polymer-resource-pack:${property("polymer_version")}")!!)
+    // Display-Entities für Effekte, nur als Pakete (werden nie mit der Welt gespeichert).
+    modImplementation(include("eu.pb4:polymer-virtual-entity:${property("polymer_version")}")!!)
     modImplementation(include("eu.pb4:sgui:${property("sgui_version")}")!!)
     modImplementation(include("me.lucko:fabric-permissions-api:${property("permissions_api_version")}")!!)
 

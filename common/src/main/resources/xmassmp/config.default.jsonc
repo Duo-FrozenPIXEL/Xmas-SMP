@@ -22,19 +22,59 @@
     "nature": { "enabled": true, "cooldownMultiplier": 1.0, "damageMultiplier": 1.0 }
   },
 
+  "crystalItem": {
+    // Spieler ohne Kristall bekommen beim Betreten einen zufälligen, aktivierten Kristall.
+    "giveOnJoin": true,
+    // Seelengebunden: Der Kristall kann nicht gedroppt, in Behälter gelegt, verbaut oder beim
+    // Tod verloren werden – er taucht sofort wieder im Inventar auf. Kopien in Behältern oder
+    // Item-Rahmen sind wirkungslos und verschwinden, sobald jemand sie anfasst.
+    // false: Das Item ist reine Anzeige und kann verloren gehen; die Kräfte bleiben trotzdem.
+    "soulbound": true
+  },
+
   // Energie (Breaking-Pristine-System).
   // VORLÄUFIG: Die Werte werden an das Original angepasst, sobald es recherchiert ist.
   "energy": {
     "start": 5,   // Energie neuer Spieler
     "min": 0,
-    "max": 10
+    "max": 10,
+    // Gewinn für den Sieger bzw. Verlust für den Besiegten bei einem PvP-Kill.
+    // Läuft ein Event mit "energy_multiplier", wird der Gewinn damit multipliziert.
+    "killGain": 1,
+    // Verlust bei jedem Tod, auch ohne Gegner (Mob, Lava, Sturz …).
+    "deathLoss": 1,
+    // Anti-Farming: Wer denselben Spieler innerhalb dieser Minuten erneut besiegt, bekommt
+    // keine Energie. 0 = aus.
+    "sameVictimCooldownMinutes": 30,
+    // Ab welcher Energie der Kristall wie aussieht; darunter ist er zerbrochen und die
+    // Fähigkeiten sind aus. Es muss gelten: min ≤ damaged ≤ scratched ≤ pristine ≤ max.
+    "stages": { "damaged": 1, "scratched": 4, "pristine": 7 },
+    // Stärke der Fähigkeiten (Schaden, Dauer, Radius) bei der niedrigsten Energie über
+    // „zerbrochen“. Sie steigt linear bis 1.0 bei max.
+    "minStrength": 0.6
+  },
+
+  "controls": {
+    // Taste „Item mit Zweithand tauschen“ (Standard F) löst Fähigkeit 1 aus,
+    // Schleichen + F Fähigkeit 2. Funktioniert ohne Client-Mod. Der normale Zweithand-Tausch
+    // ist dann für Spieler mit Kristall abgeschaltet. false = F tauscht wieder normal.
+    "swapHandsActivates": true
+  },
+
+  "hud": {
+    // Actionbar mit Fähigkeits-Icons, Cooldowns und Energie für Spieler mit Kristall.
+    "enabled": true,
+    // Aktualisierung in Server-Ticks (20 = 1 Sekunde), 1–40.
+    "updateTicks": 10
   },
 
   "effects": {
     // Partikel-Qualität: LOW, MEDIUM oder HIGH. Niedrigere Stufen dünnen die Partikel aus.
     "quality": "HIGH",
     // Obergrenze aller Fähigkeits-Partikel pro Server-Tick. Darüber hinaus wird verworfen.
-    "maxParticlesPerTick": 3000
+    "maxParticlesPerTick": 3000,
+    // Obergrenze gleichzeitiger Display-Entities (3D-Blöcke/Items in Effekten). 0 = keine.
+    "maxDisplays": 256
   },
 
   "events": {
