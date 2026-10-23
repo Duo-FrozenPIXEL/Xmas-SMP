@@ -217,6 +217,59 @@ class EventSchedulerTest {
     }
 
     @Test
+    void invalidMessageSoundsFallBackToDefaultWithError() {
+        EventLoader.Result result = new EventLoader(EventActionRegistry.withDefaults()).parse("""
+                { "messages": { "announceSound": "minecraft:block.note_block.Bell",
+                                "countdownSound": "" },
+                  "events": [] }
+                """);
+        assertEquals(1, result.errors().size(), result.errors().toString());
+        assertTrue(result.errors().get(0).contains("announceSound"));
+        assertEquals(EventMessages.DEFAULTS.announceSound(), result.messages().announceSound());
+        assertEquals("", result.messages().countdownSound(), "leer = kein Sound, kein Fehler");
+    }
+
+    @Test
+    void invalidSoundActionIsRejectedOnLoad() {
+        EventLoader.Result result = new EventLoader(EventActionRegistry.withDefaults()).parse("""
+                { "events": [ { "id": "bad", "times": ["18:00"],
+                                "onStart": [ { "type": "sound", "sound": "minecraft:Ding Dong" } ] } ] }
+                """);
+        assertTrue(result.events().isEmpty());
+        assertTrue(result.errors().get(0).contains("ungültige Sound-ID"), result.errors().toString());
+    }
+
+    @Test
+    void failingHostDoesNotBreakTickOrRepeatTriggers() {
+        EventScheduler s = scheduler(true, EVE);
+        RecordingHost failing = new RecordingHost() {
+            @Override
+            public void playSound(String sound, float volume, float pitch) {
+                throw new IllegalArgumentException("ungültiger Sound");
+            }
+        };
+        s.setHost(failing);
+        s.addListener(new EventScheduler.Listener() {
+            @Override
+            public void started(EventDefinition event, RunningEvent running) {
+                throw new IllegalStateException("Listener kaputt");
+            }
+        });
+        runSeconds(s, "2026-12-24T17:49:00", "2026-12-24T18:31:00");
+
+        assertEquals(List.of(
+                "broadcast:§6✦ §eHeiligabend §6beginnt in §e10 §6Minute(n)!",
+                "broadcast:§6✦ §eHeiligabend §6beginnt in §e1 §6Minute(n)!",
+                "title:§c3|§eHeiligabend",
+                "title:§c2|§eHeiligabend",
+                "title:§c1|§eHeiligabend",
+                "broadcast:start Heiligabend",
+                "command:say eve",
+                "broadcast:end Heiligabend"), failing.log, "jeder Auslöser genau einmal");
+        assertTrue(s.running().isEmpty());
+    }
+
+    @Test
     void nextStartFindsNextYearlyOccurrence() {
         EventScheduler s = scheduler(true, EVE);
         assertEquals(berlin("2026-12-24T18:00:00"), s.nextStart("eve", berlin("2026-06-01T00:00:00")).orElseThrow());

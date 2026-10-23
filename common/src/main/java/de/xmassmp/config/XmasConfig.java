@@ -158,7 +158,11 @@ public final class XmasConfig {
             warnings.add("events.timezone '" + events.timezone + "' unbekannt – Europe/Berlin verwendet");
             events.timezone = "Europe/Berlin";
         }
-        crystals.forEach((id, settings) -> {
+        crystals.replaceAll((id, settings) -> {
+            if (settings == null) {
+                warnings.add("crystals." + id + " ist leer – Standardwerte verwendet");
+                return new CrystalSettings();
+            }
             if (settings.cooldownMultiplier < 0) {
                 warnings.add("crystals." + id + ".cooldownMultiplier < 0 – auf 1.0 gesetzt");
                 settings.cooldownMultiplier = 1.0;
@@ -167,6 +171,7 @@ public final class XmasConfig {
                 warnings.add("crystals." + id + ".damageMultiplier < 0 – auf 1.0 gesetzt");
                 settings.damageMultiplier = 1.0;
             }
+            return settings;
         });
         return warnings;
     }

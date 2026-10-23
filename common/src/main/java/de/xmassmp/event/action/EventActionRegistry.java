@@ -3,6 +3,7 @@ package de.xmassmp.event.action;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.xmassmp.event.EventConfigException;
+import de.xmassmp.util.ResourceIds;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,6 +33,9 @@ public final class EventActionRegistry {
         }));
         registry.register(simple("sound", json -> {
             String sound = requireString(json, "sound");
+            if (!ResourceIds.isValid(sound)) {
+                throw new EventConfigException("sound: ungültige Sound-ID '" + sound + "' (nur a-z, 0-9, _ . - /)");
+            }
             float volume = (float) optDouble(json, "volume", 1.0);
             float pitch = (float) optDouble(json, "pitch", 1.0);
             return ctx -> ctx.host().playSound(sound, volume, pitch);

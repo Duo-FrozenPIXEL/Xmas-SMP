@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 /**
  * Führt Events zu festen Tagen und Uhrzeiten aus. Rein zeitgesteuert über {@link #tick(Instant)} –
@@ -119,13 +120,17 @@ public final class EventScheduler {
     // ------------------------------------------------------------------ Zeitsteuerung
 
     public void tick(Instant now) {
-        if (lastProcessed == null || now.isBefore(lastProcessed)
-                || Duration.between(lastProcessed, now).compareTo(MAX_GAP) > 0) {
-            recover(lastProcessed != null && now.isAfter(lastProcessed) ? lastProcessed : null, now);
-        } else if (now.isAfter(lastProcessed)) {
-            process(lastProcessed, now);
+        try {
+            if (lastProcessed == null || now.isBefore(lastProcessed)
+                    || Duration.between(lastProcessed, now).compareTo(MAX_GAP) > 0) {
+                recover(lastProcessed != null && now.isAfter(lastProcessed) ? lastProcessed : null, now);
+            } else if (now.isAfter(lastProcessed)) {
+                process(lastProcessed, now);
+            }
+        } finally {
+            // Auch nach einem Fehler weiterrücken, sonst feuern dieselben Auslöser bei jedem Tick erneut.
+            lastProcessed = now;
         }
-        lastProcessed = now;
     }
 
     private void process(Instant from, Instant to) {
@@ -160,17 +165,10 @@ public final class EventScheduler {
         triggers.sort(Comparator.comparing(Trigger::at).thenComparing(Trigger::kind));
 
         for (Trigger t : triggers) {
-            EventDefinition def = definitions.get(t.eventId());
-            switch (t.kind()) {
-                case END -> {
-                    RunningEvent r = running.get(t.eventId());
-                    if (r != null && r.start().equals(t.occurrenceStart())) {
-                        end(r, true);
-                    }
-                }
-                case ANNOUNCE -> announce(def, t.secondsLeft() / 60);
-                case COUNTDOWN -> countdown(def, t.secondsLeft());
-                case START -> start(def, t.at(), t.at().plus(def.duration()), false);
+            try {
+                fire(t);
+            } catch (RuntimeException e) {
+                logger.error(t.kind() + " von Event " + t.eventId() + " fehlgeschlagen", e);
             }
         }
         // Enden, die erst durch Starts in diesem Fenster entstanden sind (sehr kurze Events).
@@ -178,6 +176,21 @@ public final class EventScheduler {
             if (r.end() != null && !r.end().isAfter(to)) {
                 end(r, true);
             }
+        }
+    }
+
+    private void fire(Trigger t) {
+        EventDefinition def = definitions.get(t.eventId());
+        switch (t.kind()) {
+            case END -> {
+                RunningEvent r = running.get(t.eventId());
+                if (r != null && r.start().equals(t.occurrenceStart())) {
+                    end(r, true);
+                }
+            }
+            case ANNOUNCE -> announce(def, t.secondsLeft() / 60);
+            case COUNTDOWN -> countdown(def, t.secondsLeft());
+            case START -> start(def, t.at(), t.at().plus(def.duration()), false);
         }
     }
 
@@ -300,7 +313,7 @@ public final class EventScheduler {
             running.put(def.id(), r);
             changed = true;
         }
-        listeners.forEach(l -> l.started(def, r));
+        notifyListeners(def, l -> l.started(def, r));
         return true;
     }
 
@@ -313,7 +326,17 @@ public final class EventScheduler {
             if (runActions) {
                 runActions(def, def.onEnd(), Map.of());
             }
-            listeners.forEach(l -> l.ended(def, r));
+            notifyListeners(def, l -> l.ended(def, r));
+        }
+    }
+
+    private void notifyListeners(EventDefinition def, Consumer<Listener> call) {
+        for (Listener listener : listeners) {
+            try {
+                call.accept(listener);
+            } catch (RuntimeException e) {
+                logger.error("Listener für Event " + def.id() + " fehlgeschlagen", e);
+            }
         }
     }
 
