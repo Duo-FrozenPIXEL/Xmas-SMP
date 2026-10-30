@@ -3,6 +3,7 @@ package de.xmassmp.fabric;
 import de.xmassmp.XmasCore;
 import de.xmassmp.effect.EffectSink;
 import de.xmassmp.event.EventHost;
+import de.xmassmp.gui.GuiHost;
 import de.xmassmp.platform.Platform;
 import de.xmassmp.platform.PlayerHandle;
 import de.xmassmp.platform.WorldRef;
@@ -30,7 +31,9 @@ final class FabricPlatform implements Platform {
     private final XmasLogger logger;
     private final FabricEffectSink effectSink;
     private final FabricEventHost eventHost;
+    private final FabricGuiHost guiHost;
     private final Map<UUID, FabricPlayerHandle> handles = new ConcurrentHashMap<>();
+    private final Map<WorldRef, ServerLevel> levels = new ConcurrentHashMap<>();
 
     FabricPlatform(MinecraftServer server, Logger slf4j) {
         this.server = server;
@@ -52,6 +55,7 @@ final class FabricPlatform implements Platform {
         };
         this.effectSink = new FabricEffectSink(this, slf4j);
         this.eventHost = new FabricEventHost(server);
+        this.guiHost = new FabricGuiHost(server, this.logger);
     }
 
     MinecraftServer server() {
@@ -84,6 +88,11 @@ final class FabricPlatform implements Platform {
     }
 
     @Override
+    public GuiHost guiHost() {
+        return guiHost;
+    }
+
+    @Override
     public List<PlayerHandle> onlinePlayers() {
         return server.getPlayerList().getPlayers().stream().map(p -> (PlayerHandle) handle(p)).toList();
     }
@@ -103,18 +112,21 @@ final class FabricPlatform implements Platform {
         handles.remove(uuid);
     }
 
-    /** Welt zu einer {@link WorldRef}; die ID ist {@code String.valueOf(level.dimension())}. */
+    /** Welt zu einer {@link WorldRef} (ID der Dimension, z. B. {@code minecraft:overworld}); zwischengespeichert. */
     ServerLevel level(WorldRef ref) {
-        for (ServerLevel level : server.getAllLevels()) {
-            if (worldRef(level).equals(ref)) {
-                return level;
-            }
+        ServerLevel cached = levels.get(ref);
+        if (cached != null) {
+            return cached;
         }
-        return null;
+        // Unbekannte ID oder neu geladene Dimension: einmal alle Welten eintragen.
+        for (ServerLevel level : server.getAllLevels()) {
+            levels.putIfAbsent(worldRef(level), level);
+        }
+        return levels.get(ref);
     }
 
     static WorldRef worldRef(Level level) {
-        return new WorldRef(String.valueOf(level.dimension()));
+        return new WorldRef(McIds.id(level.dimension()));
     }
 
     static Vec3 vec(net.minecraft.world.phys.Vec3 v) {

@@ -110,6 +110,9 @@ public final class EnergyService implements PlayerListener {
     @Override
     public void onDeath(PlayerHandle victim, PlayerHandle killer) {
         XmasConfig.Energy cfg = config.get().energy;
+        if (!cfg.pvpEnabled) {
+            return;
+        }
         int lost = change(victim, -cfg.deathLoss);
         if (lost != 0) {
             victim.sendMessage(Messages.prefixed("§c" + lost + " Energie " + summary(victim.uuid())));

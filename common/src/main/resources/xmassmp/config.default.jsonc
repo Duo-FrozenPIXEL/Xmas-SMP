@@ -35,6 +35,9 @@
   // Energie (Breaking-Pristine-System).
   // VORLÄUFIG: Die Werte werden an das Original angepasst, sobald es recherchiert ist.
   "energy": {
+    // Energie-Gewinn und -Verlust durch Kills und Tode an/aus (z. B. für Friedensphasen).
+    // false: Energie ändert sich nur noch per Befehl bzw. Admin-GUI.
+    "pvpEnabled": true,
     "start": 5,   // Energie neuer Spieler
     "min": 0,
     "max": 10,

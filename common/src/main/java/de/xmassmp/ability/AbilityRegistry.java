@@ -12,12 +12,14 @@ public final class AbilityRegistry {
     private final Map<String, Ability> byId = new LinkedHashMap<>();
 
     public void register(Ability ability) {
-        if (byId.putIfAbsent(ability.id(), ability) != null) {
+        if (byId.containsKey(ability.id())) {
             throw new IllegalArgumentException("Fähigkeit bereits registriert: " + ability.id());
         }
         if (ability instanceof ActiveAbility active && active.slot() != 1 && active.slot() != 2) {
             throw new IllegalArgumentException(ability.id() + ": slot muss 1 oder 2 sein");
         }
+        // Erst nach allen Prüfungen eintragen, damit ungültige Fähigkeiten nicht in der Map landen
+        byId.put(ability.id(), ability);
     }
 
     public Optional<Ability> get(String id) {

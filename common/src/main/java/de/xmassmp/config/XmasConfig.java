@@ -42,6 +42,8 @@ public final class XmasConfig {
 
     /** (V) Vorläufige Werte, bis das Original-Energiesystem recherchiert ist (todo.md, 2). */
     public static final class Energy {
+        /** Energie-Gewinn und -Verlust durch Kills und Tode; aus = Energie ändert sich nur per Befehl. */
+        public boolean pvpEnabled = true;
         public int start = 5;
         public int min = 0;
         public int max = 10;

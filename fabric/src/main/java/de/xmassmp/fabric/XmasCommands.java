@@ -5,9 +5,12 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.xmassmp.XmasCore;
 import de.xmassmp.admin.AdminService;
+import de.xmassmp.config.ConfigManager;
+import de.xmassmp.platform.PlayerHandle;
 import de.xmassmp.text.Messages;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.commands.CommandSourceStack;
@@ -27,6 +30,9 @@ import static net.minecraft.commands.Commands.literal;
  * Permission-Plugin OP-Level 2. Die Logik liegt in {@link AdminService}.
  */
 final class XmasCommands {
+
+    private static final SimpleCommandExceptionType NOT_STARTED = new SimpleCommandExceptionType(
+            FabricText.legacy(Messages.PREFIX + "§cXmas-SMP ist nicht gestartet – Details im Server-Log"));
 
     private final Supplier<XmasCore> core;
 
@@ -66,6 +72,7 @@ final class XmasCommands {
                         .then(literal("energy").then(argument("value", IntegerArgumentType.integer())
                                 .executes(ctx -> withPlayer(ctx, (admin, p) -> admin.setEnergy(actor(ctx),
                                         p.getUUID(), p.getName().getString(), IntegerArgumentType.getInteger(ctx, "value"))))))))
+                .then(literal("admin").executes(this::openAdmin))
                 .then(literal("reload").executes(this::reload))
                 .then(literal("event")
                         .then(literal("list").executes(ctx -> lines(ctx, admin().eventList())))
@@ -105,14 +112,29 @@ final class XmasCommands {
                 spec -> FabricItems.give(target, spec)));
     }
 
-    private int reload(CommandContext<CommandSourceStack> ctx) {
-        List<String> messages = admin().reload(actor(ctx));
-        ctx.getSource().sendSuccess(() -> FabricText.legacy(Messages.prefixed("Neu geladen")), true);
-        messages.forEach(m -> ctx.getSource().sendSystemMessage(FabricText.legacy("§7· " + m)));
+    private int reload(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ConfigManager.LoadResult result = admin().reload(actor(ctx));
+        if (result.success()) {
+            ctx.getSource().sendSuccess(() -> FabricText.legacy(Messages.prefixed("Neu geladen")), true);
+        } else {
+            ctx.getSource().sendFailure(FabricText.legacy(Messages.PREFIX
+                    + "§cNeu laden fehlgeschlagen – vorherige Einstellungen bleiben aktiv:"));
+        }
+        result.messages().forEach(m -> ctx.getSource().sendSystemMessage(FabricText.legacy("§7· " + m)));
+        return result.success() ? 1 : 0;
+    }
+
+    private int openAdmin(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        XmasCore instance = started();
+        PlayerHandle handle = instance.platform().player(player.getUUID()).orElse(null);
+        if (handle == null || !instance.adminGui().open(handle)) {
+            return fail(ctx, "Admin-GUI konnte nicht geöffnet werden");
+        }
         return 1;
     }
 
-    private int simulate(CommandContext<CommandSourceStack> ctx) {
+    private int simulate(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         String[] parts = StringArgumentType.getString(ctx, "time").trim().split("\\s+");
         boolean dry = parts.length > 1 && parts[1].equalsIgnoreCase("dry");
         if (parts.length > 2 || (parts.length == 2 && !dry)) {
@@ -133,17 +155,27 @@ final class XmasCommands {
         return reply(ctx, action.run(admin(), player));
     }
 
-    private AdminService admin() {
-        XmasCore instance = core.get();
-        if (instance == null) {
-            throw new IllegalStateException("Xmas-SMP ist noch nicht gestartet");
-        }
-        return instance.admin();
+    /** Verständliche Meldung statt "unerwarteter Fehler", wenn der Kern nicht läuft. */
+    private AdminService admin() throws CommandSyntaxException {
+        return started().admin();
     }
 
+    private XmasCore started() throws CommandSyntaxException {
+        XmasCore instance = core.get();
+        if (instance == null) {
+            throw NOT_STARTED.create();
+        }
+        return instance;
+    }
+
+    /** Spielername, sonst die Quelle (Befehlsblock, Funktion, RCON); die Server-Konsole als "Konsole". */
     private static String actor(CommandContext<CommandSourceStack> ctx) {
         ServerPlayer player = ctx.getSource().getPlayer();
-        return player != null ? player.getName().getString() : AdminService.CONSOLE;
+        if (player != null) {
+            return player.getName().getString();
+        }
+        String name = ctx.getSource().getTextName();
+        return name == null || name.isBlank() || name.equals("Server") ? AdminService.CONSOLE : name;
     }
 
     private static int reply(CommandContext<CommandSourceStack> ctx, AdminService.Result result) {

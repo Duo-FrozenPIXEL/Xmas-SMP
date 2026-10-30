@@ -39,6 +39,7 @@ Alle Befehle brauchen das Recht `xmassmp.admin`. Ohne Permission-Plugin (z. B. L
 | Befehl | Wirkung |
 |---|---|
 | `/xmas` | Hilfe |
+| `/xmas admin` | Konfigurations-GUI (nur für Spieler, siehe unten) |
 | `/xmas give <spieler> crystal <kristall> [tier] [zustand]` | Kristall-Item geben. Kristalle: `fire`, `earth`, `wind`, `shadow`, `nature`. Tier `1`–`2`, Zustand `broken`, `damaged`, `scratched`, `pristine` (Standard: Tier 1, `pristine`) |
 | `/xmas give <spieler> item <item>` | Hilfs-Item geben: `revival_tome`, `upgrader`, `energy_bottle`, `gem_trader`, `repair_kit`, `gem_fragment` |
 | `/xmas set <spieler> crystal <kristall>` | Aktiven Kristall setzen |
@@ -48,9 +49,22 @@ Alle Befehle brauchen das Recht `xmassmp.admin`. Ohne Permission-Plugin (z. B. L
 | `/xmas event list` | Alle Events mit Status und nächstem Start |
 | `/xmas event start <id>` / `stop <id>` | Event sofort starten/beenden (auch deaktivierte) |
 | `/xmas event simulate <yyyy-MM-dd> <HH:mm> [dry]` | Testmodus: Uhrzeit simulieren. Mit `dry` werden Aktionen nur geloggt |
-| `/xmas event simulate off` | Testmodus beenden, echten Event-Zustand wiederherstellen |
+| `/xmas event simulate off` | Testmodus beenden; simulierte Events enden mit ihren End-Aktionen |
 
-Jede Änderung über `give`, `set`, `reload` und `event` landet in `<welt>/xmassmp/audit.log` (eine JSON-Zeile pro Eintrag: Zeit, Wer, Was, Ziel). Abschaltbar mit `audit.enabled`.
+Jede Änderung über `give`, `set`, `reload`, `event` und die Admin-GUI landet in `<welt>/xmassmp/audit.log` (eine JSON-Zeile pro Eintrag: Zeit, Wer, Was, Ziel). Abschaltbar mit `audit.enabled`.
+
+### Admin-GUI
+
+`/xmas admin` öffnet ein Kisten-Menü (Vanilla-Client genügt):
+
+- **Allgemein**: Plugin, Fähigkeiten, PvP-Energie, Kristall beim ersten Join, Seelenbindung, Aktivierung mit F und HUD an/aus; Neu laden.
+- **Kristalle**: je Kristall an/aus, Cooldown- und Schadens-Multiplikator.
+- **Energie**: Start, Minimum, Maximum, Gewinn pro Kill, Verlust pro Tod, Anti-Farming.
+- **Spieler**: Online-Spieler wählen, dann Kristall, Tier und Energie setzen oder Cooldowns zurücksetzen.
+- **Events**: Status aller Events; Linksklick startet bzw. stoppt, Rechtsklick schaltet den automatischen Start um; laufenden Testmodus beenden.
+- **Items**: alle Custom-Items und Kristalle herausnehmen.
+
+Zahlen: Linksklick +1, Rechtsklick −1, mit Shift ×5 (Multiplikatoren in Schritten von 0.1). Änderungen werden sofort in `config.jsonc` bzw. `events.jsonc` geschrieben und wirken ohne Reload. Dabei wird nur der geänderte Wert ersetzt, Kommentare und Formatierung bleiben erhalten.
 
 ## Konfiguration
 
@@ -62,6 +76,7 @@ Jede Änderung über `give`, `set`, `reload` und `event` landet in `<welt>/xmass
 | `crystals.<id>.enabled`, `cooldownMultiplier`, `damageMultiplier` | pro Kristall |
 | `crystalItem.giveOnJoin` | Spieler ohne Kristall bekommen beim Betreten einen zufälligen |
 | `crystalItem.soulbound` | Kristall kann nicht gedroppt, eingelagert oder beim Tod verloren werden |
+| `energy.pvpEnabled` | Energie-Gewinn und -Verlust durch Kills und Tode an/aus |
 | `energy.start`, `min`, `max` | Energie (vorläufige Werte bis zur Recherche des Originals) |
 | `energy.killGain`, `deathLoss` | Gewinn beim PvP-Kill, Verlust bei jedem Tod |
 | `energy.sameVictimCooldownMinutes` | Anti-Farming: kein Gewinn für denselben Gegner innerhalb dieser Zeit |
@@ -85,6 +100,9 @@ Events laufen an festen Tagen zu festen Uhrzeiten. Beschrieben werden sie in `co
 - Aktionen beim Start und Ende: `broadcast`, `title`, `sound`, `command`. Eigene Typen lassen sich im Code registrieren.
 - Modifikatoren, solange ein Event läuft, z. B. `"cooldown_multiplier": 0.5` oder `"energy_multiplier": 2.0`.
 - Laufende Events überstehen einen Neustart. Starts, die in eine Server-Pause fielen, werden je nach Config nachgeholt oder übersprungen.
+- Ist das Plugin abgeschaltet oder `events.jsonc` defekt, ruht der Plan. Danach enden inzwischen abgelaufene Events mit ihren End-Aktionen (nach einem Serverausfall dagegen still).
+- Wird die Systemuhr zurückgestellt (bis 1 Stunde), wartet der Plan, damit nichts doppelt läuft. Bei größeren Sprüngen setzt er ohne Nachholen neu auf.
+- Testmodus: Ein eigener Plan läuft ab dem simulierten Datum. Der echte Plan läuft unverändert weiter. Im Trockenlauf (`dry`) wirken simulierte Modifikatoren nicht auf das Spiel.
 - Sommer-/Winterzeit: Jede Startzeit feuert genau einmal pro Tag.
 
 ## Entwicklung
@@ -106,7 +124,7 @@ python3 tools/resourcepack.py build           # build/Xmas-SMP-resourcepack.zip 
 
 Die Fabric-Abhängigkeiten stehen in `gradle.properties`. Vor dem ersten Build die Versionen auf [fabricmc.net/develop](https://fabricmc.net/develop) prüfen.
 
-Die GitHub Actions bauen und prüfen bei jedem Push das Ressourcenpaket, den Kern (inkl. Tests) und das Fabric-JAR. Die Ergebnisse liegen als Artefakte bereit.
+Die GitHub Actions bauen und prüfen bei Pushes auf `main`, bei Pull Requests und manuell (`workflow_dispatch`) das Ressourcenpaket, den Kern (inkl. Tests) und das Fabric-JAR. Die Ergebnisse liegen als Artefakte bereit.
 
 ### Architektur
 

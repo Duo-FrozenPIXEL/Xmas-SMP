@@ -5,6 +5,8 @@ import de.xmassmp.event.action.EventAction;
 import de.xmassmp.platform.XmasLogger;
 import de.xmassmp.text.Messages;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -34,10 +36,17 @@ import java.util.function.Consumer;
  *   <li>mit {@code catchUpMissed} werden Events, deren Start in die Pause fiel und die noch
  *       laufen würden, nachträglich gestartet; sonst übersprungen.</li>
  * </ul>
+ * Lief der Server weiter und war nur der Plan pausiert (Plugin aus, Config defekt), setzt
+ * {@link #resume(Instant)} fort: dann enden abgelaufene Events mit ihren End-Aktionen.
+ *
+ * <p>Wird die Uhr bis zu {@link #MAX_BACKWARD_WAIT} zurückgestellt, wartet der Plan, bis sie den
+ * alten Stand wieder erreicht, damit nichts doppelt feuert. Bei größeren Sprüngen setzt er beim
+ * neuen Zeitpunkt neu auf, ohne etwas nachzuholen.
  */
 public final class EventScheduler {
 
     public static final Duration MAX_GAP = Duration.ofSeconds(30);
+    public static final Duration MAX_BACKWARD_WAIT = Duration.ofHours(1);
 
     /** Benachrichtigung über Start und Ende, z. B. für den Christmas-Twist. */
     public interface Listener {
@@ -64,6 +73,7 @@ public final class EventScheduler {
     private final Map<String, RunningEvent> running = new LinkedHashMap<>();
     private Instant lastProcessed;
     private boolean changed;
+    private boolean waitingForClock;
 
     public EventScheduler(EventHost host, XmasLogger logger) {
         this.host = host;
@@ -120,10 +130,12 @@ public final class EventScheduler {
     // ------------------------------------------------------------------ Zeitsteuerung
 
     public void tick(Instant now) {
+        if (clockWentBack(now)) {
+            return;
+        }
         try {
-            if (lastProcessed == null || now.isBefore(lastProcessed)
-                    || Duration.between(lastProcessed, now).compareTo(MAX_GAP) > 0) {
-                recover(lastProcessed != null && now.isAfter(lastProcessed) ? lastProcessed : null, now);
+            if (lastProcessed == null || Duration.between(lastProcessed, now).compareTo(MAX_GAP) > 0) {
+                recover(lastProcessed, now, false);
             } else if (now.isAfter(lastProcessed)) {
                 process(lastProcessed, now);
             }
@@ -131,6 +143,42 @@ public final class EventScheduler {
             // Auch nach einem Fehler weiterrücken, sonst feuern dieselben Auslöser bei jedem Tick erneut.
             lastProcessed = now;
         }
+    }
+
+    /**
+     * Setzt nach einer Pause fort, in der der Server lief (Plugin aus, {@code events.jsonc} defekt).
+     * Anders als nach einem Serverausfall enden abgelaufene Events mit ihren End-Aktionen.
+     */
+    public void resume(Instant now) {
+        if (lastProcessed == null || Duration.between(lastProcessed, now).compareTo(MAX_GAP) <= 0) {
+            tick(now);
+            return;
+        }
+        try {
+            recover(lastProcessed, now, true);
+        } finally {
+            lastProcessed = now;
+        }
+    }
+
+    /** {@code true}, wenn dieser Tick wegen einer zurückgestellten Uhr entfällt. */
+    private boolean clockWentBack(Instant now) {
+        if (lastProcessed == null || !now.isBefore(lastProcessed)) {
+            waitingForClock = false;
+            return false;
+        }
+        if (Duration.between(now, lastProcessed).compareTo(MAX_BACKWARD_WAIT) <= 0) {
+            if (!waitingForClock) {
+                waitingForClock = true;
+                logger.warn("Uhr wurde zurückgestellt – Event-Plan wartet bis " + lastProcessed);
+            }
+            return true;
+        }
+        logger.warn("Uhr wurde um mehr als " + MAX_BACKWARD_WAIT.toMinutes() + " Minuten zurückgestellt – "
+                + "Event-Plan setzt bei " + now + " neu auf, ohne etwas nachzuholen");
+        waitingForClock = false;
+        lastProcessed = now;
+        return true;
     }
 
     private void process(Instant from, Instant to) {
@@ -188,17 +236,32 @@ public final class EventScheduler {
                     end(r, true);
                 }
             }
-            case ANNOUNCE -> announce(def, t.secondsLeft() / 60);
-            case COUNTDOWN -> countdown(def, t.secondsLeft());
+            case ANNOUNCE -> {
+                if (!stillRunningAt(def.id(), t.occurrenceStart())) {
+                    announce(def, t.secondsLeft() / 60);
+                }
+            }
+            case COUNTDOWN -> {
+                if (!stillRunningAt(def.id(), t.occurrenceStart())) {
+                    countdown(def, t.secondsLeft());
+                }
+            }
             case START -> start(def, t.at(), t.at().plus(def.duration()), false);
         }
     }
 
-    private void recover(Instant last, Instant now) {
+    /** Läuft das Event zum Termin noch, wird der Start übersprungen – dann auch nicht ankündigen. */
+    private boolean stillRunningAt(String id, Instant occurrenceStart) {
+        RunningEvent r = running.get(id);
+        return r != null && (r.end() == null || r.end().isAfter(occurrenceStart));
+    }
+
+    /** @param endActions {@code true}, wenn der Server lief und nur der Plan pausiert war */
+    private void recover(Instant last, Instant now, boolean endActions) {
         for (RunningEvent r : List.copyOf(running.values())) {
             if (r.end() != null && !r.end().isAfter(now)) {
                 logger.info("Event " + r.id() + " ist während der Pause abgelaufen");
-                end(r, false);
+                end(r, endActions);
             }
         }
         for (EventDefinition def : definitions.values()) {
@@ -246,13 +309,21 @@ public final class EventScheduler {
         return true;
     }
 
-    /** Nächster geplanter Start nach {@code now} innerhalb eines Jahres. */
+    /** Beendet alle laufenden Events mit End-Aktionen, z. B. am Ende des Testmodus. */
+    public void stopAll() {
+        for (RunningEvent r : List.copyOf(running.values())) {
+            end(r, true);
+        }
+    }
+
+    /** Nächster geplanter Start nach {@code now} innerhalb von acht Jahren (genug für den 29.02.). */
     public Optional<Instant> nextStart(String id, Instant now) {
         EventDefinition def = definitions.get(id);
         if (def == null || !def.enabled()) {
             return Optional.empty();
         }
-        return starts(def, now, now.plus(Duration.ofDays(400))).stream()
+        Instant horizon = now.atZone(zone).plusYears(8).plusDays(1).toInstant();
+        return starts(def, now, horizon).stream()
                 .filter(start -> start.isAfter(now))
                 .findFirst();
     }
@@ -368,9 +439,19 @@ public final class EventScheduler {
         Map<String, String> values = new HashMap<>();
         values.put("id", def.id());
         values.put("name", def.name());
-        values.put("duration", Long.toString(def.duration().toMinutes()));
+        values.put("duration", minutes(def.duration()));
         values.putAll(extra);
         return values;
+    }
+
+    /** Dauer in Minuten, Bruchteile mit Punkt ({@code 0.5}) statt abgerundet. */
+    static String minutes(Duration duration) {
+        long millis = duration.toMillis();
+        if (millis % 60_000 == 0) {
+            return Long.toString(millis / 60_000);
+        }
+        return BigDecimal.valueOf(millis).divide(BigDecimal.valueOf(60_000), 2, RoundingMode.HALF_UP)
+                .stripTrailingZeros().toPlainString();
     }
 
     private void runActions(EventDefinition def, List<EventAction> actions, Map<String, String> extra) {

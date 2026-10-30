@@ -4,6 +4,8 @@ import de.xmassmp.event.EventHost;
 import de.xmassmp.text.Messages;
 
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Kontext einer Aktion.
@@ -12,17 +14,25 @@ import java.util.Map;
  */
 public record ActionContext(EventHost host, String eventId, Map<String, String> placeholders) {
 
+    private static final Pattern PLACEHOLDER = Pattern.compile("\\{([^{}]+)}");
+
     public ActionContext {
         placeholders = Map.copyOf(placeholders);
     }
 
-    /** Setzt Platzhalter ein, ohne Farbcodes umzuwandeln (für Befehle). */
+    /**
+     * Setzt Platzhalter in einem Durchgang ein, ohne Farbcodes umzuwandeln (für Befehle).
+     * Eingesetzte Werte werden nicht erneut ersetzt; unbekannte Platzhalter bleiben stehen.
+     */
     public String fill(String template) {
-        String out = template;
-        for (Map.Entry<String, String> e : placeholders.entrySet()) {
-            out = out.replace("{" + e.getKey() + "}", e.getValue());
+        Matcher m = PLACEHOLDER.matcher(template);
+        StringBuilder out = new StringBuilder();
+        while (m.find()) {
+            String value = placeholders.get(m.group(1));
+            m.appendReplacement(out, Matcher.quoteReplacement(value != null ? value : m.group()));
         }
-        return out;
+        m.appendTail(out);
+        return out.toString();
     }
 
     /** Setzt Platzhalter ein und wandelt {@code &}-Farbcodes um (für Texte). */

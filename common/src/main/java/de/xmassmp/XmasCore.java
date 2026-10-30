@@ -3,12 +3,14 @@ package de.xmassmp;
 import de.xmassmp.ability.AbilityControls;
 import de.xmassmp.ability.AbilityRegistry;
 import de.xmassmp.ability.AbilityService;
+import de.xmassmp.admin.AdminGui;
 import de.xmassmp.admin.AdminService;
 import de.xmassmp.admin.AuditLog;
 import de.xmassmp.config.ConfigManager;
 import de.xmassmp.crystal.CrystalRegistry;
 import de.xmassmp.crystal.CrystalService;
 import de.xmassmp.energy.EnergyService;
+import de.xmassmp.energy.StageEffects;
 import de.xmassmp.effect.EffectEngine;
 import de.xmassmp.event.EventClock;
 import de.xmassmp.event.EventService;
@@ -57,6 +59,11 @@ public final class XmasCore {
     private final AbilityService abilityService;
     private final AuditLog audit;
     private final AdminService admin;
+    private final AdminGui adminGui;
+    private final CrystalService crystalService;
+    private final EnergyService energy;
+    private final HudService hud;
+    private final List<PlayerListener> playerListeners = new CopyOnWriteArrayList<>();
     private final Set<String> failing = new HashSet<>();
     private long ticks;
 
@@ -72,7 +79,9 @@ public final class XmasCore {
         this.crystals = CrystalRegistry.withDefaults();
         this.abilities = new AbilityRegistry();
         this.eventActions = EventActionRegistry.withDefaults();
-        this.players = new PlayerDataStore(platform.dataDirectory(), () -> config.get().energy.start, logger);
+        this.players = new PlayerDataStore(platform.dataDirectory(), () -> config.get().energy.start,
+                () -> config.get().energy.min, () -> config.get().energy.max, logger);
+        config.onReload(cfg -> players.clampLoaded());
         this.effects = new EffectEngine(platform.effectSink(), () -> config.get().effects.quality,
                 () -> config.get().effects.maxParticlesPerTick, () -> config.get().effects.maxDisplays,
                 new Random(), logger);
@@ -80,12 +89,15 @@ public final class XmasCore {
                 platform.eventHost(), eventActions, new EventClock(clock), logger);
         this.energy = new EnergyService(players, config::get, () -> events.modifier(EnergyService.ENERGY_MODIFIER),
                 clock::millis, effects, this::syncCrystalItem);
+        energy.addStageListener(new StageEffects(crystals, players, effects));
         this.abilityService = new AbilityService(config::get, effects, clock::millis,
                 () -> events.modifier(AbilityService.COOLDOWN_MODIFIER), energy::strength);
         this.audit = new AuditLog(platform.dataDirectory(), () -> config.get().audit.enabled, clock, logger);
         this.crystalService = new CrystalService(platform, crystals, players, config::get,
                 energy::stage, effects, new Random());
-        this.admin = new AdminService(crystals, players, config, events, audit, this::reload, crystalService::sync);
+        this.admin = new AdminService(crystals, players, config, events, audit, this::reloadResult, crystalService::sync);
+        this.adminGui = new AdminGui(admin, config, crystals, events, players, platform::onlinePlayers,
+                platform.guiHost());
         this.hud = new HudService(platform, crystals, abilities, players, config::get, energy::stage, effects,
                 clock::millis);
         addPlayerListener(crystalService);
@@ -103,24 +115,36 @@ public final class XmasCore {
 
     /** Lädt {@code config.jsonc} und {@code events.jsonc} neu und liefert die Meldungen. */
     public List<String> reload() {
-        List<String> messages = new ArrayList<>(config.load().messages());
+        return reloadResult().messages();
+    }
+
+    /** Wie {@link #reload()}; {@code success} nur, wenn beide Dateien übernommen wurden. */
+    public ConfigManager.LoadResult reloadResult() {
+        ConfigManager.LoadResult configResult = config.load();
+        List<String> messages = new ArrayList<>(configResult.messages());
         var cfg = config.get();
-        messages.addAll(events.reload(ZoneId.of(cfg.events.timezone), cfg.events.catchUpMissed));
-        return messages;
+        ConfigManager.LoadResult eventResult = events.reloadResult(ZoneId.of(cfg.events.timezone),
+                cfg.events.catchUpMissed);
+        messages.addAll(eventResult.messages());
+        return new ConfigManager.LoadResult(configResult.success() && eventResult.success(), messages);
     }
 
     /** Einmal pro Server-Tick aufrufen. */
     public void tick() {
         ticks++;
+        // Autosave auch bei abgeschaltetem Plugin, damit z. B. Änderungen per Befehl nicht verloren gehen.
+        if (ticks % AUTOSAVE_TICKS == 0) {
+            guarded("Autosave", players::saveDirty);
+        }
         if (!config.get().general.enabled) {
+            events.pause();
             return;
         }
         guarded("Effekte", effects::tick);
+        guarded("Kristall-Items", () -> crystalService.tick(ticks));
+        guarded("HUD", () -> hud.tick(ticks));
         if (ticks % TICKS_PER_SECOND == 0) {
             guarded("Events", events::tick);
-        }
-        if (ticks % AUTOSAVE_TICKS == 0) {
-            guarded("Autosave", players::saveDirty);
         }
     }
 
@@ -264,6 +288,10 @@ public final class XmasCore {
 
     public AdminService admin() {
         return admin;
+    }
+
+    public AdminGui adminGui() {
+        return adminGui;
     }
 
     public CrystalService crystalService() {

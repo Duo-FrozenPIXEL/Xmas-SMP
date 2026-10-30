@@ -17,6 +17,11 @@ OUT = ROOT / "build" / "Xmas-SMP-resourcepack.zip"
 # Vanilla-Parents dürfen nur aus diesen Ordnern kommen ("generated" allein ist ungültig).
 VANILLA_PARENT_PREFIXES = ("item/", "block/", "builtin/")
 
+# Bekannte Vanilla-Texturen (`minecraft:...`), die das Pack referenziert, ohne sie selbst zu enthalten.
+# Fehlt eine `minecraft:`-Textur, die nicht in dieser Liste steht, wird eine Warnung gemeldet
+# (z. B. Tippfehler wie `minecraft:item/echo_shrad`). Aktuell referenziert das Pack keine solche Textur.
+KNOWN_VANILLA_TEXTURES = frozenset()
+
 
 def split_id(ref, default_ns="minecraft"):
     ns, _, path = ref.rpartition(":")
@@ -79,7 +84,13 @@ def validate():
                 continue
             errors.append(f"{rel}: Modell {ref} existiert nicht")
         entries = data.get("model", {}).get("entries", [])
-        thresholds = [e.get("threshold") for e in entries]
+        thresholds = []
+        for index, entry in enumerate(entries):
+            threshold = entry.get("threshold") if isinstance(entry, dict) else None
+            if isinstance(threshold, bool) or not isinstance(threshold, (int, float)):
+                errors.append(f"{rel}: Eintrag {index} hat keinen gültigen threshold (Zahl erwartet)")
+                continue  # fehlerhafter Eintrag wird beim Sortieren ausgelassen
+            thresholds.append(threshold)
         if len(thresholds) != len(set(thresholds)):
             errors.append(f"{rel}: doppelte Schwellenwerte")
         if thresholds != sorted(thresholds):
@@ -102,6 +113,8 @@ def validate():
                 continue
             ns, path = split_id(ref)
             if ns == "minecraft" and not texture_file(ref).exists():
+                if f"{ns}:{path}" not in KNOWN_VANILLA_TEXTURES:
+                    warnings.append(f"{rel}: Vanilla-Textur {ref} ist nicht bekannt (Tippfehler?)")
                 continue  # Vanilla-Textur
             used_textures.add(texture_file(ref))
             if not texture_file(ref).exists():

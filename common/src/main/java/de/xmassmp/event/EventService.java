@@ -1,5 +1,7 @@
 package de.xmassmp.event;
 
+import de.xmassmp.config.ConfigManager;
+import de.xmassmp.config.JsoncEditor;
 import de.xmassmp.event.action.EventActionRegistry;
 import de.xmassmp.platform.XmasLogger;
 import de.xmassmp.util.JsonFiles;
@@ -15,20 +17,28 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Bündelt Scheduler, {@code events.jsonc}, Zustandsspeicher und Testmodus.
  *
- * <p>Testmodus ({@link #simulate}): Der echte Zustand wird gesichert, die Uhr springt auf das
- * simulierte Datum und läuft von dort normal weiter. Mit {@code dryRun} werden Aktionen nur
- * geloggt. {@link #stopSimulation()} stellt den gesicherten Zustand wieder her; während der
- * Simulation wird nichts gespeichert.
+ * <p>Testmodus ({@link #simulate}): Ein eigener Scheduler läuft ab dem simulierten Datum mit,
+ * der echte Plan läuft in echter Zeit unverändert weiter und wird weiter gespeichert. Mit
+ * {@code dryRun} werden Aktionen der Simulation nur geloggt, ihre Modifikatoren wirken nicht und
+ * Listener werden nicht benachrichtigt. {@link #stopSimulation()} beendet die simulierten Events
+ * mit ihren End-Aktionen, damit z. B. per Befehl geändertes Wetter zurückgesetzt wird.
+ *
+ * <p>Solange keine gültige {@code events.jsonc} geladen ist oder das Plugin abgeschaltet ist
+ * ({@link #pause()}), ruht der echte Plan. Danach setzt er mit {@link EventScheduler#resume} fort.
  */
 public final class EventService {
 
     public static final String FILE_NAME = "events.jsonc";
     static final String TEMPLATE = "/xmassmp/events.default.jsonc";
     private static final Duration SAVE_INTERVAL = Duration.ofSeconds(60);
+
+    private record Config(List<EventDefinition> events, EventMessages messages, ZoneId zone, boolean catchUp) {
+    }
 
     private final Path file;
     private final EventHost host;
@@ -37,9 +47,12 @@ public final class EventService {
     private final EventLoader loader;
     private final EventStateStore store;
     private final EventScheduler scheduler;
+    private final List<EventScheduler.Listener> listeners = new CopyOnWriteArrayList<>();
 
-    private EventState realState;
+    private Config config;
+    private EventScheduler simulation;
     private boolean dryRun;
+    private boolean paused;
     private Instant lastSave = Instant.MIN;
 
     public EventService(Path configDirectory, Path dataDirectory, EventHost host, EventActionRegistry actions,
@@ -54,16 +67,31 @@ public final class EventService {
         this.scheduler.restore(store.load());
     }
 
+    /** Der gerade aktive Plan: im Testmodus der simulierte, sonst der echte. */
     public EventScheduler scheduler() {
-        return scheduler;
+        return simulation != null ? simulation : scheduler;
     }
 
     public EventClock clock() {
         return clock;
     }
 
+    /** Benachrichtigung über Start und Ende echter Events und nicht-trockener Simulationen. */
+    public void addListener(EventScheduler.Listener listener) {
+        listeners.add(listener);
+        scheduler.addListener(listener);
+        if (simulation != null && !dryRun) {
+            simulation.addListener(listener);
+        }
+    }
+
     /** Lädt {@code events.jsonc}; legt die Beispiel-Datei an, falls sie fehlt. Liefert Meldungen. */
     public List<String> reload(ZoneId zone, boolean catchUpMissed) {
+        return reloadResult(zone, catchUpMissed).messages();
+    }
+
+    /** Wie {@link #reload}, zusätzlich mit der Angabe, ob die Datei übernommen wurde. */
+    public ConfigManager.LoadResult reloadResult(ZoneId zone, boolean catchUpMissed) {
         List<String> messages = new ArrayList<>();
         try {
             if (Files.notExists(file)) {
@@ -78,24 +106,73 @@ public final class EventService {
             EventLoader.Result result = loader.parse(Files.readString(file, StandardCharsets.UTF_8));
             if (result.events().isEmpty() && !result.errors().isEmpty()) {
                 messages.addAll(result.errors());
-                messages.add(FILE_NAME + " nicht übernommen – vorherige Events bleiben aktiv");
-                return messages;
+                messages.add(notApplied());
+                return new ConfigManager.LoadResult(false, messages);
             }
-            scheduler.configure(result.events(), result.messages(), zone, catchUpMissed);
+            config = new Config(List.copyOf(result.events()), result.messages(), zone, catchUpMissed);
+            apply(scheduler);
+            if (simulation != null) {
+                apply(simulation);
+            }
             messages.addAll(result.errors());
             messages.add(result.events().size() + " Event(s) geladen, Zeitzone " + zone);
+            return new ConfigManager.LoadResult(true, messages);
         } catch (IOException e) {
             messages.add(FILE_NAME + " konnte nicht gelesen werden: " + e.getMessage());
+            if (config == null) {
+                messages.add(notApplied());
+            }
+            return new ConfigManager.LoadResult(false, messages);
         }
-        return messages;
+    }
+
+    /** Setzt {@code enabled} eines Events direkt in {@code events.jsonc} (Kommentare bleiben) und lädt neu. */
+    public ConfigManager.LoadResult setEnabled(String id, boolean enabled) {
+        if (config == null) {
+            return new ConfigManager.LoadResult(false, List.of(notApplied()));
+        }
+        try {
+            String text = Files.readString(file, StandardCharsets.UTF_8);
+            JsonFiles.writeAtomic(file, JsoncEditor.set(text, List.of("events", "id=" + id, "enabled"),
+                    Boolean.toString(enabled)));
+        } catch (IOException | IllegalArgumentException e) {
+            return new ConfigManager.LoadResult(false,
+                    List.of(FILE_NAME + " konnte nicht geändert werden: " + e.getMessage()));
+        }
+        return reloadResult(config.zone(), config.catchUp());
+    }
+
+    private String notApplied() {
+        return config == null
+                ? FILE_NAME + " nicht übernommen – keine Events aktiv, bis die Datei repariert ist (/xmas reload)"
+                : FILE_NAME + " nicht übernommen – vorherige Events bleiben aktiv";
+    }
+
+    private void apply(EventScheduler target) {
+        target.configure(config.events(), config.messages(), config.zone(), config.catchUp());
     }
 
     /** Einmal pro Sekunde aufrufen. */
     public void tick() {
-        scheduler.tick(clock.now());
-        if (isSimulating()) {
-            scheduler.consumeChanged();
+        if (config == null) {
+            // Ohne Definitionen würden wiederhergestellte Events ohne End-Aktionen enden.
+            markPausedIfStarted();
             return;
+        }
+        if (paused) {
+            paused = false;
+            scheduler.resume(clock.realNow());
+            if (simulation != null) {
+                simulation.resume(clock.now());
+            }
+        } else {
+            scheduler.tick(clock.realNow());
+            if (simulation != null) {
+                simulation.tick(clock.now());
+            }
+        }
+        if (simulation != null) {
+            simulation.consumeChanged();
         }
         Instant real = clock.realNow();
         if (scheduler.consumeChanged() || Duration.between(lastSave, real).compareTo(SAVE_INTERVAL) >= 0) {
@@ -103,51 +180,77 @@ public final class EventService {
         }
     }
 
+    /**
+     * Plugin abgeschaltet: Der Plan ruht. Der nächste {@link #tick()} setzt fort und beendet
+     * inzwischen abgelaufene Events mit End-Aktionen, statt sie wie nach einem Serverausfall still
+     * zu beenden.
+     */
+    public void pause() {
+        markPausedIfStarted();
+    }
+
+    private void markPausedIfStarted() {
+        if (scheduler.snapshot().lastProcessed() != null) {
+            paused = true;
+        }
+    }
+
     public boolean start(String id) {
-        return scheduler.startNow(id, clock.now());
+        return scheduler().startNow(id, clock.now());
     }
 
     public boolean stop(String id) {
-        return scheduler.stopNow(id);
+        return scheduler().stopNow(id);
     }
 
     public Optional<Instant> nextStart(String id) {
-        return scheduler.nextStart(id, clock.now());
+        return scheduler().nextStart(id, clock.now());
     }
 
+    /** Modifikatoren echter Events, im Testmodus ohne Trockenlauf zusätzlich die simulierten. */
     public double modifier(String key) {
-        return scheduler.modifier(key);
+        double value = scheduler.modifier(key);
+        if (simulation != null && !dryRun) {
+            value *= simulation.modifier(key);
+        }
+        return value;
     }
 
     public void simulate(Instant target, boolean dry) {
-        if (!isSimulating()) {
-            realState = scheduler.snapshot();
+        if (simulation != null) {
+            // Vorherige Simulation sauber beenden, sonst blieben ihre Änderungen bestehen.
+            simulation.stopAll();
+        } else {
             save();
         }
-        // Simulation startet ohne laufende Events; was zum Zeitpunkt läuft, holt der Catch-up nach.
-        scheduler.restore(new EventState(null, List.of()));
         dryRun = dry;
-        scheduler.setHost(dry ? new DryRunHost(logger) : host);
+        simulation = new EventScheduler(dry ? new DryRunHost(logger) : host, logger);
+        if (!dry) {
+            listeners.forEach(simulation::addListener);
+        }
+        if (config != null) {
+            apply(simulation);
+        }
         clock.simulate(target);
         logger.info("Event-Testmodus: simulierte Zeit " + target + (dry ? " (Trockenlauf)" : ""));
-        scheduler.tick(clock.now());
+        // Simulation startet ohne laufende Events; was zum Zeitpunkt läuft, holt der Catch-up nach.
+        simulation.tick(clock.now());
     }
 
     public boolean stopSimulation() {
-        if (!isSimulating()) {
+        if (simulation == null) {
             return false;
         }
+        simulation.stopAll();
+        simulation = null;
         clock.reset();
-        scheduler.setHost(host);
-        scheduler.restore(realState);
-        realState = null;
         dryRun = false;
         logger.info("Event-Testmodus beendet");
         return true;
     }
 
     public boolean isSimulating() {
-        return clock.isSimulated();
+        return simulation != null;
     }
 
     public boolean isDryRun() {

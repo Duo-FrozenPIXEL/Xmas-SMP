@@ -171,8 +171,13 @@ public final class EffectEngine {
         while (it.hasNext()) {
             ScheduledSound s = it.next();
             if (s.dueTick() <= currentTick) {
-                playLayer(s.world(), s.position(), s.layer());
+                // Erst entfernen: Ein fehlerhafter Sound darf nicht in jedem Tick erneut werfen.
                 it.remove();
+                try {
+                    playLayer(s.world(), s.position(), s.layer());
+                } catch (RuntimeException e) {
+                    logger.error("Sound " + s.layer().sound() + " konnte nicht abgespielt werden", e);
+                }
             }
         }
     }

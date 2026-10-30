@@ -57,12 +57,12 @@ Das Pack ist `pack_format 34` (= 1.21–1.21.1), nutzt aber bereits das Item-Def
 - [x] `repair_kit.json` nutzt Textur `revivalkit.png` (Verbandskasten); `repairitem.png` wird nicht genutzt (sieht nach UI-Atlas-Fragment aus) → entfernt (liegt weiter im Original-ZIP).
 - [x] `empty.png` (400×400, RGB, magenta) wird nirgends genutzt → entfernt (liegt weiter im Original-ZIP).
 - [x] `assets/minecraft/items/white_dye-working.txt` ist eine Arbeitsdatei mit abweichendem Format → entfernen.
-- [ ] `strengthgemtier2pristine3/4.png` haben graue Randpixel links → optisch nachbessern
+- [ ] `strengthgemtier2pristine3/4.png` haben graue Randpixel links → optisch nachbessern. Geprüft: Spalte x=0, Zeilen 8–15 (RGB 123,123,123); bei allen anderen Gems sind diese Pixel Teil der farbigen Kontur, Transparentmachen würde Löcher schneiden → Farbe muss gezeichnet/gewählt werden (auch `pristine2` betroffen)
 - [ ] `gem-breaking/*.png` (8 graue Riss-Overlays) werden nicht genutzt → als Basis für Bruch-Animation/Partikel oder für eingefärbte neue Texturen verwenden.
 - [ ] Nicht benötigte Gems (Flux, Life, Speed) aus dem eigenen Pack entfernen oder für spätere Erweiterungen (Christmas-Twist) markieren.
 
 ### 1.3 Pack für 1.21.11 – 26.3 fit machen
-- [x] `pack.mcmeta` auf das neue Format mit `min_format` / `max_format` umstellen (ab 1.21.9 Pflicht). 1.21.11 ≈ Format 75, 26.1 ≈ 84 **(V)** – exakte Werte für 26.3 im Minecraft-Wiki prüfen.
+- [x] `pack.mcmeta` auf das neue Format mit `min_format` / `max_format` umstellen (ab 1.21.9 Pflicht). Geprüft (`docs/versionen.md`): 1.21.11 = 75, 26.1 = 84, 26.2 = 88, 26.3 = 97.1 – `min_format` 75 / `max_format` 97 passt.
 - [x] Beschreibung im `pack.mcmeta` auf „Xmas-SMP“ ändern (aktuell „BlissGems V4 (1.21.x)“); `pack.png` ggf. ersetzen.
 - [ ] Umstieg von `custom_model_data` auf Basis-Items hin zur `item_model`-Komponente erwägen (je Kristall/Stufe eine eigene Item-Definition unter `assets/xmassmp/items/`) – sauberer und versionsstabiler.
 - [x] Namespace von `blissgems` auf eigenen Namespace `xmassmp` umziehen.
@@ -81,17 +81,18 @@ Das Pack ist `pack_format 34` (= 1.21–1.21.1), nutzt aber bereits das Item-Def
 ## 2. Recherche (Original-Bliss-Verhalten) **(V)**
 
 Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktioniert (Foren)“.
+Ergebnisse mit Quellen und Sicherheit je Aussage: `docs/bliss-original.md`. Abweichungen sind dort aufgelistet; wo nötig als „Entscheidung des Owners nötig“ markiert (u. a. Startenergie 5 = „zerkratzt“ statt Pristine wie im Original).
 
-- [ ] Energiesystem recherchieren: Wertebereich (meist 0–10), Gewinn bei Kill / Verlust bei Tod, Namen der Stufen (Broken … Pristine +X)
-- [ ] Verhalten bei 0 Energie (Gem zerbricht? Fähigkeiten aus? Bann/Revive?)
-- [ ] Tier-System: Wie wird Tier 2 erreicht (Upgrader), was schaltet Tier 2 frei?
-- [ ] Gem Trader: Gem gegen zufälligen/gewählten anderen Gem tauschen? Kosten? Trader-Token? Shrine/Station?
-- [ ] Gem Fragments: Wofür (Crafting des Traders/Upgraders/Repair)?
-- [ ] Energy Bottle: Energie abzapfen / übertragen
-- [ ] Repair-Kit / Revival-Tome: Gem reparieren, gebannte/tote Spieler wiederbeleben
-- [ ] Aktivierung der Fähigkeiten im Original (Tasten, Offhand, Klick-Kombinationen), Cooldown-Anzeige (Actionbar mit Font-Icons ``–``)
-- [ ] Startverhalten: Bekommt jeder Spieler beim ersten Join einen zufälligen Gem?
-- [ ] Ergebnisse als `docs/bliss-original.md` dokumentieren und Abweichungen begründen
+- [x] Energiesystem recherchieren: Wertebereich (meist 0–10), Gewinn bei Kill / Verlust bei Tod, Namen der Stufen (Broken … Pristine +X)
+- [x] Verhalten bei 0 Energie (Gem zerbricht? Fähigkeiten aus? Bann/Revive?)
+- [x] Tier-System: Wie wird Tier 2 erreicht (Upgrader), was schaltet Tier 2 frei?
+- [x] Gem Trader: Gem gegen zufälligen/gewählten anderen Gem tauschen? Kosten? Trader-Token? Shrine/Station?
+- [x] Gem Fragments: Wofür (Crafting des Traders/Upgraders/Repair)?
+- [x] Energy Bottle: Energie abzapfen / übertragen
+- [x] Repair-Kit / Revival-Tome: Gem reparieren, gebannte/tote Spieler wiederbeleben
+- [x] Aktivierung der Fähigkeiten im Original (Tasten, Offhand, Klick-Kombinationen), Cooldown-Anzeige (Actionbar mit Font-Icons ``–``)
+- [x] Startverhalten: Bekommt jeder Spieler beim ersten Join einen zufälligen Gem?
+- [x] Ergebnisse als `docs/bliss-original.md` dokumentieren und Abweichungen auflisten (Begründungen bzw. Entscheidungen stehen beim Owner)
 
 ---
 
@@ -104,9 +105,9 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
   - `paper/` – später
   - `neoforge/` – später
 - [x] Multiloader-Ansatz wählen: eigenes `common`-Modul mit Plattform-Interfaces (`Platform`, `EffectSink`, `EventHost`), Fabric kompiliert die Kern-Quellen mit
-- [ ] Multi-Version-Builds 1.21.11 → 26.3 einrichten (z. B. **Stonecutter**) **(V)**
-- [ ] Java-Versionen beachten: 1.21.11 = Java 21, 26.x = vermutlich Java 25 **(V)**
-- [ ] Ab 26.1 ist Minecraft nicht mehr obfuskiert → Mappings/Loom-Setup je Version unterschiedlich **(V)**
+- [ ] Multi-Version-Builds 1.21.11 → 26.3 einrichten (z. B. **Stonecutter** 0.9.8) – braucht Gradle-9-Update, eigenes Loom-Setup je Version und sgui 2.x (API-Änderungen ungeprüft); nur mit lokalem Build testbar
+- [x] Java-Versionen geprüft: 1.21.11 = Java 21, alle 26.x = Java 25 (`docs/versionen.md`)
+- [x] Geprüft: ab 26.1 nicht mehr obfuskiert → für 26.x Plugin `net.fabricmc.fabric-loom` ohne Mappings, `implementation` statt `modImplementation`, Gradle 9.x nötig (Wrapper steht auf 8.14.3); Details und Versionen von Fabric API/Polymer/sgui je 26.x in `docs/versionen.md`
 - [x] CI (GitHub Actions): Pack-Validator, Kern-Tests, Fabric-Build (1.21.11), JARs als Workflow-Artefakte
 - [ ] CI: weitere Zielversionen (26.x) und Paper/NeoForge in die Matrix, Artefakte als GitHub-Release
 - [x] `README.md` füllen: Installation, Befehle, Permissions, Konfiguration, unterstützte Versionen
@@ -130,7 +131,7 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 - [x] Plattform-Adapter: Partikel senden, Items bauen, Befehle registrieren, Tick-Takt (Fabric)
 - [x] Plattform-Adapter: `PlayerHandle` (Position, Blickrichtung, Schleichen, Actionbar, Chat), Online-Spieler
 - [x] Plattform-Adapter: Display-Entities spawnen
-- [ ] Plattform-Adapter: GUIs öffnen
+- [x] Plattform-Adapter: GUIs öffnen (`GuiHost`/`GuiView` im Kern, Fabric über sgui `FabricGuiHost`)
 
 ---
 
@@ -149,8 +150,9 @@ Ziel laut Instructions: „schau dir an wie das Plugin normalerweise funktionier
 - [x] Kill eines Spielers → +Energie, eigener Tod → −Energie (`energy.killGain`/`deathLoss`, Anti-Farming `sameVictimCooldownMinutes`, Event-Modifikator `energy_multiplier`)
 - [x] Energie → Bruchstufe → Modell (4 sichtbare Stufen: zerbrochen, beschädigt, zerkratzt, makellos; Schwellen in `energy.stages`)
 - [x] Energie skaliert Fähigkeitsstärke (Schaden, Dauer, Radius) und schaltet bei „zerbrochen“ Fähigkeiten ab (`AbilityService.Result.BROKEN`)
-- [ ] **Bruch-Animation** beim Stufenwechsel (Hook `EnergyService.addStageListener` und Glas-Sound vorhanden): Riss-Partikel (Overlay-Texturen `gem-breaking/*`), Glas-Sound, Item-Shards in Kristallfarbe
-- [ ] **Reparatur-/Aufwertungs-Animation** beim Aufstieg
+- [x] **Bruch-Animation** beim Stufenwechsel (`StageEffects`): Spannungsring, Splitter-Kugel, Funken, leuchtende Kristallscherben (Item-Displays) in Kristallfarbe, bei „zerbrochen“ Rauch und Nachhall – im Spiel noch nicht angesehen
+  - [ ] Riss-Overlays `gem-breaking/*` einbinden (braucht eigene Item-Modelle im Pack, z. B. als Item-Display vor dem Spieler)
+- [x] **Reparatur-/Aufwertungs-Animation** beim Aufstieg (`StageEffects`): Spirale sammelt Splitter, Scherbe setzt sich leuchtend zusammen, Lichtring am Boden – im Spiel noch nicht angesehen
 - [ ] Energy Bottle: Energie abfüllen (Rechtsklick/Befehl) und an andere übertragen
 - [ ] Repair-Kit: Kristall-Energie wiederherstellen (Rezept + Effekt)
 - [ ] Revival-Tome: Verhalten bei 0 Energie (Revive-Mechanik laut Recherche) **(V)**
@@ -222,16 +224,16 @@ Allgemeine Qualitätsanforderungen für **jede** Kraft:
 
 ## 6. Admin-/Moderationssystem
 
-- [ ] Befehl `/xmas admin` (Permission `xmassmp.admin`, Fallback OP-Level 2) öffnet Konfigurations-GUI
-- [ ] GUI-Seiten:
-  - [ ] **Allgemein**: Plugin an/aus, Fähigkeiten global an/aus, PvP-Energie an/aus, Reload
-  - [ ] **Kristalle**: je Kristall aktivieren/deaktivieren, Cooldown-/Schadens-Multiplikator
-  - [ ] **Energie**: Start-, Min-, Max-Energie, Gewinn/Verlust pro Kill/Tod
-  - [ ] **Trader/Upgrader**: aktiv, Rezepte, Kosten
-  - [ ] **Spieler**: Online-Spieler wählen → Kristall setzen, Tier setzen, Energie setzen, Cooldowns zurücksetzen
-  - [ ] **Events**: geplante Events ansehen, aktivieren/deaktivieren, manuell starten/stoppen, Testmodus
-  - [ ] **Items**: alle Custom-Items zum Herausnehmen (Kristalle, Trader, Upgrader, Energy Bottle, Repair-Kit, Fragments)
-- [ ] Änderungen aus der GUI sofort speichern (Config-Datei) und live anwenden (Achtung: Speichern verwirft die Kommentare in `config.jsonc` – Vorlage neu rendern statt Gson-Dump)
+- [x] Befehl `/xmas admin` (Permission `xmassmp.admin`, Fallback OP-Level 2) öffnet Konfigurations-GUI
+- [x] GUI-Seiten (`AdminGui`, im Spiel noch nicht angesehen):
+  - [x] **Allgemein**: Plugin an/aus, Fähigkeiten global an/aus, PvP-Energie an/aus, Reload
+  - [x] **Kristalle**: je Kristall aktivieren/deaktivieren, Cooldown-/Schadens-Multiplikator
+  - [x] **Energie**: Start-, Min-, Max-Energie, Gewinn/Verlust pro Kill/Tod
+  - [ ] **Trader/Upgrader**: aktiv, Rezepte, Kosten – folgt mit 4.3/4.4 (Platzhalter-Feld im Hauptmenü)
+  - [x] **Spieler**: Online-Spieler wählen → Kristall setzen, Tier setzen, Energie setzen, Cooldowns zurücksetzen
+  - [x] **Events**: geplante Events ansehen, aktivieren/deaktivieren, manuell starten/stoppen, Testmodus
+  - [x] **Items**: alle Custom-Items zum Herausnehmen (Kristalle, Trader, Upgrader, Energy Bottle, Repair-Kit, Fragments)
+- [x] Änderungen aus der GUI sofort speichern und live anwenden: `JsoncEditor` ersetzt nur den geänderten Wert, Kommentare und Formatierung in `config.jsonc`/`events.jsonc` bleiben erhalten
 - [x] Zusätzliche Text-Befehle (für Konsole/Automatisierung): `/xmas give`, `/xmas set <spieler> crystal|tier|energy`, `/xmas reload`, `/xmas event start|stop|list|simulate`
 - [x] Tab-Completion für alle Befehle
 - [x] Audit-Log: Admin-Änderungen protokollieren (wer, was, wann) → `<welt>/xmassmp/audit.log`
@@ -244,7 +246,7 @@ Allgemeine Qualitätsanforderungen für **jede** Kraft:
 - [x] Event-Scheduler: Events an **bestimmten Tagen zu bestimmten Uhrzeiten** ausführen
 - [x] Zeitzone konfigurierbar (Standard `Europe/Berlin`), Sommerzeit-sicher
 - [x] Event-Definition in Config: ID, Name, Datum/Zeitraum (z. B. 24.12.–31.12.), Uhrzeit(en), Dauer, Wiederholung (jährlich `MM-dd`, Wochentage), Aktionen
-- [ ] Aktionstypen (erweiterbar):
+- [x] Aktionstypen (erweiterbar):
   - [x] Broadcast/Titel/Sound an alle
   - [x] Befehl ausführen
   - [x] Globale Modifikatoren (z. B. doppelte Energie, verkürzte Cooldowns) – `cooldown_multiplier` und `energy_multiplier` wirken
@@ -252,7 +254,7 @@ Allgemeine Qualitätsanforderungen für **jede** Kraft:
 - [x] Ankündigungen vor Eventstart (z. B. 10 min, 1 min, Countdown)
 - [x] Persistenz: Laufende Events überstehen Server-Neustart; verpasste Events beim Start nachholen oder überspringen (konfigurierbar)
 - [x] Testmodus: Datum/Uhrzeit simulieren (`/xmas event simulate <datum> <uhrzeit> [dry]`)
-- [ ] Integration in Admin-GUI (Abschnitt 6)
+- [x] Integration in Admin-GUI (Abschnitt 6)
 - [x] Weihnachtswoche als Beispiel-Config mit leeren Platzhalter-Events anlegen
 
 ---
@@ -260,7 +262,7 @@ Allgemeine Qualitätsanforderungen für **jede** Kraft:
 ## 8. Christmas-Twist (Platzhalter)
 
 - [ ] Wartet auf separate Datei vom Owner
-- [ ] Erweiterungspunkte vorbereiten: Crystal-Registry, Ability-Interface, Event-Aktionen, Pack-Namespace für neue Texturen
+- [x] Erweiterungspunkte vorbereiten: `CrystalRegistry.register`, `Ability`/`AbilityRegistry`, `EventActionRegistry`, `EventService.addListener` (gilt auch für nicht-trockene Simulationen), Pack-Namespace `xmassmp`
 
 ---
 
@@ -274,9 +276,9 @@ Allgemeine Qualitätsanforderungen für **jede** Kraft:
 
 ## 10. Qualitätssicherung
 
-- [x] Unit-Tests für vorhandene Kernlogik (Event-Scheduler inkl. Zeitzonen/Datumsgrenzen, Config, Spielerdaten, Effekte, Cooldowns, Admin, Pack-Abgleich) – 78 Tests
+- [x] Unit-Tests für vorhandene Kernlogik (Event-Scheduler inkl. Zeitzonen/Datumsgrenzen, Testmodus, Pausen, Zeitsprünge, Config inkl. JSONC-Editor, Spielerdaten, Effekte, Stufen-Animationen, Cooldowns, Admin inkl. Admin-GUI, Pack-Abgleich) – 185 Tests
 - [ ] Unit-Tests für Energie, Tier-Upgrade und Trader, sobald implementiert
-- [ ] Testserver je Plattform und Version (1.21.11, 26.1, 26.2, 26.3) – **(V)** welche 26.x-Versionen tatsächlich existieren
+- [ ] Testserver je Plattform und Version (1.21.11, 26.1, 26.2, 26.3 – alle veröffentlicht, siehe `docs/versionen.md`)
 - [ ] Jede Kraft im Spiel testen und Video/GIF aufnehmen (Qualitäts-Check Animation/Partikel)
 - [ ] Performance-Test mit vielen Spielern und gleichzeitigen Fähigkeiten
 - [ ] Mehrspieler-Test: PvP-Energie, Anti-Farming, Trader, Admin-GUI

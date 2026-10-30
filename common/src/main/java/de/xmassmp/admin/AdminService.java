@@ -56,14 +56,14 @@ public final class AdminService {
     private final ConfigManager config;
     private final EventService events;
     private final AuditLog audit;
-    private final Supplier<List<String>> reloader;
+    private final Supplier<ConfigManager.LoadResult> reloader;
     private final Consumer<UUID> playerChanged;
 
     /**
      * @param playerChanged wird nach jeder Änderung an Spielerdaten aufgerufen (z. B. Item-Abgleich)
      */
     public AdminService(CrystalRegistry crystals, PlayerDataStore players, ConfigManager config,
-                        EventService events, AuditLog audit, Supplier<List<String>> reloader,
+                        EventService events, AuditLog audit, Supplier<ConfigManager.LoadResult> reloader,
                         Consumer<UUID> playerChanged) {
         this.crystals = crystals;
         this.players = players;
@@ -79,6 +79,7 @@ public final class AdminService {
                 "§6/xmas give <spieler> crystal <kristall> [tier] [zustand]",
                 "§6/xmas give <spieler> item <item>",
                 "§6/xmas set <spieler> crystal|tier|energy <wert>",
+                "§6/xmas admin §7– Konfigurations-GUI",
                 "§6/xmas reload",
                 "§6/xmas event list|start <id>|stop <id>",
                 "§6/xmas event simulate <yyyy-MM-dd> <HH:mm> [dry] §7· §6/xmas event simulate off");
@@ -160,12 +161,30 @@ public final class AdminService {
         return Result.ok("Energie von " + name + " ist jetzt " + energy);
     }
 
+    public Result resetCooldowns(String actor, UUID uuid, String name) {
+        players.get(uuid).clearCooldowns();
+        players.save(uuid);
+        audit.record(actor, "reset_cooldowns", name, null);
+        playerChanged.accept(uuid);
+        return Result.ok("Cooldowns von " + name + " zurückgesetzt");
+    }
+
+    // ------------------------------------------------------------------ config
+
+    /** Ändert einen Wert in {@code config.jsonc}; Kommentare bleiben erhalten, die Änderung wirkt sofort. */
+    public Result setConfig(String actor, List<String> path, Object value) {
+        ConfigManager.LoadResult result = config.set(path, value);
+        String key = String.join(".", path);
+        audit.record(actor, "config", key, value + (result.success() ? "" : " (FEHLER)"));
+        return result.success() ? Result.ok(key + " = " + value) : Result.fail(String.join("; ", result.messages()));
+    }
+
     // ------------------------------------------------------------------ reload
 
-    public List<String> reload(String actor) {
-        List<String> messages = reloader.get();
-        audit.record(actor, "reload", null, String.join("; ", messages));
-        return messages;
+    public ConfigManager.LoadResult reload(String actor) {
+        ConfigManager.LoadResult result = reloader.get();
+        audit.record(actor, "reload", null, (result.success() ? "" : "FEHLER: ") + String.join("; ", result.messages()));
+        return result;
     }
 
     // ------------------------------------------------------------------ events
@@ -209,6 +228,18 @@ public final class AdminService {
                 : "Event " + id + " gestartet (" + def.get().duration().toMinutes() + " min)");
     }
 
+    /** Schaltet die automatische Ausführung eines Events in {@code events.jsonc} um. */
+    public Result eventSetEnabled(String actor, String id, boolean enabled) {
+        if (events.scheduler().definition(id).isEmpty()) {
+            return Result.fail("Unbekanntes Event: " + id);
+        }
+        ConfigManager.LoadResult result = events.setEnabled(id, enabled);
+        audit.record(actor, "event_enabled", id, enabled + (result.success() ? "" : " (FEHLER)"));
+        return result.success()
+                ? Result.ok("Event " + id + (enabled ? " aktiviert" : " deaktiviert"))
+                : Result.fail(String.join("; ", result.messages()));
+    }
+
     public Result eventStop(String actor, String id) {
         if (!events.stop(id)) {
             return Result.fail("Event " + id + " läuft nicht");
@@ -237,7 +268,7 @@ public final class AdminService {
             return Result.fail("Testmodus ist nicht aktiv");
         }
         audit.record(actor, "event_simulate_off", null, null);
-        return Result.ok("Testmodus beendet, echter Event-Zustand wiederhergestellt");
+        return Result.ok("Testmodus beendet – simulierte Events wurden mit ihren End-Aktionen beendet");
     }
 
     // ------------------------------------------------------------------ Tab-Completion

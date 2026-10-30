@@ -1,5 +1,6 @@
 package de.xmassmp.text;
 
+import java.util.IllegalFormatException;
 import java.util.List;
 
 /**
@@ -40,7 +41,15 @@ public record LocalizedText(String key, String fallback, List<LocalizedText> arg
 
     /** Fallback mit eingesetzten Argumenten, z. B. für Logs und Tests. */
     public String toPlainString() {
-        Object[] values = args.stream().map(LocalizedText::toPlainString).toArray();
-        return values.length == 0 ? fallback : String.format(fallback, values);
+        List<String> values = args.stream().map(LocalizedText::toPlainString).toList();
+        if (values.isEmpty()) {
+            return fallback;
+        }
+        try {
+            return String.format(fallback, values.toArray());
+        } catch (IllegalFormatException e) {
+            // Ungültiges Format im Fallback (z. B. "50% schneller"): Argumente ohne Formatierung anhängen
+            return fallback + " " + String.join(" ", values);
+        }
     }
 }

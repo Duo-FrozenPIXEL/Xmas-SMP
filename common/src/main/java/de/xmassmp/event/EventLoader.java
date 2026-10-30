@@ -119,38 +119,43 @@ public final class EventLoader {
 
         List<DateRule> dates = new ArrayList<>();
         if (json.has("dates")) {
-            for (JsonElement entry : json.getAsJsonArray("dates")) {
+            for (JsonElement entry : requireArray(json, "dates", "[\"12-24\"]")) {
                 if (entry.isJsonObject()) {
                     JsonObject range = entry.getAsJsonObject();
                     String from = EventActionRegistry.requireString(range, "from");
                     dates.add(DateRule.parse(from, optString(range, "to", from)));
                 } else {
-                    dates.add(DateRule.parse(entry.getAsString(), entry.getAsString()));
+                    String text = requireText(entry, "dates", "[\"12-24\"]");
+                    dates.add(DateRule.parse(text, text));
                 }
             }
         }
 
         Set<DayOfWeek> weekdays = new HashSet<>();
         if (json.has("weekdays")) {
-            for (JsonElement entry : json.getAsJsonArray("weekdays")) {
+            for (JsonElement entry : requireArray(json, "weekdays", "[\"FRIDAY\"]")) {
+                String day = requireText(entry, "weekdays", "[\"FRIDAY\"]");
                 try {
-                    weekdays.add(DayOfWeek.valueOf(entry.getAsString().toUpperCase(Locale.ROOT)));
+                    weekdays.add(DayOfWeek.valueOf(day.toUpperCase(Locale.ROOT)));
                 } catch (IllegalArgumentException e) {
-                    throw new EventConfigException("Unbekannter Wochentag '" + entry.getAsString()
+                    throw new EventConfigException("Unbekannter Wochentag '" + day
                             + "' (MONDAY … SUNDAY)");
                 }
             }
         }
 
         List<LocalTime> times = new ArrayList<>();
-        if (!json.has("times") || json.getAsJsonArray("times").isEmpty()) {
+        JsonArray timeEntries = json.has("times")
+                ? requireArray(json, "times", "[\"18:00\"]") : new JsonArray();
+        if (timeEntries.isEmpty()) {
             throw new EventConfigException("'times' fehlt (z. B. [\"18:00\"])");
         }
-        for (JsonElement entry : json.getAsJsonArray("times")) {
+        for (JsonElement entry : timeEntries) {
+            String text = requireText(entry, "times", "[\"18:00\"]");
             try {
-                times.add(LocalTime.parse(entry.getAsString()));
+                times.add(LocalTime.parse(text));
             } catch (DateTimeParseException e) {
-                throw new EventConfigException("Ungültige Uhrzeit '" + entry.getAsString() + "' (HH:mm)");
+                throw new EventConfigException("Ungültige Uhrzeit '" + text + "' (HH:mm)");
             }
         }
 
@@ -162,8 +167,8 @@ public final class EventLoader {
 
         List<Integer> announce = new ArrayList<>();
         if (json.has("announceMinutes")) {
-            for (JsonElement entry : json.getAsJsonArray("announceMinutes")) {
-                announce.add(entry.getAsInt());
+            for (JsonElement entry : requireArray(json, "announceMinutes", "[5, 1]")) {
+                announce.add(requireInt(entry, "announceMinutes", "[5, 1]"));
             }
         }
         int countdown = EventActionRegistry.optInt(json, "countdownSeconds", 0);
@@ -173,8 +178,9 @@ public final class EventLoader {
 
         Map<String, Double> modifiers = new LinkedHashMap<>();
         if (json.has("modifiers")) {
-            for (Map.Entry<String, JsonElement> e : json.getAsJsonObject("modifiers").entrySet()) {
-                double value = e.getValue().getAsDouble();
+            JsonObject modifierObject = requireObject(json, "modifiers", "{ \"cooldown_multiplier\": 0.5 }");
+            for (Map.Entry<String, JsonElement> e : modifierObject.entrySet()) {
+                double value = requireDouble(e.getValue(), "modifiers", "0.5");
                 if (value < 0) {
                     throw new EventConfigException("Modifikator '" + e.getKey() + "' darf nicht negativ sein");
                 }
@@ -190,7 +196,7 @@ public final class EventLoader {
     private List<EventAction> parseActions(JsonObject json, String key) throws EventConfigException {
         List<EventAction> out = new ArrayList<>();
         if (json.has(key)) {
-            JsonArray array = json.getAsJsonArray(key);
+            JsonArray array = requireArray(json, key, "[{ \"type\": \"broadcast\", \"message\": \"...\" }]");
             for (int i = 0; i < array.size(); i++) {
                 try {
                     out.add(actions.parse(array.get(i)));
@@ -200,5 +206,68 @@ public final class EventLoader {
             }
         }
         return out;
+    }
+
+    /** Liefert {@code json[key]} als Liste, sonst eine verständliche Fehlermeldung mit Beispiel. */
+    private static JsonArray requireArray(JsonObject json, String key, String example)
+            throws EventConfigException {
+        JsonElement value = json.get(key);
+        if (value == null || !value.isJsonArray()) {
+            throw typeError(key, "eine Liste", example);
+        }
+        return value.getAsJsonArray();
+    }
+
+    /** Liefert {@code json[key]} als Objekt, sonst eine verständliche Fehlermeldung mit Beispiel. */
+    private static JsonObject requireObject(JsonObject json, String key, String example)
+            throws EventConfigException {
+        JsonElement value = json.get(key);
+        if (value == null || !value.isJsonObject()) {
+            throw typeError(key, "ein Objekt", example);
+        }
+        return value.getAsJsonObject();
+    }
+
+    /** Einzelner Listeneintrag, muss ein Text sein. */
+    private static String requireText(JsonElement entry, String key, String example)
+            throws EventConfigException {
+        if (!entry.isJsonPrimitive() || !entry.getAsJsonPrimitive().isString()) {
+            throw new EventConfigException("Einträge in \"" + key
+                    + "\" müssen Texte sein, z. B. " + example);
+        }
+        return entry.getAsString();
+    }
+
+    /** Einzelner Listeneintrag, muss eine ganze Zahl sein. */
+    private static int requireInt(JsonElement entry, String key, String example)
+            throws EventConfigException {
+        try {
+            if (entry.isJsonPrimitive()) {
+                return entry.getAsInt();
+            }
+        } catch (NumberFormatException e) {
+            // fällt unten auf die Typmeldung zurück
+        }
+        throw new EventConfigException("Einträge in \"" + key
+                + "\" müssen ganze Zahlen sein, z. B. " + example);
+    }
+
+    /** Einzelner Wert, muss eine Zahl sein. */
+    private static double requireDouble(JsonElement value, String key, String example)
+            throws EventConfigException {
+        try {
+            if (value.isJsonPrimitive()) {
+                return value.getAsDouble();
+            }
+        } catch (NumberFormatException e) {
+            // fällt unten auf die Typmeldung zurück
+        }
+        throw new EventConfigException("Werte in \"" + key
+                + "\" müssen Zahlen sein, z. B. " + example);
+    }
+
+    private static EventConfigException typeError(String key, String expected, String example) {
+        return new EventConfigException("\"" + key + "\" muss " + expected
+                + " sein, z. B. " + example);
     }
 }

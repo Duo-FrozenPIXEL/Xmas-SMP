@@ -2,6 +2,7 @@ package de.xmassmp.platform;
 
 import de.xmassmp.effect.EffectSink;
 import de.xmassmp.event.EventHost;
+import de.xmassmp.gui.GuiHost;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -32,4 +33,9 @@ public interface Platform {
     List<PlayerHandle> onlinePlayers();
 
     Optional<PlayerHandle> player(UUID uuid);
+
+    /** Kisten-GUIs, z. B. für die Admin-GUI; ohne Unterstützung {@link GuiHost#UNSUPPORTED}. */
+    default GuiHost guiHost() {
+        return GuiHost.UNSUPPORTED;
+    }
 }

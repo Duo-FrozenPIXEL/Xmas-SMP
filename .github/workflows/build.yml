@@ -51,17 +51,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Je Minecraft-Version alle versionsgebundenen Abhängigkeiten angeben, sonst baut eine
+        # zweite Version gegen die Werte für 1.21.11 aus gradle.properties.
         # Weitere Versionen (26.1 – 26.3) kommen mit dem Multi-Version-Setup (todo.md, 3.1).
-        minecraft: ["1.21.11"]
+        include:
+          - minecraft: "1.21.11"
+            java: "21"
+            fabric_api: "0.139.4+1.21.11"
+            polymer: "0.15.0+1.21.11"
+            sgui: "1.12.0+1.21.11"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@v4
       - name: Build
-        run: ./gradlew :fabric:build -Pminecraft_version=${{ matrix.minecraft }}
+        run: >-
+          ./gradlew :fabric:build
+          -Pminecraft_version=${{ matrix.minecraft }}
+          -Pfabric_api_version=${{ matrix.fabric_api }}
+          -Ppolymer_version=${{ matrix.polymer }}
+          -Psgui_version=${{ matrix.sgui }}
       - uses: actions/upload-artifact@v4
         with:
           name: xmas-smp-fabric-${{ matrix.minecraft }}

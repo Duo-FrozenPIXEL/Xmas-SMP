@@ -75,6 +75,25 @@ public final class ConfigManager {
         }
     }
 
+    /**
+     * Ändert einen Wert direkt in {@code config.jsonc} – Kommentare und Formatierung bleiben
+     * erhalten – und lädt die Datei neu. Fehlt sie, wird zuerst die Vorlage geschrieben.
+     *
+     * @param path z. B. {@code ["general", "enabled"]}
+     */
+    public synchronized LoadResult set(List<String> path, Object value) {
+        try {
+            if (Files.notExists(file)) {
+                writeTemplate();
+            }
+            String text = Files.readString(file, StandardCharsets.UTF_8);
+            JsonFiles.writeAtomic(file, JsoncEditor.set(text, path, JsoncEditor.literal(value)));
+        } catch (IOException | IllegalArgumentException e) {
+            return new LoadResult(false, List.of(FILE_NAME + " konnte nicht geändert werden: " + rootMessage(e)));
+        }
+        return load();
+    }
+
     private void writeTemplate() throws IOException {
         try (InputStream in = ConfigManager.class.getResourceAsStream(TEMPLATE)) {
             if (in == null) {
