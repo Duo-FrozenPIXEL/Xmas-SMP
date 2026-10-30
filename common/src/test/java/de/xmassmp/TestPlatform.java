@@ -7,16 +7,20 @@ import de.xmassmp.item.ItemCatalog;
 import de.xmassmp.item.ItemSpec;
 import de.xmassmp.platform.Platform;
 import de.xmassmp.platform.PlayerHandle;
+import de.xmassmp.platform.TotemHost;
 import de.xmassmp.platform.WorldRef;
 import de.xmassmp.platform.XmasLogger;
+import de.xmassmp.util.BlockPos;
 import de.xmassmp.util.Vec3;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /** Plattform für Kern-Tests: Ordner im Temp-Verzeichnis, Fake-Spieler, protokollierte Ausgaben. */
@@ -29,6 +33,11 @@ public final class TestPlatform implements Platform {
     /** Partikel ({@code p:<typ>}) und Sounds ({@code s:<id>}) in Aufrufreihenfolge. */
     public final List<String> effects = new ArrayList<>();
     public final List<String> errors = new ArrayList<>();
+    /** Gesetzte Totem-Blöcke ({@code welt@x y z}). */
+    public final Set<String> totems = new HashSet<>();
+    /** Blockstellen, an denen {@link TotemHost#place} scheitert. */
+    public final Set<String> blocked = new HashSet<>();
+    public int craftingRefreshes;
 
     public TestPlatform(Path dir) {
         this.dir = dir;
@@ -109,6 +118,32 @@ public final class TestPlatform implements Platform {
     }
 
     @Override
+    public TotemHost totemHost() {
+        return new TotemHost() {
+            @Override
+            public boolean place(WorldRef world, BlockPos pos) {
+                String key = world.id() + "@" + pos;
+                return !blocked.contains(key) && totems.add(key);
+            }
+
+            @Override
+            public boolean isPresent(WorldRef world, BlockPos pos) {
+                return totems.contains(world.id() + "@" + pos);
+            }
+
+            @Override
+            public void remove(WorldRef world, BlockPos pos) {
+                totems.remove(world.id() + "@" + pos);
+            }
+        };
+    }
+
+    @Override
+    public void refreshCrafting() {
+        craftingRefreshes++;
+    }
+
+    @Override
     public List<PlayerHandle> onlinePlayers() {
         return List.copyOf(online.values());
     }
@@ -134,6 +169,15 @@ public final class TestPlatform implements Platform {
         public final List<ItemSpec> dropped = new ArrayList<>();
         /** Inhalt eines gerade geöffneten Behälters. */
         public final List<ItemSpec> openContainer = new ArrayList<>();
+        /** Item in der Haupthand und Anzahl; {@code null} = leer. */
+        public ItemSpec mainHand;
+        public int mainHandCount;
+        public int selectedSlot;
+        public boolean alive = true;
+        public boolean creative;
+        /** Titel als {@code titel|untertitel}. */
+        public final List<String> titles = new ArrayList<>();
+        public int tabRefreshes;
 
         FakePlayer(UUID uuid, String name) {
             this.uuid = uuid;
@@ -223,6 +267,73 @@ public final class TestPlatform implements Platform {
         @Override
         public void removeDroppedCrystals(double radius) {
             dropped.removeIf(stack -> ItemCatalog.isOwnedCrystal(stack.data()));
+        }
+
+        /** Legt {@code count} Items in die Haupthand. */
+        public void hold(ItemSpec item, int count) {
+            mainHand = item;
+            mainHandCount = count;
+        }
+
+        @Override
+        public String mainHandItem() {
+            if (mainHand == null || mainHandCount <= 0) {
+                return "minecraft:air";
+            }
+            return mainHand.isVanilla() ? mainHand.baseItem()
+                    : ItemCatalog.itemId(mainHand.data().get(ItemSpec.DATA_TYPE));
+        }
+
+        @Override
+        public Map<String, String> mainHandData() {
+            return mainHand == null || mainHandCount <= 0 ? Map.of() : mainHand.data();
+        }
+
+        @Override
+        public int selectedSlot() {
+            return selectedSlot;
+        }
+
+        @Override
+        public boolean consumeMainHand(String itemId, Map<String, String> requiredData) {
+            if (!itemId.equals(mainHandItem())) {
+                return false;
+            }
+            Map<String, String> data = mainHandData();
+            boolean matches = requiredData.isEmpty() ? data.isEmpty()
+                    : requiredData.entrySet().stream().allMatch(e -> e.getValue().equals(data.get(e.getKey())));
+            if (!matches) {
+                return false;
+            }
+            if (--mainHandCount <= 0) {
+                mainHand = null;
+            }
+            return true;
+        }
+
+        @Override
+        public void dropItem(ItemSpec item) {
+            dropped.add(item);
+        }
+
+        @Override
+        public void showTitle(String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+            titles.add(title + "|" + subtitle);
+        }
+
+        @Override
+        public boolean isAlive() {
+            return alive;
+        }
+
+        @Override
+        public boolean isCreative() {
+            return creative;
+        }
+
+        @Override
+        public void refreshTabListName() {
+            tabRefreshes++;
         }
 
         public List<ItemSpec> crystals() {

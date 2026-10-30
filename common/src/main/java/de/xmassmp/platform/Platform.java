@@ -38,4 +38,16 @@ public interface Platform {
     default GuiHost guiHost() {
         return GuiHost.UNSUPPORTED;
     }
+
+    /** Totem-Blöcke des Repair Kits; ohne Unterstützung {@link TotemHost#UNSUPPORTED}. */
+    default TotemHost totemHost() {
+        return TotemHost.UNSUPPORTED;
+    }
+
+    /**
+     * Berechnet die Ergebnisfelder aller offenen Werkbänke und 2×2-Felder neu, z. B. nachdem eine
+     * Energy Bottle verbraucht wurde, damit keine Kopie mehr ein Ergebnis anzeigt.
+     */
+    default void refreshCrafting() {
+    }
 }

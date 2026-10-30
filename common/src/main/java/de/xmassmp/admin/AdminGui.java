@@ -1,6 +1,7 @@
 package de.xmassmp.admin;
 
 import de.xmassmp.config.ConfigManager;
+import de.xmassmp.config.RecipeSpec;
 import de.xmassmp.config.XmasConfig;
 import de.xmassmp.crystal.Crystal;
 import de.xmassmp.crystal.CrystalModels;
@@ -23,10 +24,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -49,6 +52,8 @@ public final class AdminGui {
     private final PlayerDataStore players;
     private final Supplier<List<PlayerHandle>> online;
     private final GuiHost host;
+    private Supplier<Optional<String>> totemStatus = Optional::empty;
+    private Predicate<String> totemCancel = actor -> false;
 
     public AdminGui(AdminService admin, ConfigManager config, CrystalRegistry crystals, EventService events,
                     PlayerDataStore players, Supplier<List<PlayerHandle>> online, GuiHost host) {
@@ -85,8 +90,8 @@ public final class AdminGui {
         b.set(1, 5, nav(viewer, "minecraft:clock", "§aEvents", this::eventsPage,
                 "§7Ansehen, (de)aktivieren, starten und stoppen"));
         b.set(1, 6, nav(viewer, "minecraft:chest", "§fItems", this::items, "§7Custom-Items herausnehmen"));
-        b.set(1, 7, GuiButton.label("minecraft:emerald", "§7Trader / Upgrader",
-                "§8Folgt, sobald Trader und Upgrader", "§8umgesetzt sind"));
+        b.set(1, 7, nav(viewer, "minecraft:emerald", "§aGameplay", this::gameplay,
+                "§7Energy Bottle, Upgrader, Händler, Totem, Rezepte"));
         b.set(2, 8, GuiButton.action("minecraft:barrier", "§cSchließen", c -> host.close(viewer.uuid())));
         return b.build();
     }
@@ -251,6 +256,57 @@ public final class AdminGui {
                     "§8Starten mit /xmas event simulate", "§8<yyyy-MM-dd> <HH:mm> [dry]"));
         }
         b.set(5, 0, back(viewer, this::main));
+        return b.build();
+    }
+
+    /** Optional: Status und Abbruch des laufenden Repair-Totems (setzt der Kern). */
+    public void setTotemControls(Supplier<Optional<String>> status, Predicate<String> cancel) {
+        this.totemStatus = status;
+        this.totemCancel = cancel;
+    }
+
+    GuiView gameplay(PlayerHandle viewer) {
+        XmasConfig cfg = config.get();
+        GuiView.Builder b = GuiView.builder("§8Admin › §fGameplay", 5);
+        Function<PlayerHandle, GuiView> page = this::gameplay;
+        b.set(0, 1, toggle(viewer, "Energy Bottles", cfg.energyBottle.enabled, List.of("energyBottle", "enabled"), page,
+                "§7Abfüllen, Trinken und Zerlegen"));
+        b.set(0, 2, intValue(viewer, "minecraft:glass_bottle", "Ladezeit (s)", cfg.energyBottle.chargeSeconds,
+                List.of("energyBottle", "chargeSeconds"), page));
+        b.set(0, 3, intValue(viewer, "minecraft:iron_sword", "Kampfsperre (s)", cfg.energyBottle.combatTagSeconds,
+                List.of("energyBottle", "combatTagSeconds"), page));
+        b.set(0, 5, toggle(viewer, "Upgrader", cfg.upgrader.enabled, List.of("upgrader", "enabled"), page));
+        b.set(0, 6, toggle(viewer, "Händler", cfg.trader.enabled, List.of("trader", "enabled"), page));
+        b.set(0, 7, intValue(viewer, "minecraft:clock", "Händler-Wartezeit (min)", cfg.trader.cooldownMinutes,
+                List.of("trader", "cooldownMinutes"), page));
+
+        b.set(1, 1, toggle(viewer, "Repair-Totem", cfg.totem.enabled, List.of("totem", "enabled"), page));
+        b.set(1, 2, intValue(viewer, "minecraft:compass", "Radius", cfg.totem.radius, List.of("totem", "radius"), page));
+        b.set(1, 3, intValue(viewer, "minecraft:clock", "Dauer (min)", cfg.totem.durationMinutes,
+                List.of("totem", "durationMinutes"), page));
+        b.set(1, 4, intValue(viewer, "minecraft:glowstone_dust", "Ziel-Energie", cfg.totem.restoreTo,
+                List.of("totem", "restoreTo"), page));
+        b.set(1, 5, intValue(viewer, "minecraft:netherite_pickaxe", "Abbauzeit (s)", cfg.totem.breakSeconds,
+                List.of("totem", "breakSeconds"), page));
+        b.set(1, 6, intValue(viewer, "minecraft:lead", "Teilnahme-Fenster (s)", cfg.totem.joinSeconds,
+                List.of("totem", "joinSeconds"), page));
+        Optional<String> running = totemStatus.get();
+        b.set(1, 7, running.isPresent()
+                ? GuiButton.action("minecraft:tnt", "§cTotem beenden", c -> {
+                    totemCancel.test(viewer.name());
+                    show(viewer, gameplay(viewer));
+                }, "§7" + running.get(), "§8Klick: ohne Wirkung beenden")
+                : GuiButton.label("minecraft:gray_dye", "§7Kein Totem aktiv"));
+
+        int column = 1;
+        for (Map.Entry<String, RecipeSpec> recipe : cfg.recipes.entrySet()) {
+            if (column > 7) {
+                break;
+            }
+            b.set(2, column++, toggle(viewer, "Rezept " + recipe.getKey(), recipe.getValue().enabled,
+                    List.of("recipes", recipe.getKey(), "enabled"), page, "§8Muster in config.jsonc"));
+        }
+        b.set(4, 0, back(viewer, this::main));
         return b.build();
     }
 

@@ -115,13 +115,15 @@ class HudAndControlsTest {
         String hud = steve.lastActionBar();
         String icon1 = Crystals.FIRE.hudIcon(1);
         String icon2 = Crystals.FIRE.hudIcon(2);
-        assertEquals("§8" + icon1 + " §78s§r   §8" + icon2 + " T2§r   §c✦ 5/10", hud);
+        assertEquals("§8" + icon1 + " §78s§r   §8" + icon2 + " T2§r   §8" + Crystals.FIRE.hudIcon(3) + " –§r   §c✦ 5/10",
+                hud);
     }
 
     @Test
     void readyAbilityShowsCheckAndEnergyInCrystalColor() {
         ticks(10);
-        assertEquals("§f" + Crystals.FIRE.hudIcon(1) + " §a✔§r   §8" + Crystals.FIRE.hudIcon(2) + " T2§r   §c✦ 5/10",
+        assertEquals("§f" + Crystals.FIRE.hudIcon(1) + " §a✔§r   §8" + Crystals.FIRE.hudIcon(2) + " T2§r   §8"
+                        + Crystals.FIRE.hudIcon(3) + " –§r   §c✦ 5/10",
                 steve.lastActionBar());
         core.players().get(steve.uuid()).setCrystalId("nature");
         ticks(10);

@@ -143,6 +143,70 @@
       "chars": [
         "\uE01F"
       ]
+    },
+    {
+      "type": "bitmap",
+      "file": "xmassmp:icons/ultimate_fire.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE020"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "xmassmp:icons/ultimate_earth.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE021"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "xmassmp:icons/ultimate_wind.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE022"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "xmassmp:icons/ultimate_shadow.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE023"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "xmassmp:icons/ultimate_nature.png",
+      "ascent": 8,
+      "height": 16,
+      "chars": [
+        "\uE024"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "xmassmp:hud/bottle_progress.png",
+      "ascent": 6,
+      "height": 6,
+      "chars": [
+        "\uE030",
+        "\uE031",
+        "\uE032",
+        "\uE033",
+        "\uE034",
+        "\uE035",
+        "\uE036",
+        "\uE037",
+        "\uE038",
+        "\uE039",
+        "\uE03A"
+      ]
     }
   ]
 }

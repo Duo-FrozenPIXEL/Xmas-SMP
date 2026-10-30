@@ -9,7 +9,9 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.xmassmp.XmasCore;
 import de.xmassmp.admin.AdminService;
+import de.xmassmp.bottle.BottleRegistry;
 import de.xmassmp.config.ConfigManager;
+import de.xmassmp.energy.EnergyLedger;
 import de.xmassmp.platform.PlayerHandle;
 import de.xmassmp.text.Messages;
 import me.lucko.fabric.api.permissions.v0.Permissions;
@@ -18,6 +20,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -72,6 +75,14 @@ final class XmasCommands {
                         .then(literal("energy").then(argument("value", IntegerArgumentType.integer())
                                 .executes(ctx -> withPlayer(ctx, (admin, p) -> admin.setEnergy(actor(ctx),
                                         p.getUUID(), p.getName().getString(), IntegerArgumentType.getInteger(ctx, "value"))))))))
+                .then(literal("energy")
+                        .then(literal("audit").executes(ctx -> energyAudit(ctx, null))
+                                .then(argument("player", EntityArgument.player())
+                                        .executes(ctx -> energyAudit(ctx, EntityArgument.getPlayer(ctx, "player")))))
+                        .then(literal("bottles").executes(this::bottles)))
+                .then(literal("totem")
+                        .then(literal("status").executes(this::totemStatus))
+                        .then(literal("cancel").executes(this::totemCancel)))
                 .then(literal("admin").executes(this::openAdmin))
                 .then(literal("reload").executes(this::reload))
                 .then(literal("event")
@@ -122,6 +133,49 @@ final class XmasCommands {
         }
         result.messages().forEach(m -> ctx.getSource().sendSystemMessage(FabricText.legacy("§7· " + m)));
         return result.success() ? 1 : 0;
+    }
+
+    /** Die letzten 15 Energieänderungen (alle oder eines Spielers) aus {@code energy.log}. */
+    private int energyAudit(CommandContext<CommandSourceStack> ctx, ServerPlayer target) throws CommandSyntaxException {
+        List<EnergyLedger.Entry> entries = started().ledger().recent(target == null ? null : target.getUUID(), 15);
+        if (entries.isEmpty()) {
+            return lines(ctx, List.of(Messages.prefixed("Keine Einträge im Energie-Protokoll.")));
+        }
+        List<String> out = new ArrayList<>();
+        out.add(Messages.prefixed("Energie-Protokoll" + (target == null ? "" : " von " + target.getName().getString())
+                + " (neueste unten):"));
+        for (EnergyLedger.Entry e : entries) {
+            String time = e.time().length() >= 19 ? e.time().substring(0, 19).replace('T', ' ') : e.time();
+            String color = EnergyLedger.SUSPICIOUS.equals(e.reason()) ? "§c" : "§f";
+            out.add("§8" + time + " " + color + e.name() + " §7" + e.from() + " → " + e.to() + " §8(" + e.reason()
+                    + (e.ref() != null ? ", " + e.ref() : "") + ")");
+        }
+        return lines(ctx, out);
+    }
+
+    private int bottles(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        BottleRegistry registry = started().bottles().registry();
+        List<String> active = registry.activeIds();
+        List<String> out = new ArrayList<>();
+        out.add(Messages.prefixed(active.size() + " aktive Energy Bottles" + (active.size() > 15 ? " (die neuesten 15):" : ":")));
+        for (String id : active.subList(Math.max(0, active.size() - 15), active.size())) {
+            BottleRegistry.Entry entry = registry.entry(id);
+            out.add("§8" + id.substring(0, 8) + " §7" + entry.origin + " · " + entry.creator + " · §8" + entry.created);
+        }
+        return lines(ctx, out);
+    }
+
+    private int totemStatus(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        return lines(ctx, List.of(Messages.prefixed(started().totem().status().orElse("Kein Repair-Totem aktiv."))));
+    }
+
+    private int totemCancel(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        XmasCore instance = started();
+        if (!instance.totem().cancel(actor(ctx))) {
+            return fail(ctx, "Kein Repair-Totem aktiv");
+        }
+        instance.audit().record(actor(ctx), "totem_cancel", null, null);
+        return 1;
     }
 
     private int openAdmin(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {

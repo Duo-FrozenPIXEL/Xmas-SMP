@@ -32,8 +32,9 @@
     "soulbound": true
   },
 
-  // Energie (Breaking-Pristine-System).
-  // VORLÄUFIG: Die Werte werden an das Original angepasst, sobald es recherchiert ist.
+  // Energie (Breaking-Pristine-System), Regeln siehe docs/implementierungsplan.md.
+  // Zustände wie im Original: 0 Zerbrochen, 1 Ruiniert, 2 Beschädigt, 3 Gerissen, 4 Zerkratzt,
+  // 5 Makellos, 6–10 Makellos +1 … +5.
   "energy": {
     // Energie-Gewinn und -Verlust durch Kills und Tode an/aus (z. B. für Friedensphasen).
     // false: Energie ändert sich nur noch per Befehl bzw. Admin-GUI.
@@ -43,25 +44,101 @@
     "max": 10,
     // Gewinn für den Sieger bzw. Verlust für den Besiegten bei einem PvP-Kill.
     // Läuft ein Event mit "energy_multiplier", wird der Gewinn damit multipliziert.
+    // Wer ein Opfer ohne Energie besiegt, bekommt nichts (kein Farmen mit Zweitaccounts).
     "killGain": 1,
     // Verlust bei jedem Tod, auch ohne Gegner (Mob, Lava, Sturz …).
     "deathLoss": 1,
     // Anti-Farming: Wer denselben Spieler innerhalb dieser Minuten erneut besiegt, bekommt
     // keine Energie. 0 = aus.
     "sameVictimCooldownMinutes": 30,
-    // Ab welcher Energie der Kristall wie aussieht; darunter ist er zerbrochen und die
-    // Fähigkeiten sind aus. Es muss gelten: min ≤ damaged ≤ scratched ≤ pristine ≤ max.
-    "stages": { "damaged": 1, "scratched": 4, "pristine": 7 },
+    // Hat der Sieger schon max, fällt die Energie des Opfers als Energy Bottle auf den Boden.
+    "dropBottleWhenKillerAtMax": true,
+    // Ab welcher Energie der Kristall wie aussieht (4 Modelle im Pack); darunter ist er zerbrochen
+    // und die aktiven Fähigkeiten sind aus. Es muss gelten: min ≤ damaged ≤ scratched ≤ pristine ≤ max.
+    "stages": { "damaged": 1, "scratched": 3, "pristine": 5 },
+    // Mindest-Energie je aktiver Fähigkeit. Bei 1–2 Energie gibt es nur die Primärkraft.
+    // Die Ultimate braucht zusätzlich Tier 2. Passive wirken immer, auch bei 0 Energie.
+    "access": { "primary": 1, "secondary": 3, "ultimate": 3 },
     // Stärke der Fähigkeiten (Schaden, Dauer, Radius) bei der niedrigsten Energie über
     // „zerbrochen“. Sie steigt linear bis 1.0 bei max.
     "minStrength": 0.6
   },
 
+  // Energy Bottle: Schleichen + Rechtsklick mit einer leeren Glasflasche gedrückt halten → −1 Energie,
+  // Rechtsklick auf die Flasche → +1 Energie (auch bei 0, auch für andere Spieler).
+  // Jede Flasche hat eine eigene ID im Flaschen-Register (bottles.json); Kopien wirken nicht.
+  "energyBottle": {
+    "enabled": true,
+    "chargeSeconds": 5,
+    // Abfüllen nur, solange danach mindestens so viel Energie bleibt.
+    "keepAtLeast": 1,
+    // Kein Abfüllen so lange nach Schaden durch einen anderen Spieler. 0 = aus.
+    "combatTagSeconds": 15,
+    "drinkCooldownSeconds": 1
+  },
+
+  // Upgrader: Rechtsklick hebt den Kristall auf Tier 2 (schaltet die Ultimate frei).
+  "upgrader": { "enabled": true },
+
+  // Kristall-Händler: Rechtsklick öffnet eine GUI mit freier Wahl des neuen Kristalls.
+  "trader": {
+    "enabled": true,
+    "keepTier": true,
+    "keepEnergy": true,
+    // Wartezeit zwischen zwei Täuschen in Minuten. 0 = keine.
+    "cooldownMinutes": 0
+  },
+
+  // Repair Kit: wird als Totem auf den Boden gestellt. Global läuft höchstens eins.
+  "totem": {
+    "enabled": true,
+    "radius": 15,
+    "durationMinutes": 10,
+    // Energie unter diesem Wert wird am Ende auf genau diesen Wert gesetzt.
+    "restoreTo": 5,
+    // Abbauzeit, fest – unabhängig von Werkzeug, Effizienz und Eile. TNT/Kolben/Feuer wirken nicht.
+    "breakSeconds": 10,
+    // Teilnehmer ist, wer in dieser Zeit nach dem Aufstellen im Kreis steht. Wer den Kreis
+    // danach verlässt, stirbt oder sich ausloggt, bekommt nichts.
+    "joinSeconds": 30,
+    // Koordinaten beim Aufstellen per Chat und Titel an alle.
+    "announceCoordinates": true
+  },
+
+  // Werkbank-Rezepte. pattern: 1–3 Zeilen, Leerzeichen = leeres Feld; key: Zeichen → Item-ID.
+  // Kristall-Splitter (xmassmp:gem_fragment) gibt es nur aus Energy Bottles ("gem_fragments").
+  "recipes": {
+    "upgrader": {
+      "enabled": true,
+      "pattern": ["FBF", "BWB", "FBF"],
+      "key": { "F": "xmassmp:gem_fragment", "B": "minecraft:dragon_breath", "W": "minecraft:wither_skeleton_skull" }
+    },
+    "gem_trader": {
+      "enabled": true,
+      "pattern": ["DBD", "BFB", "DBD"],
+      "key": { "D": "minecraft:diamond", "B": "minecraft:dragon_breath", "F": "xmassmp:gem_fragment" }
+    },
+    "repair_kit": {
+      "enabled": true,
+      "pattern": ["FAF", "DTD", "FAF"],
+      "key": { "F": "xmassmp:gem_fragment", "A": "minecraft:anvil", "D": "minecraft:diamond_block",
+               "T": "minecraft:netherite_upgrade_smithing_template" }
+    },
+    // 1 Energy Bottle (formlos, auch im 2×2-Feld) → so viele Splitter.
+    "gem_fragments": { "enabled": true, "count": 9 }
+  },
+
   "controls": {
-    // Taste „Item mit Zweithand tauschen“ (Standard F) löst Fähigkeit 1 aus,
-    // Schleichen + F Fähigkeit 2. Funktioniert ohne Client-Mod. Der normale Zweithand-Tausch
+    // Taste „Item mit Zweithand tauschen“ (Standard F) löst die Primärkraft aus,
+    // Schleichen + F die Sekundärkraft. Funktioniert ohne Client-Mod. Der normale Zweithand-Tausch
     // ist dann für Spieler mit Kristall abgeschaltet. false = F tauscht wieder normal.
-    "swapHandsActivates": true
+    "swapHandsActivates": true,
+    // Schleichen + Rechtsklick mit dem eigenen Kristall in der Haupthand löst die Ultimate aus.
+    "sneakUseUltimate": true,
+    // Tasten aus dem optionalen Client-Mod (xmas-smp-client) annehmen.
+    "clientKeys": true,
+    // Spieler mit Tier-2-Kristall stehen gelb in der Tab-Liste.
+    "tier2TabColor": true
   },
 
   "hud": {

@@ -1,5 +1,7 @@
 package de.xmassmp.ability;
 
+import de.xmassmp.crystal.Crystal;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,8 +17,8 @@ public final class AbilityRegistry {
         if (byId.containsKey(ability.id())) {
             throw new IllegalArgumentException("Fähigkeit bereits registriert: " + ability.id());
         }
-        if (ability instanceof ActiveAbility active && active.slot() != 1 && active.slot() != 2) {
-            throw new IllegalArgumentException(ability.id() + ": slot muss 1 oder 2 sein");
+        if (ability instanceof ActiveAbility active && (active.slot() < 1 || active.slot() > Crystal.SLOTS)) {
+            throw new IllegalArgumentException(ability.id() + ": slot muss 1–" + Crystal.SLOTS + " sein");
         }
         // Erst nach allen Prüfungen eintragen, damit ungültige Fähigkeiten nicht in der Map landen
         byId.put(ability.id(), ability);

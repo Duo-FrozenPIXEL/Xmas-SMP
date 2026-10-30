@@ -75,6 +75,8 @@ class CrystalPackTest {
         expected.forEach((crystal, icon) -> {
             assertEquals("xmassmp:icons/" + icon + "1.png", fileByChar.get(crystal.hudIcon(1)), crystal.id());
             assertEquals("xmassmp:icons/" + icon + "2.png", fileByChar.get(crystal.hudIcon(2)), crystal.id());
+            assertEquals("xmassmp:icons/ultimate_" + crystal.id() + ".png", fileByChar.get(crystal.hudIcon(3)),
+                    crystal.id());
         });
     }
 
@@ -93,6 +95,10 @@ class CrystalPackTest {
         }
         for (CustomItem item : CustomItem.values()) {
             texts.add(ItemCatalog.custom(item).name());
+            texts.addAll(ItemCatalog.custom(item).lore());
+        }
+        for (int energy = 0; energy <= 10; energy++) {
+            texts.add(de.xmassmp.energy.EnergyLevel.name(energy));
         }
         for (String lang : List.of("de_de", "en_us")) {
             JsonObject json = read(PACK.resolve("assets/xmassmp/lang/" + lang + ".json")).getAsJsonObject();
@@ -117,7 +123,7 @@ class CrystalPackTest {
     void registryRejectsDuplicateTexture() {
         CrystalRegistry registry = CrystalRegistry.withDefaults();
         Crystal copy = new Crystal("ice", "Eis", "strength", 7, Crystals.FIRE.color(),
-                Crystals.FIRE.accentColor(), 'b', "");
+                Crystals.FIRE.accentColor(), 'b', "\uE012\uE013\uE020");
         assertThrows(IllegalArgumentException.class, () -> registry.register(copy));
     }
 

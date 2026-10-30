@@ -4,12 +4,10 @@
   "crystal.xmassmp.wind": "Wind",
   "crystal.xmassmp.shadow": "Schatten",
   "crystal.xmassmp.nature": "Natur",
-
   "stage.xmassmp.broken": "zerbrochen",
   "stage.xmassmp.damaged": "beschädigt",
   "stage.xmassmp.scratched": "zerkratzt",
   "stage.xmassmp.pristine": "makellos",
-
   "item.xmassmp.crystal": "%s-Kristall",
   "item.xmassmp.revival_tome": "Wiederbelebungs-Foliant",
   "item.xmassmp.upgrader": "Upgrader",
@@ -17,9 +15,25 @@
   "item.xmassmp.gem_trader": "Kristall-Händler",
   "item.xmassmp.repair_kit": "Reparatur-Set",
   "item.xmassmp.gem_fragment": "Kristall-Splitter",
-
   "lore.xmassmp.tier": "Tier %s",
   "lore.xmassmp.stage": "Zustand: %s",
-  "lore.xmassmp.energy": "Energie: %s",
-  "lore.xmassmp.soulbound": "Seelengebunden"
+  "lore.xmassmp.energy": "Energie: %s (%s)",
+  "lore.xmassmp.soulbound": "Seelengebunden",
+  "energy.xmassmp.broken": "Zerbrochen",
+  "energy.xmassmp.ruined": "Ruiniert",
+  "energy.xmassmp.damaged": "Beschädigt",
+  "energy.xmassmp.cracked": "Gerissen",
+  "energy.xmassmp.scratched": "Zerkratzt",
+  "energy.xmassmp.pristine": "Makellos",
+  "energy.xmassmp.pristine_plus": "Makellos +%s",
+  "lore.xmassmp.upgrader.1": "Rechtsklick: Kristall auf Tier 2 heben",
+  "lore.xmassmp.upgrader.2": "Schaltet die Ultimate frei",
+  "lore.xmassmp.energy_bottle.1": "Rechtsklick: +1 Energie",
+  "lore.xmassmp.energy_bottle.2": "Werkbank: 9 Kristall-Splitter",
+  "lore.xmassmp.gem_trader.1": "Rechtsklick: Kristall frei wählen",
+  "lore.xmassmp.gem_trader.2": "Tier und Energie bleiben erhalten",
+  "lore.xmassmp.repair_kit.1": "Auf den Boden stellen: Totem für 10 Minuten",
+  "lore.xmassmp.repair_kit.2": "Wer bis zum Ende im Kreis bleibt, bekommt 5 Energie",
+  "lore.xmassmp.repair_kit.3": "Die Koordinaten sieht jeder!",
+  "lore.xmassmp.gem_fragment.1": "Zutat für Upgrader, Händler und Repair Kit"
 }

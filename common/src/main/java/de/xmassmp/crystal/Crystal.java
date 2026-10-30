@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
  * @param color       Hauptfarbe (Partikel, Lore)
  * @param accentColor Zweitfarbe für Farbverläufe ({@code dust_color_transition})
  * @param chatColor   Legacy-Farbcode für Chat/Lore
- * @param hudIcons    Font-Zeichen der zwei Fähigkeits-Icons
+ * @param hudIcons    Font-Zeichen der drei Fähigkeits-Icons (Primär, Sekundär, Ultimate)
  */
 public record Crystal(
         String id,
@@ -28,14 +28,17 @@ public record Crystal(
         char chatColor,
         String hudIcons) {
 
+    /** Aktive Fähigkeiten je Kristall: 1 = Primär, 2 = Sekundär, 3 = Ultimate. */
+    public static final int SLOTS = 3;
+
     private static final Pattern ID = Pattern.compile("[a-z0-9_]+");
 
     public Crystal {
         if (!ID.matcher(id).matches()) {
             throw new IllegalArgumentException("Ungültige Kristall-ID: " + id);
         }
-        if (hudIcons.codePointCount(0, hudIcons.length()) != 2) {
-            throw new IllegalArgumentException("Kristall " + id + " braucht genau zwei HUD-Icons");
+        if (hudIcons.codePointCount(0, hudIcons.length()) != SLOTS) {
+            throw new IllegalArgumentException("Kristall " + id + " braucht genau " + SLOTS + " HUD-Icons");
         }
     }
 
@@ -43,11 +46,10 @@ public record Crystal(
         return LocalizedText.of("crystal.xmassmp." + id, nameFallback).withColor(chatColor);
     }
 
-    /** Icon der Fähigkeit 1 oder 2. */
+    /** Icon der Fähigkeit 1–3. */
     public String hudIcon(int slot) {
-        int first = hudIcons.codePointAt(0);
-        int second = hudIcons.codePointAt(Character.charCount(first));
-        return Character.toString(slot == 1 ? first : second);
+        int[] icons = hudIcons.codePoints().toArray();
+        return Character.toString(icons[Math.max(1, Math.min(SLOTS, slot)) - 1]);
     }
 
     @Override

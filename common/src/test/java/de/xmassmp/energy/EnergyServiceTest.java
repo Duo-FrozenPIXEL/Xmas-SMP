@@ -67,8 +67,8 @@ class EnergyServiceTest {
         core.onPlayerDeath(alex, steve);
         assertEquals(6, energy(steve));
         assertEquals(4, energy(alex));
-        assertTrue(steve.messages.get(0).contains("+1 Energie"));
-        assertTrue(alex.messages.get(0).contains("-1 Energie"));
+        assertTrue(steve.messages.stream().anyMatch(m -> m.contains("+1 Energie")), steve.messages.toString());
+        assertTrue(alex.messages.stream().anyMatch(m -> m.contains("-1 Energie")), alex.messages.toString());
     }
 
     @Test
@@ -85,8 +85,44 @@ class EnergyServiceTest {
         core.onPlayerDeath(alex, steve);
         assertEquals(10, energy(steve));
         assertEquals(0, energy(alex));
-        assertTrue(steve.messages.get(0).contains("schon voll"));
+        assertTrue(steve.messages.get(0).contains("keine Energie mehr"), steve.messages.toString());
         assertTrue(alex.messages.isEmpty());
+    }
+
+    @Test
+    void victimWithoutEnergyGivesNothingButKillerAtZeroStillGains() {
+        core.players().get(alex.uuid()).setEnergy(0);
+        core.onPlayerDeath(alex, steve);
+        assertEquals(5, energy(steve), "Opfer ohne Energie bringt nichts");
+
+        core.players().get(steve.uuid()).setEnergy(0);
+        core.players().get(alex.uuid()).setEnergy(4);
+        core.onPlayerDeath(alex, steve);
+        assertEquals(1, energy(steve), "Sieger mit 0 Energie bekommt trotzdem +1");
+        assertEquals(3, energy(alex));
+    }
+
+    @Test
+    void killerAtMaxDropsVictimsEnergyAsBottle() {
+        core.players().get(steve.uuid()).setEnergy(10);
+        core.onPlayerDeath(alex, steve);
+        assertEquals(10, energy(steve));
+        assertEquals(4, energy(alex));
+        assertEquals(1, alex.dropped.size(), "Energie des Opfers liegt als Flasche am Boden");
+        String id = alex.dropped.get(0).data().get("bottle");
+        assertEquals(de.xmassmp.bottle.BottleRegistry.State.ACTIVE, core.bottles().registry().state(id));
+        assertTrue(steve.messages.get(0).contains("Energy Bottle"), steve.messages.toString());
+    }
+
+    @Test
+    void everyChangeIsLogged() {
+        core.onPlayerDeath(alex, steve);
+        var entries = core.ledger().recent(null, 10);
+        assertEquals(2, entries.size(), entries.toString());
+        assertEquals("death", entries.get(0).reason());
+        assertEquals("kill", entries.get(1).reason());
+        assertEquals(steve.uuid(), entries.get(1).player());
+        assertEquals("Alex", entries.get(1).ref());
     }
 
     @Test
@@ -128,9 +164,10 @@ class EnergyServiceTest {
         XmasConfig.Stages stages = new XmasConfig.Stages();
         assertEquals(PristineStage.BROKEN, EnergyService.stageFor(0, stages));
         assertEquals(PristineStage.DAMAGED, EnergyService.stageFor(1, stages));
-        assertEquals(PristineStage.DAMAGED, EnergyService.stageFor(3, stages));
+        assertEquals(PristineStage.DAMAGED, EnergyService.stageFor(2, stages));
+        assertEquals(PristineStage.SCRATCHED, EnergyService.stageFor(3, stages));
         assertEquals(PristineStage.SCRATCHED, EnergyService.stageFor(4, stages));
-        assertEquals(PristineStage.PRISTINE, EnergyService.stageFor(7, stages));
+        assertEquals(PristineStage.PRISTINE, EnergyService.stageFor(5, stages), "Start 5 = Makellos wie im Original");
         assertEquals(PristineStage.PRISTINE, EnergyService.stageFor(10, stages));
     }
 
@@ -138,7 +175,7 @@ class EnergyServiceTest {
     void invalidStagesFallBackWithWarning() throws IOException {
         Path config = dir.resolve("config.jsonc");
         Files.writeString(config, Files.readString(config).replace(
-                "\"stages\": { \"damaged\": 1, \"scratched\": 4, \"pristine\": 7 }",
+                "\"stages\": { \"damaged\": 1, \"scratched\": 3, \"pristine\": 5 }",
                 "\"stages\": { \"damaged\": 8, \"scratched\": 4, \"pristine\": 20 }"));
         List<String> messages = core.reload();
         assertTrue(messages.stream().anyMatch(m -> m.contains("energy.stages")), messages.toString());
@@ -150,7 +187,7 @@ class EnergyServiceTest {
     void stageChangeUpdatesItemAndNotifies() {
         List<String> changes = new ArrayList<>();
         core.energy().addStageListener((player, from, to) -> changes.add(player.name() + " " + from + "->" + to));
-        core.players().get(alex.uuid()).setEnergy(4);
+        core.players().get(alex.uuid()).setEnergy(3);
         core.crystalService().sync(alex);
 
         core.onPlayerDeath(alex, null);

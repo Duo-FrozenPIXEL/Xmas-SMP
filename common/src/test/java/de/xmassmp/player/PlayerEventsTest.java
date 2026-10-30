@@ -81,10 +81,10 @@ class PlayerEventsTest {
         core.onPlayerDeath(steve, alex);
         core.onPlayerDeath(alex, null);
         core.onPlayerRespawn(steve);
-        assertTrue(core.onUseItem(steve, Map.of("type", "energy_bottle")));
+        assertTrue(core.onUseItem(steve, Map.of("type", "gem_fragment")));
         core.onPlayerQuit(steve.uuid());
         assertEquals(List.of("join Steve", "death Steve by Alex", "death Alex by -", "respawn Steve",
-                "use energy_bottle", "quit"), trace);
+                "use gem_fragment", "quit"), trace);
     }
 
     @Test

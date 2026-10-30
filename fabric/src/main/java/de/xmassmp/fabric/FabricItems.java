@@ -20,14 +20,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Baut Item-Stacks aus {@link ItemSpec}: Vanilla-Basis-Item + Komponenten, kein Client-Mod nötig. */
+/**
+ * Baut Item-Stacks aus {@link ItemSpec}: eigenes Server-Item ({@link XmasRegistry}) mit Komponenten;
+ * der Client sieht das Basis-Item mit {@code custom_model_data}, kein Client-Mod nötig.
+ */
 final class FabricItems {
 
     private FabricItems() {
     }
 
     static ItemStack create(ItemSpec spec) {
-        Item item = BuiltInRegistries.ITEM.getValue(McIds.parse(spec.baseItem()));
+        if (spec.isVanilla()) {
+            return new ItemStack(BuiltInRegistries.ITEM.getValue(McIds.parse(spec.baseItem())));
+        }
+        Item item = XmasRegistry.item(spec.data().get(ItemSpec.DATA_TYPE));
+        if (item == null) {
+            item = BuiltInRegistries.ITEM.getValue(McIds.parse(spec.baseItem()));
+        }
         ItemStack stack = new ItemStack(item);
         stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(
                 List.of((float) spec.customModelData()), List.of(), List.of(), List.of()));
@@ -40,6 +49,9 @@ final class FabricItems {
         }
         if (ItemCatalog.TYPE_CRYSTAL.equals(spec.data().get(ItemSpec.DATA_TYPE))) {
             stack.set(DataComponents.MAX_STACK_SIZE, 1);
+        }
+        if ("true".equals(spec.data().get(ItemCatalog.DATA_GLINT))) {
+            stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
         }
         CompoundTag data = new CompoundTag();
         spec.data().forEach(data::putString);
@@ -121,6 +133,27 @@ final class FabricItems {
                 player.getBoundingBox().inflate(radius), e -> ItemCatalog.isOwnedCrystal(data(e.getItem())))) {
             item.discard();
         }
+    }
+
+    /** Registry-ID des Items, z. B. {@code minecraft:glass_bottle} oder {@code xmassmp:energy_bottle}. */
+    static String id(ItemStack stack) {
+        return stack.isEmpty() ? "minecraft:air" : BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+    }
+
+    /** Regeln siehe {@link de.xmassmp.platform.PlayerHandle#consumeMainHand}. */
+    static boolean consumeMainHand(ServerPlayer player, String itemId, Map<String, String> required) {
+        ItemStack stack = player.getMainHandItem();
+        if (!itemId.equals(id(stack))) {
+            return false;
+        }
+        Map<String, String> data = data(stack);
+        boolean matches = required.isEmpty() ? data.isEmpty()
+                : required.entrySet().stream().allMatch(e -> e.getValue().equals(data.get(e.getKey())));
+        if (!matches) {
+            return false;
+        }
+        stack.shrink(1);
+        return true;
     }
 
     /** Ins Inventar oder, wenn voll, vor die Füße. */

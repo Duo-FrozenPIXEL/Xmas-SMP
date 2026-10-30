@@ -28,4 +28,13 @@ public record ItemSpec(
         lore = List.copyOf(lore);
         data = Map.copyOf(data);
     }
+
+    /** Ein ganz normales Vanilla-Item ohne Name, Lore, Modell und Markierungen (z. B. eine leere Glasflasche). */
+    public static ItemSpec vanilla(String itemId) {
+        return new ItemSpec(itemId, 0, LocalizedText.literal(""), List.of(), Map.of());
+    }
+
+    public boolean isVanilla() {
+        return data.isEmpty();
+    }
 }

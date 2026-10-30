@@ -22,15 +22,56 @@ Java 21.
 2. Server starten. Beim ersten Start entstehen
    - `config/xmassmp/config.jsonc` – Hauptkonfiguration
    - `config/xmassmp/events.jsonc` – Events (Beispiel-Weihnachtswoche, alles deaktiviert)
-   - `<welt>/xmassmp/` – Spielerdaten, Event-Zustand, `audit.log`
+   - `<welt>/xmassmp/` – Spielerdaten, Event-Zustand, `audit.log`, `energy.log`, `bottles.json`, `totem.json`
 3. Das Ressourcenpaket stellt Polymer bereit. Für die automatische Auslieferung an Spieler Polymers AutoHost einrichten (siehe Polymer-Doku) oder das Paket aus `python3 tools/resourcepack.py build` selbst hosten.
 
 ## Spielen
 
-- Wer noch keinen Kristall hat, bekommt beim Betreten einen zufälligen. Er ist seelengebunden: Er lässt sich nicht droppen, einlagern oder beim Tod verlieren.
-- **F** (Zweithand-Taste) löst Fähigkeit 1 aus, **Schleichen + F** Fähigkeit 2 (ab Tier 2).
-- Die Actionbar zeigt beide Fähigkeiten (bereit ✔, Cooldown in Sekunden, gesperrt `T2`, zerbrochen ✖) und die Energie ✦.
-- PvP-Siege bringen Energie, jeder Tod kostet welche. Die Energie bestimmt, wie zerbrochen der Kristall aussieht und wie stark die Fähigkeiten sind. Bei „zerbrochen“ ruhen sie.
+- Wer noch keinen Kristall hat, bekommt beim ersten Betreten einen zufälligen – auch wer später einsteigt. Er ist seelengebunden: Er lässt sich nicht droppen, einlagern oder beim Tod verlieren.
+- Jeder Kristall hat eine **Primär**- und eine **Sekundärkraft** (Tier 1) und eine **Ultimate** (Tier 2), dazu Passive. Ohne Client-Mod: **F** = Primär, **Schleichen + F** = Sekundär, **Schleichen + Rechtsklick** mit dem Kristall in der Haupthand = Ultimate.
+- Die Actionbar zeigt alle drei Fähigkeiten (bereit ✔, Cooldown in Sekunden, gesperrt `T2`, zu wenig Energie `✦3`, zerbrochen ✖) und die Energie ✦.
+
+### Energie
+
+- Skala 0–10, Start 5 („Makellos“). Zustände wie im Original: Zerbrochen (0), Ruiniert (1), Beschädigt (2), Gerissen (3), Zerkratzt (4), Makellos (5), Makellos +1 … +5.
+- PvP-Sieg +1, jeder Tod −1. Wer ein Opfer **ohne** Energie besiegt, bekommt nichts. Hat der Sieger schon 10, fällt die Energie des Opfers als Energy Bottle zu Boden.
+- **0 Energie:** keine aktiven Kräfte. **1–2:** nur die Primärkraft. **Ab 3:** Primär und Sekundär, mit Tier 2 auch die Ultimate. **Passive wirken immer**, auch bei 0 und egal, wo der Kristall im Inventar liegt.
+- Jede Energieänderung steht in `<welt>/xmassmp/energy.log` (`/xmas energy audit`).
+
+### Items
+
+| Item | So bekommt man es | Wirkung |
+|---|---|---|
+| **Energy Bottle** | Leere Glasflasche in die Hand, **Schleichen + Rechtsklick 5 s halten** (Ladebalken am Fadenkreuz) – kostet 1 Energie | Rechtsklick: +1 Energie, auch bei 0 und für jeden Spieler |
+| **Kristall-Splitter** | 1 Energy Bottle → 9 Splitter (Werkbank oder 2×2-Feld) | Zutat |
+| **Upgrader** | 4 Splitter, 4 Drachenatem, 1 Witherskelettschädel | Rechtsklick: Tier 2, schaltet die Ultimate frei |
+| **Kristall-Händler** | 4 Diamanten, 4 Drachenatem, 1 Splitter | Rechtsklick: GUI, neuen Kristall frei wählen (Tier und Energie bleiben) |
+| **Repair Kit** | 4 Splitter, 2 Ambosse, 2 Diamantblöcke, 1 Netherit-Schmiedevorlage | Auf den Boden stellen → **Totem** |
+
+Rezepte stehen in `config.jsonc` unter `recipes` und lassen sich ohne Neubau ändern. Alle Items sind eigene Server-Items: Sie haben keine Vanilla-Funktion (kein Brauen, Platzieren, Handeln).
+
+**Schutz vor Exploits:** Jede Energy Bottle hat eine eigene ID im Flaschen-Register (`<welt>/xmassmp/bottles.json`). Trinken und Zerlegen schließen den Eintrag in einem Schritt. Kopien (Dupe-Glitches, Creative-Mittelklick) wirken deshalb nur einmal, gefälschte Flaschen nie; beides wird entfernt und im Energie-Protokoll vermerkt. Die 5 s Ladezeit zählt der Server selbst. Abfüllen geht nur, solange danach mindestens 1 Energie bleibt, und nicht in den 15 s nach PvP-Schaden.
+
+### Repair-Totem
+
+- Das Repair Kit wird auf den Boden gestellt. **Global läuft höchstens ein Totem.** Die Koordinaten gehen per Chat und Titel an alle.
+- Wer in den ersten 30 s im Kreis (15 Blöcke, Partikelring) steht, nimmt teil. Nach **10 Minuten** zerbricht das Totem, dann bekommen alle verbliebenen Teilnehmer mit weniger als 5 Energie genau 5 – auch von 0.
+- Wer den Kreis verlässt, stirbt oder sich ausloggt, scheidet aus. Der Kreis ist kein Schutzschild.
+- Gegner können das Totem in **festen 10 Sekunden** abbauen (Werkzeug und Effizienz egal; TNT, Kolben und Feuer wirken nicht). Loslassen oder Wegschauen setzt den Countdown zurück. Wird es zerstört, bekommt niemand Energie.
+
+### Optionaler Client-Mod (Tasten)
+
+Wer möchte, legt die drei Fähigkeiten auf eigene Tasten: `xmas-smp-client-<version>.jar` mit der [Fabric API](https://modrinth.com/mod/fabric-api) in den `mods/`-Ordner des **Clients** legen. Die Tasten stehen unter *Optionen → Steuerung → Xmas-SMP* und lassen sich dort frei belegen.
+
+| Fähigkeit | Standardtaste |
+|---|---|
+| Primär | **R** |
+| Sekundär | **G** |
+| Ultimate | **V** |
+
+Der Mod meldet dem Server nur „Taste gedrückt“. Ob die Fähigkeit auslöst (Cooldown, Energie, Tier), entscheidet weiterhin der Server. Auf Servern ohne Xmas-SMP sendet er nichts.
+
+Nötig ist er nicht. Ohne Mod gilt: **F** = Primär, **Schleichen + F** = Sekundär, **Schleichen + Rechtsklick** mit dem Kristall in der Haupthand = Ultimate.
 
 ## Befehle
 
@@ -41,7 +82,7 @@ Alle Befehle brauchen das Recht `xmassmp.admin`. Ohne Permission-Plugin (z. B. L
 | `/xmas` | Hilfe |
 | `/xmas admin` | Konfigurations-GUI (nur für Spieler, siehe unten) |
 | `/xmas give <spieler> crystal <kristall> [tier] [zustand]` | Kristall-Item geben. Kristalle: `fire`, `earth`, `wind`, `shadow`, `nature`. Tier `1`–`2`, Zustand `broken`, `damaged`, `scratched`, `pristine` (Standard: Tier 1, `pristine`) |
-| `/xmas give <spieler> item <item>` | Hilfs-Item geben: `revival_tome`, `upgrader`, `energy_bottle`, `gem_trader`, `repair_kit`, `gem_fragment` |
+| `/xmas give <spieler> item <item>` | Hilfs-Item geben: `upgrader`, `energy_bottle` (mit Register-Eintrag), `gem_trader`, `repair_kit`, `gem_fragment` |
 | `/xmas set <spieler> crystal <kristall>` | Aktiven Kristall setzen |
 | `/xmas set <spieler> tier <1-2>` | Tier setzen |
 | `/xmas set <spieler> energy <wert>` | Energie setzen (Grenzen aus der Config) |
@@ -50,6 +91,9 @@ Alle Befehle brauchen das Recht `xmassmp.admin`. Ohne Permission-Plugin (z. B. L
 | `/xmas event start <id>` / `stop <id>` | Event sofort starten/beenden (auch deaktivierte) |
 | `/xmas event simulate <yyyy-MM-dd> <HH:mm> [dry]` | Testmodus: Uhrzeit simulieren. Mit `dry` werden Aktionen nur geloggt |
 | `/xmas event simulate off` | Testmodus beenden; simulierte Events enden mit ihren End-Aktionen |
+| `/xmas energy audit [spieler]` | Die letzten Energieänderungen mit Grund und Flaschen-ID |
+| `/xmas energy bottles` | Aktive Energy Bottles im Register |
+| `/xmas totem status` / `cancel` | Laufendes Repair-Totem anzeigen bzw. ohne Wirkung beenden |
 
 Jede Änderung über `give`, `set`, `reload`, `event` und die Admin-GUI landet in `<welt>/xmassmp/audit.log` (eine JSON-Zeile pro Eintrag: Zeit, Wer, Was, Ziel). Abschaltbar mit `audit.enabled`.
 
@@ -63,6 +107,7 @@ Jede Änderung über `give`, `set`, `reload`, `event` und die Admin-GUI landet i
 - **Spieler**: Online-Spieler wählen, dann Kristall, Tier und Energie setzen oder Cooldowns zurücksetzen.
 - **Events**: Status aller Events; Linksklick startet bzw. stoppt, Rechtsklick schaltet den automatischen Start um; laufenden Testmodus beenden.
 - **Items**: alle Custom-Items und Kristalle herausnehmen.
+- **Gameplay**: Energy Bottles, Upgrader, Händler und Repair-Totem an/aus und ihre Werte; laufendes Totem beenden; Rezepte an/aus.
 
 Zahlen: Linksklick +1, Rechtsklick −1, mit Shift ×5 (Multiplikatoren in Schritten von 0.1). Änderungen werden sofort in `config.jsonc` bzw. `events.jsonc` geschrieben und wirken ohne Reload. Dabei wird nur der geänderte Wert ersetzt, Kommentare und Formatierung bleiben erhalten.
 
@@ -77,12 +122,19 @@ Zahlen: Linksklick +1, Rechtsklick −1, mit Shift ×5 (Multiplikatoren in Schri
 | `crystalItem.giveOnJoin` | Spieler ohne Kristall bekommen beim Betreten einen zufälligen |
 | `crystalItem.soulbound` | Kristall kann nicht gedroppt, eingelagert oder beim Tod verloren werden |
 | `energy.pvpEnabled` | Energie-Gewinn und -Verlust durch Kills und Tode an/aus |
-| `energy.start`, `min`, `max` | Energie (vorläufige Werte bis zur Recherche des Originals) |
+| `energy.start`, `min`, `max` | Energie (Standard 5, 0, 10) |
 | `energy.killGain`, `deathLoss` | Gewinn beim PvP-Kill, Verlust bei jedem Tod |
 | `energy.sameVictimCooldownMinutes` | Anti-Farming: kein Gewinn für denselben Gegner innerhalb dieser Zeit |
-| `energy.stages` | ab welcher Energie der Kristall beschädigt/zerkratzt/makellos ist; darunter zerbrochen, Fähigkeiten aus |
+| `energy.dropBottleWhenKillerAtMax` | Sieger mit voller Energie: Energie des Opfers fällt als Flasche zu Boden |
+| `energy.stages` | ab welcher Energie der Kristall beschädigt/zerkratzt/makellos aussieht (1/3/5); darunter zerbrochen |
+| `energy.access` | Mindest-Energie für Primär/Sekundär/Ultimate (1/3/3) |
 | `energy.minStrength` | Fähigkeitsstärke bei niedrigster Energie (steigt bis 1.0 bei `max`) |
+| `energyBottle.*` | Ladezeit, Mindest-Rest-Energie, Kampfsperre, Trink-Pause |
+| `upgrader.enabled`, `trader.*` | Upgrader an/aus; Händler: Tier/Energie behalten, Wartezeit |
+| `totem.*` | Radius, Dauer, Ziel-Energie, Abbauzeit, Teilnahmefenster, Koordinaten ansagen |
+| `recipes.<id>` | Rezepte (`pattern` + `key`), `gem_fragments.count` |
 | `controls.swapHandsActivates` | F / Schleichen + F lösen Fähigkeiten aus statt die Hände zu tauschen |
+| `controls.sneakUseUltimate`, `clientKeys`, `tier2TabColor` | Ultimate per Schleichen + Rechtsklick, Tasten aus dem Client-Mod, gelber Tab-Name für Tier 2 |
 | `hud.enabled`, `hud.updateTicks` | Actionbar-HUD an/aus und wie oft es aktualisiert wird |
 | `effects.quality` | `LOW`, `MEDIUM`, `HIGH` – dünnt Partikel aus |
 | `effects.maxParticlesPerTick` | Partikel-Budget aller Effekte pro Tick |
@@ -110,6 +162,7 @@ Events laufen an festen Tagen zu festen Uhrzeiten. Beschrieben werden sie in `co
 ```
 common/          plattformunabhängiger Kern (Kristalle, Spielerdaten, Effekte, Config, Events, Admin) + Tests
 fabric/          Fabric-Adapter (erste Plattform)
+client/          optionaler Fabric-Client-Mod (Tasten für die Fähigkeiten)
 paper/, neoforge/  geplant
 resourcepack/    Ressourcenpaket-Quelle (Doku: docs/resourcepack.md)
 tools/           Pack-Validator und -Builder

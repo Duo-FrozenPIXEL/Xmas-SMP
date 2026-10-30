@@ -36,6 +36,14 @@ def load_json(path, errors):
         return None
 
 
+def png_size(path):
+    """(Breite, Höhe) aus dem IHDR-Chunk oder None, wenn keine PNG-Datei."""
+    head = path.read_bytes()[:24]
+    if len(head) < 24 or head[:8] != b"\x89PNG\r\n\x1a\n" or head[12:16] != b"IHDR":
+        return None
+    return int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big")
+
+
 def walk_item_models(node):
     """Liefert alle (model-id, threshold) aus einer Item-Definition."""
     if isinstance(node, dict):
@@ -122,13 +130,43 @@ def validate():
 
     for font in sorted(assets.glob("*/font/*.json")):
         data = load_json(font, errors) or {}
+        rel = font.relative_to(PACK)
+        seen_chars = {}
         for provider in data.get("providers", []):
             if "file" in provider:
                 ns, path = split_id(provider["file"])
                 tex = assets / ns / "textures" / path
                 used_textures.add(tex)
                 if not tex.exists():
-                    errors.append(f"{font.relative_to(PACK)}: Font-Textur {provider['file']} existiert nicht")
+                    errors.append(f"{rel}: Font-Textur {provider['file']} existiert nicht")
+            if provider.get("type", "").removeprefix("minecraft:") != "bitmap":
+                continue
+            name = provider.get("file", "?")
+            rows = provider.get("chars", [])
+            height = provider.get("height", 8)
+            ascent = provider.get("ascent")
+            if not isinstance(ascent, int) or isinstance(ascent, bool):
+                errors.append(f"{rel}: {name}: ascent fehlt oder ist keine Ganzzahl")
+            elif ascent > height:
+                errors.append(f"{rel}: {name}: ascent {ascent} > height {height} (vom Spiel abgelehnt)")
+            if not rows or len({len(r) for r in rows}) != 1:
+                errors.append(f"{rel}: {name}: chars-Zeilen fehlen oder sind unterschiedlich lang")
+                continue
+            for char in "".join(rows):
+                if char == "\0":
+                    continue  # Platzhalter für leere Zellen
+                if char in seen_chars:
+                    errors.append(f"{rel}: Zeichen U+{ord(char):04X} doppelt ({seen_chars[char]}, {name})")
+                seen_chars[char] = name
+            if "file" in provider and tex.exists():
+                size = png_size(tex)
+                if size is None:
+                    errors.append(f"{rel}: {name}: keine gültige PNG-Datei")
+                elif size[0] % len(rows[0]) or size[1] % len(rows):
+                    errors.append(
+                        f"{rel}: {name}: {size[0]}×{size[1]} px nicht durch das Zeichenraster "
+                        f"{len(rows[0])}×{len(rows)} teilbar"
+                    )
 
     for tex in sorted(assets.glob("*/textures/**/*.png")):
         if tex not in used_textures:

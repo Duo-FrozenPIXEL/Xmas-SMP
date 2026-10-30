@@ -4,12 +4,10 @@
   "crystal.xmassmp.wind": "Wind",
   "crystal.xmassmp.shadow": "Shadow",
   "crystal.xmassmp.nature": "Nature",
-
   "stage.xmassmp.broken": "broken",
   "stage.xmassmp.damaged": "damaged",
   "stage.xmassmp.scratched": "scratched",
   "stage.xmassmp.pristine": "pristine",
-
   "item.xmassmp.crystal": "%s Crystal",
   "item.xmassmp.revival_tome": "Revival Tome",
   "item.xmassmp.upgrader": "Upgrader",
@@ -17,9 +15,25 @@
   "item.xmassmp.gem_trader": "Crystal Trader",
   "item.xmassmp.repair_kit": "Repair Kit",
   "item.xmassmp.gem_fragment": "Crystal Fragment",
-
   "lore.xmassmp.tier": "Tier %s",
   "lore.xmassmp.stage": "Condition: %s",
-  "lore.xmassmp.energy": "Energy: %s",
-  "lore.xmassmp.soulbound": "Soulbound"
+  "lore.xmassmp.energy": "Energy: %s (%s)",
+  "lore.xmassmp.soulbound": "Soulbound",
+  "energy.xmassmp.broken": "Broken",
+  "energy.xmassmp.ruined": "Ruined",
+  "energy.xmassmp.damaged": "Damaged",
+  "energy.xmassmp.cracked": "Cracked",
+  "energy.xmassmp.scratched": "Scratched",
+  "energy.xmassmp.pristine": "Pristine",
+  "energy.xmassmp.pristine_plus": "Pristine +%s",
+  "lore.xmassmp.upgrader.1": "Right-click: raise your crystal to tier 2",
+  "lore.xmassmp.upgrader.2": "Unlocks the ultimate",
+  "lore.xmassmp.energy_bottle.1": "Right-click: +1 energy",
+  "lore.xmassmp.energy_bottle.2": "Crafting table: 9 gem fragments",
+  "lore.xmassmp.gem_trader.1": "Right-click: choose any crystal",
+  "lore.xmassmp.gem_trader.2": "Tier and energy are kept",
+  "lore.xmassmp.repair_kit.1": "Place on the ground: totem for 10 minutes",
+  "lore.xmassmp.repair_kit.2": "Stay in the circle until the end to get 5 energy",
+  "lore.xmassmp.repair_kit.3": "Everyone sees the coordinates!",
+  "lore.xmassmp.gem_fragment.1": "Ingredient for upgrader, trader and repair kit"
 }

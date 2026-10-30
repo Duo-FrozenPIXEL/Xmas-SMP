@@ -29,4 +29,4 @@ Bekannt als offener Punkt (todo 4.1 „seelengebunden“). Das wird zum echten F
 - Kristall-Händler (`emerald`): gilt als Währung beim Dorfbewohner-Handel
 - Kristall-Splitter (`prismarine_shard`): lässt sich craften
 
-**Offen, weil eine Entscheidung nötig ist:** Sauber lösen ließe sich das mit eigenen Server-Items über Polymer (`PolymerItem`, Anzeige als Vanilla-Item) oder mit dem Umstieg auf die `item_model`-Komponente (todo 1.3). Die Alternative wären mehrere Mixins in Crafting, Brauen, Handel und Platzieren. Beides ändert die Item-Architektur und muss im Spiel getestet werden.
+**Behoben am 2026-10-30:** Alle Xmas-Items sind jetzt eigene Polymer-Server-Items (`xmassmp:<typ>`) und haben dadurch keine Vanilla-Funktion mehr (im Testserver geprüft: Crafter, TNT). Ursprüngliche Einschätzung: Sauber lösen ließe sich das mit eigenen Server-Items über Polymer (`PolymerItem`, Anzeige als Vanilla-Item) oder mit dem Umstieg auf die `item_model`-Komponente (todo 1.3). Die Alternative wären mehrere Mixins in Crafting, Brauen, Handel und Platzieren. Beides ändert die Item-Architektur und muss im Spiel getestet werden.

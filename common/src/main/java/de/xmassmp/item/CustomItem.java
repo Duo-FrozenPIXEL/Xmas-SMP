@@ -5,9 +5,14 @@ import de.xmassmp.text.LocalizedText;
 import java.util.Locale;
 import java.util.Optional;
 
-/** Hilfs-Items aus dem Original. Basis-Item und CMD laut docs/resourcepack.md. */
+/**
+ * Hilfs-Items aus dem Original. Basis-Item (Anzeige beim Client) und CMD laut docs/resourcepack.md.
+ * Auf Fabric sind es eigene Server-Items ({@code xmassmp:<id>}) ohne Vanilla-Funktion.
+ *
+ * <p>Das Revival Tome entfällt (das Repair Kit holt auch Spieler mit 0 Energie zurück); sein Modell
+ * bleibt für den Christmas-Twist im Pack.
+ */
 public enum CustomItem {
-    REVIVAL_TOME("minecraft:enchanted_book", 1, "Wiederbelebungs-Foliant", 'd'),
     UPGRADER("minecraft:enchanted_book", 3001, "Upgrader", 'e'),
     ENERGY_BOTTLE("minecraft:ghast_tear", 4001, "Energieflasche", 'b'),
     GEM_TRADER("minecraft:emerald", 4002, "Kristall-Händler", 'a'),
@@ -28,6 +33,16 @@ public enum CustomItem {
 
     public String id() {
         return name().toLowerCase(Locale.ROOT);
+    }
+
+    /** Server-Item-ID, z. B. {@code xmassmp:energy_bottle}. */
+    public String itemId() {
+        return ItemCatalog.NAMESPACE + ":" + id();
+    }
+
+    /** Stapelbar sind nur die Fragments; alle anderen tragen eigene Daten oder sind wertvoll. */
+    public int maxStackSize() {
+        return this == GEM_FRAGMENT ? 64 : 1;
     }
 
     public String baseItem() {

@@ -18,6 +18,8 @@ include("common")
 //   gradle build -Pxmassmp.skipFabric
 if (!providers.gradleProperty("xmassmp.skipFabric").isPresent) {
     include("fabric")
+    // Optionaler Client-Mod: Tasten für die Kristall-Fähigkeiten (siehe README).
+    include("client")
 }
 
 // paper/ und neoforge/ folgen nach Fabric (siehe todo.md, Abschnitt 9).

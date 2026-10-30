@@ -23,10 +23,11 @@ import java.util.function.Supplier;
 
 /**
  * Breaking-Pristine-System: Energie steigt bei PvP-Kills, sinkt bei jedem Tod und bestimmt
- * Bruchstufe (Aussehen des Kristalls) und Stärke der Fähigkeiten.
+ * Bruchstufe (Aussehen des Kristalls), Zugriff auf die aktiven Fähigkeiten und deren Stärke.
  *
- * <p>(V) Werte und Regeln sind vorläufig, bis das Original recherchiert ist (todo.md, 2); alles
- * steht in {@code config.jsonc} unter {@code energy}.
+ * <p>Regeln laut Owner (docs/implementierungsplan.md, 1.1): Wer ein Opfer ohne Energie besiegt,
+ * bekommt nichts. Hat der Sieger schon das Maximum, fällt die Energie als Energy Bottle zu Boden.
+ * Jede Änderung landet im {@link EnergyLedger}.
  */
 public final class EnergyService implements PlayerListener {
 
@@ -39,6 +40,12 @@ public final class EnergyService implements PlayerListener {
         void onStageChanged(PlayerHandle player, PristineStage from, PristineStage to);
     }
 
+    /** Energie, die der Sieger nicht mehr aufnehmen kann (er hat schon das Maximum). */
+    @FunctionalInterface
+    public interface OverflowHandler {
+        void onOverflow(PlayerHandle killer, PlayerHandle victim, int amount);
+    }
+
     private record KillPair(UUID killer, UUID victim) {
     }
 
@@ -48,6 +55,9 @@ public final class EnergyService implements PlayerListener {
     private final LongSupplier clockMillis;
     private final EffectEngine effects;
     private final Consumer<UUID> changed;
+    private final EnergyLedger ledger;
+    private OverflowHandler overflow = (killer, victim, amount) -> {
+    };
     private final List<StageListener> stageListeners = new CopyOnWriteArrayList<>();
     /** Letzter Energiegewinn je Sieger/Besiegtem; nur im Speicher, ein Neustart setzt ihn zurück. */
     private final Map<KillPair, Long> lastRewardedKill = new HashMap<>();
@@ -57,6 +67,13 @@ public final class EnergyService implements PlayerListener {
      */
     public EnergyService(PlayerDataStore players, Supplier<XmasConfig> config, DoubleSupplier eventMultiplier,
                          LongSupplier clockMillis, EffectEngine effects, Consumer<UUID> changed) {
+        this(players, config, eventMultiplier, clockMillis, effects, changed, EnergyLedger.NONE);
+    }
+
+    public EnergyService(PlayerDataStore players, Supplier<XmasConfig> config, DoubleSupplier eventMultiplier,
+                         LongSupplier clockMillis, EffectEngine effects, Consumer<UUID> changed,
+                         EnergyLedger ledger) {
+        this.ledger = ledger;
         this.players = players;
         this.config = config;
         this.eventMultiplier = eventMultiplier;
@@ -67,6 +84,14 @@ public final class EnergyService implements PlayerListener {
 
     public void addStageListener(StageListener listener) {
         stageListeners.add(listener);
+    }
+
+    public void setOverflowHandler(OverflowHandler handler) {
+        this.overflow = handler;
+    }
+
+    public EnergyLedger ledger() {
+        return ledger;
     }
 
     // ------------------------------------------------------------------ Abfragen
@@ -105,6 +130,19 @@ public final class EnergyService implements PlayerListener {
         return cfg.minStrength + (1 - cfg.minStrength) * Math.max(0, t);
     }
 
+    /**
+     * Mindest-Energie für eine aktive Fähigkeit: Slot 1 = Primär, 2 = Sekundär, 3 = Ultimate
+     * ({@code energy.access}). Passive brauchen keine Energie.
+     */
+    public int requiredEnergy(int slot) {
+        XmasConfig.Access access = config.get().energy.access;
+        return switch (slot) {
+            case 1 -> access.primary;
+            case 2 -> access.secondary;
+            default -> access.ultimate;
+        };
+    }
+
     // ------------------------------------------------------------------ Kills und Tode
 
     @Override
@@ -113,13 +151,20 @@ public final class EnergyService implements PlayerListener {
         if (!cfg.pvpEnabled) {
             return;
         }
-        int lost = change(victim, -cfg.deathLoss);
+        int before = players.get(victim.uuid()).energy();
+        int lost = change(victim, -cfg.deathLoss, EnergyLedger.DEATH, killer == null ? null : killer.name());
         if (lost != 0) {
             victim.sendMessage(Messages.prefixed("§c" + lost + " Energie " + summary(victim.uuid())));
         }
-        if (killer != null) {
-            reward(killer, victim, cfg);
+        if (killer == null) {
+            return;
         }
+        if (before <= cfg.min) {
+            // Kein Farmen mit Zweitaccounts: Wer nichts zu verlieren hat, bringt auch nichts.
+            killer.sendMessage(Messages.prefixed("Keine Energie: " + victim.name() + " hatte keine Energie mehr."));
+            return;
+        }
+        reward(killer, victim, cfg);
     }
 
     private void reward(PlayerHandle killer, PlayerHandle victim, XmasConfig.Energy cfg) {
@@ -137,19 +182,32 @@ public final class EnergyService implements PlayerListener {
             return;
         }
         lastRewardedKill.put(pair, now);
-        int gained = change(killer, gain);
-        killer.sendMessage(Messages.prefixed(gained > 0
-                ? "§a+" + gained + " Energie " + summary(killer.uuid())
-                : "Deine Energie ist schon voll " + summary(killer.uuid())));
+        int gained = change(killer, gain, EnergyLedger.KILL, victim.name());
+        if (gained > 0) {
+            killer.sendMessage(Messages.prefixed("§a+" + gained + " Energie " + summary(killer.uuid())));
+        }
+        int rest = gain - gained;
+        if (rest > 0 && cfg.dropBottleWhenKillerAtMax) {
+            overflow.onOverflow(killer, victim, rest);
+        } else if (gained == 0) {
+            killer.sendMessage(Messages.prefixed("Deine Energie ist schon voll " + summary(killer.uuid())));
+        }
+    }
+
+    /** Wie {@link #change(PlayerHandle, int, String, String)} mit Grund {@link EnergyLedger#ADMIN}. */
+    public int change(PlayerHandle player, int delta) {
+        return change(player, delta, EnergyLedger.ADMIN, null);
     }
 
     /**
-     * Ändert die Energie innerhalb von {@code energy.min}/{@code max}, speichert sofort und meldet
-     * einen Stufenwechsel.
+     * Ändert die Energie innerhalb von {@code energy.min}/{@code max}, speichert sofort, protokolliert
+     * im {@link EnergyLedger} und meldet einen Stufenwechsel.
      *
+     * @param reason Grund fürs Protokoll, siehe Konstanten in {@link EnergyLedger}
+     * @param ref    Bezug fürs Protokoll (Flaschen-ID, Gegner …) oder {@code null}
      * @return tatsächliche Änderung (0, wenn die Grenze schon erreicht war)
      */
-    public int change(PlayerHandle player, int delta) {
+    public int change(PlayerHandle player, int delta, String reason, String ref) {
         XmasConfig.Energy cfg = config.get().energy;
         PlayerData data = players.get(player.uuid());
         int before = data.energy();
@@ -160,6 +218,7 @@ public final class EnergyService implements PlayerListener {
         PristineStage oldStage = stage(data);
         data.setEnergy(after);
         players.save(player.uuid());
+        ledger.record(player.uuid(), player.name(), before, after, reason, ref);
         PristineStage newStage = stage(data);
         if (newStage != oldStage) {
             announceStage(player, oldStage, newStage);

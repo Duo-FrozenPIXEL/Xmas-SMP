@@ -243,7 +243,7 @@ class StageEffectsTest {
         core.onPlayerJoin(alex);
 
         // Bruch: SCRATCHED -> DAMAGED.
-        core.players().get(alex.uuid()).setEnergy(4);
+        core.players().get(alex.uuid()).setEnergy(3);
         core.onPlayerDeath(alex, null);
         for (int i = 0; i < 5; i++) {
             core.tick();
@@ -258,10 +258,10 @@ class StageEffectsTest {
         assertEquals(0, core.effects().activeCount(), "Animation beendet");
         assertEquals(0, core.effects().activeDisplays(), "Scherben aufgeräumt");
 
-        // Reparatur: DAMAGED (3) -> SCRATCHED (4) durch einen Kill.
+        // Reparatur: DAMAGED (2) -> SCRATCHED (3) durch einen Kill.
         platform.effects.clear();
         core.onPlayerDeath(steve, alex);
-        assertEquals(4, core.players().get(alex.uuid()).energy());
+        assertEquals(3, core.players().get(alex.uuid()).energy());
         for (int i = 0; i < 50; i++) {
             core.tick();
         }

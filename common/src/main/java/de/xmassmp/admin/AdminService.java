@@ -5,6 +5,7 @@ import de.xmassmp.crystal.Crystal;
 import de.xmassmp.crystal.CrystalModels;
 import de.xmassmp.crystal.CrystalRegistry;
 import de.xmassmp.crystal.PristineStage;
+import de.xmassmp.energy.EnergyLedger;
 import de.xmassmp.event.EventDefinition;
 import de.xmassmp.event.EventService;
 import de.xmassmp.event.RunningEvent;
@@ -25,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -62,6 +64,9 @@ public final class AdminService {
     /**
      * @param playerChanged wird nach jeder Änderung an Spielerdaten aufgerufen (z. B. Item-Abgleich)
      */
+    private BiFunction<CustomItem, String, ItemSpec> itemFactory = (item, actor) -> ItemCatalog.custom(item);
+    private EnergyLedger ledger = EnergyLedger.NONE;
+
     public AdminService(CrystalRegistry crystals, PlayerDataStore players, ConfigManager config,
                         EventService events, AuditLog audit, Supplier<ConfigManager.LoadResult> reloader,
                         Consumer<UUID> playerChanged) {
@@ -74,6 +79,18 @@ public final class AdminService {
         this.playerChanged = playerChanged;
     }
 
+    /**
+     * Baut Items für {@code /xmas give} und die Admin-GUI; Energy Bottles müssen dabei im
+     * Flaschen-Register angelegt werden.
+     */
+    public void setItemFactory(BiFunction<CustomItem, String, ItemSpec> factory) {
+        this.itemFactory = factory;
+    }
+
+    public void setEnergyLedger(EnergyLedger ledger) {
+        this.ledger = ledger;
+    }
+
     public static List<String> help() {
         return List.of(
                 "§6/xmas give <spieler> crystal <kristall> [tier] [zustand]",
@@ -82,7 +99,9 @@ public final class AdminService {
                 "§6/xmas admin §7– Konfigurations-GUI",
                 "§6/xmas reload",
                 "§6/xmas event list|start <id>|stop <id>",
-                "§6/xmas event simulate <yyyy-MM-dd> <HH:mm> [dry] §7· §6/xmas event simulate off");
+                "§6/xmas event simulate <yyyy-MM-dd> <HH:mm> [dry] §7· §6/xmas event simulate off",
+                "§6/xmas energy audit [spieler] §7· §6/xmas energy bottles",
+                "§6/xmas totem status|cancel");
     }
 
     // ------------------------------------------------------------------ give
@@ -111,7 +130,7 @@ public final class AdminService {
         if (item.isEmpty()) {
             return Result.fail("Unbekanntes Item: " + itemId);
         }
-        giver.accept(ItemCatalog.custom(item.get()));
+        giver.accept(itemFactory.apply(item.get(), actor));
         audit.record(actor, "give", target, "item=" + itemId);
         return Result.ok(target + " hat " + item.get().displayName().fallback() + " erhalten");
     }
@@ -156,6 +175,7 @@ public final class AdminService {
         int before = data.energy();
         data.setEnergy(energy);
         players.save(uuid);
+        ledger.record(uuid, name, before, energy, EnergyLedger.ADMIN, actor);
         audit.record(actor, "set_energy", name, before + " -> " + energy);
         playerChanged.accept(uuid);
         return Result.ok("Energie von " + name + " ist jetzt " + energy);

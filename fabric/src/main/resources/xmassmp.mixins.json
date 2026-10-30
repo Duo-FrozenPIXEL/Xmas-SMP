@@ -4,7 +4,8 @@
   "package": "de.xmassmp.fabric.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "ServerGamePacketListenerImplMixin"
+    "ServerGamePacketListenerImplMixin",
+    "ServerPlayerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

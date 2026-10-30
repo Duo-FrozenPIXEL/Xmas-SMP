@@ -49,4 +49,23 @@ public interface PlayerListener {
     default boolean onUseItem(PlayerHandle player, Map<String, String> itemData) {
         return false;
     }
+
+    /**
+     * Ein Spieler hat Schaden genommen.
+     *
+     * @param attacker verursachender Spieler oder {@code null}
+     */
+    default void onDamaged(PlayerHandle victim, PlayerHandle attacker) {
+    }
+
+    /**
+     * Rechtsklick mit einem Vanilla-Item ohne Xmas-Markierungen, das der Adapter meldet (derzeit nur
+     * {@code minecraft:glass_bottle} beim Schleichen). Der Client wiederholt das etwa alle 4 Ticks,
+     * solange die Taste gehalten wird.
+     *
+     * @return {@code true}, um das Vanilla-Verhalten (z. B. Wasser schöpfen) zu unterdrücken
+     */
+    default boolean onUseVanillaItem(PlayerHandle player, String itemId) {
+        return false;
+    }
 }

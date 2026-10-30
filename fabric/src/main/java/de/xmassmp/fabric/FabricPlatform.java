@@ -6,13 +6,18 @@ import de.xmassmp.event.EventHost;
 import de.xmassmp.gui.GuiHost;
 import de.xmassmp.platform.Platform;
 import de.xmassmp.platform.PlayerHandle;
+import de.xmassmp.platform.TotemHost;
 import de.xmassmp.platform.WorldRef;
 import de.xmassmp.platform.XmasLogger;
+import de.xmassmp.util.BlockPos;
 import de.xmassmp.util.Vec3;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.AbstractCraftingMenu;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelResource;
 import org.slf4j.Logger;
@@ -90,6 +95,65 @@ final class FabricPlatform implements Platform {
     @Override
     public GuiHost guiHost() {
         return guiHost;
+    }
+
+    @Override
+    public TotemHost totemHost() {
+        return totemHost;
+    }
+
+    @Override
+    public void refreshCrafting() {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            refresh(player.containerMenu);
+            if (player.containerMenu != player.inventoryMenu) {
+                refresh(player.inventoryMenu);
+            }
+        }
+    }
+
+    private static void refresh(AbstractContainerMenu menu) {
+        if (menu instanceof AbstractCraftingMenu crafting && !crafting.getInputGridSlots().isEmpty()) {
+            crafting.slotsChanged(crafting.getInputGridSlots().get(0).container);
+        }
+    }
+
+    /** Totem-Block über {@link XmasRegistry#totem}; ungeladene Chunks werden nicht angefasst. */
+    private final TotemHost totemHost = new TotemHost() {
+        @Override
+        public boolean place(WorldRef world, BlockPos pos) {
+            ServerLevel level = level(world);
+            net.minecraft.core.BlockPos at = mc(pos);
+            if (level == null || !level.isInWorldBounds(at) || !level.getWorldBorder().isWithinBounds(at)
+                    || !level.getBlockState(at).canBeReplaced()) {
+                return false;
+            }
+            return level.setBlock(at, XmasRegistry.totem.defaultBlockState(), 3);
+        }
+
+        @Override
+        public boolean isPresent(WorldRef world, BlockPos pos) {
+            ServerLevel level = level(world);
+            net.minecraft.core.BlockPos at = mc(pos);
+            if (level == null) {
+                return false;
+            }
+            // Ungeladen: nichts kann es dort gerade zerstören – als vorhanden werten, statt den Chunk zu laden.
+            return !level.isLoaded(at) || level.getBlockState(at).is(XmasRegistry.totem);
+        }
+
+        @Override
+        public void remove(WorldRef world, BlockPos pos) {
+            ServerLevel level = level(world);
+            net.minecraft.core.BlockPos at = mc(pos);
+            if (level != null && level.getBlockState(at).is(XmasRegistry.totem)) {
+                level.setBlock(at, Blocks.AIR.defaultBlockState(), 3);
+            }
+        }
+    };
+
+    static net.minecraft.core.BlockPos mc(BlockPos pos) {
+        return new net.minecraft.core.BlockPos(pos.x(), pos.y(), pos.z());
     }
 
     @Override

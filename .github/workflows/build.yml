@@ -69,7 +69,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build
         run: >-
-          ./gradlew :fabric:build
+          ./gradlew :fabric:build :client:build
           -Pminecraft_version=${{ matrix.minecraft }}
           -Pfabric_api_version=${{ matrix.fabric_api }}
           -Ppolymer_version=${{ matrix.polymer }}
@@ -78,3 +78,7 @@ jobs:
         with:
           name: xmas-smp-fabric-${{ matrix.minecraft }}
           path: fabric/build/libs/*.jar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: xmas-smp-client-${{ matrix.minecraft }}
+          path: client/build/libs/*.jar

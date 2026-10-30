@@ -3,24 +3,35 @@ package de.xmassmp;
 import de.xmassmp.ability.AbilityControls;
 import de.xmassmp.ability.AbilityRegistry;
 import de.xmassmp.ability.AbilityService;
+import de.xmassmp.ability.PassiveService;
 import de.xmassmp.admin.AdminGui;
 import de.xmassmp.admin.AdminService;
 import de.xmassmp.admin.AuditLog;
+import de.xmassmp.bottle.BottleRegistry;
+import de.xmassmp.bottle.BottleService;
 import de.xmassmp.config.ConfigManager;
 import de.xmassmp.crystal.CrystalRegistry;
 import de.xmassmp.crystal.CrystalService;
+import de.xmassmp.energy.EnergyLedger;
 import de.xmassmp.energy.EnergyService;
 import de.xmassmp.energy.StageEffects;
 import de.xmassmp.effect.EffectEngine;
 import de.xmassmp.event.EventClock;
 import de.xmassmp.event.EventService;
 import de.xmassmp.event.action.EventActionRegistry;
+import de.xmassmp.gameplay.TraderService;
+import de.xmassmp.gameplay.UpgraderService;
 import de.xmassmp.hud.HudService;
+import de.xmassmp.item.CustomItem;
+import de.xmassmp.item.ItemCatalog;
+import de.xmassmp.item.ItemSpec;
 import de.xmassmp.platform.Platform;
 import de.xmassmp.platform.PlayerHandle;
 import de.xmassmp.platform.XmasLogger;
 import de.xmassmp.player.PlayerDataStore;
 import de.xmassmp.player.PlayerListener;
+import de.xmassmp.recipe.RecipeService;
+import de.xmassmp.totem.TotemService;
 
 import java.time.Clock;
 import java.time.ZoneId;
@@ -63,6 +74,15 @@ public final class XmasCore {
     private final CrystalService crystalService;
     private final EnergyService energy;
     private final HudService hud;
+    private final EnergyLedger ledger;
+    private final BottleRegistry bottleRegistry;
+    private final BottleService bottles;
+    private final RecipeService recipes;
+    private final UpgraderService upgrader;
+    private final TraderService trader;
+    private final TotemService totem;
+    private final PassiveService passives;
+    private final AbilityControls controls;
     private final List<PlayerListener> playerListeners = new CopyOnWriteArrayList<>();
     private final Set<String> failing = new HashSet<>();
     private long ticks;
@@ -87,29 +107,67 @@ public final class XmasCore {
                 new Random(), logger);
         this.events = new EventService(platform.configDirectory(), platform.dataDirectory(),
                 platform.eventHost(), eventActions, new EventClock(clock), logger);
+        this.ledger = new EnergyLedger(platform.dataDirectory(), clock, logger);
         this.energy = new EnergyService(players, config::get, () -> events.modifier(EnergyService.ENERGY_MODIFIER),
-                clock::millis, effects, this::syncCrystalItem);
+                clock::millis, effects, this::syncCrystalItem, ledger);
         energy.addStageListener(new StageEffects(crystals, players, effects));
         this.abilityService = new AbilityService(config::get, effects, clock::millis,
-                () -> events.modifier(AbilityService.COOLDOWN_MODIFIER), energy::strength);
+                () -> events.modifier(AbilityService.COOLDOWN_MODIFIER), energy::strength, energy::requiredEnergy);
         this.audit = new AuditLog(platform.dataDirectory(), () -> config.get().audit.enabled, clock, logger);
         this.crystalService = new CrystalService(platform, crystals, players, config::get,
                 energy::stage, effects, new Random());
-        this.admin = new AdminService(crystals, players, config, events, audit, this::reloadResult, crystalService::sync);
+        this.admin = new AdminService(crystals, players, config, events, audit, this::reloadResult, this::playerChanged);
         this.adminGui = new AdminGui(admin, config, crystals, events, players, platform::onlinePlayers,
                 platform.guiHost());
         this.hud = new HudService(platform, crystals, abilities, players, config::get, energy::stage, effects,
+                clock::millis, energy::requiredEnergy);
+        this.bottleRegistry = new BottleRegistry(platform.dataDirectory(), clock, logger);
+        this.bottles = new BottleService(platform, players, crystals, config::get, energy, bottleRegistry, effects, hud,
+                clock::millis, logger);
+        energy.setOverflowHandler(bottles::dropOverflow);
+        this.recipes = new RecipeService(config::get, bottles);
+        this.upgrader = new UpgraderService(crystals, players, config::get, effects, hud, this::playerChanged);
+        this.trader = new TraderService(crystals, players, config::get, platform.guiHost(), effects, hud,
+                clock::millis, this::playerChanged);
+        this.totem = new TotemService(platform, players, config::get, energy, effects, hud, logger);
+        this.passives = new PassiveService(platform, crystals, abilities, players, config::get, effects,
+                energy::strength);
+        this.controls = new AbilityControls(crystals, abilities, abilityService, players, config::get, hud,
                 clock::millis);
+        admin.setItemFactory(this::adminItem);
+        admin.setEnergyLedger(ledger);
+        adminGui.setTotemControls(totem::status, actor -> {
+            boolean cancelled = totem.cancel(actor);
+            if (cancelled) {
+                audit.record(actor, "totem_cancel", null, null);
+            }
+            return cancelled;
+        });
         addPlayerListener(crystalService);
         addPlayerListener(energy);
         addPlayerListener(hud);
-        addPlayerListener(new AbilityControls(crystals, abilities, abilityService, players, config::get, hud,
-                clock::millis));
+        addPlayerListener(controls);
+        addPlayerListener(bottles);
+        addPlayerListener(upgrader);
+        addPlayerListener(trader);
+        addPlayerListener(totem);
+    }
+
+    private ItemSpec adminItem(CustomItem item, String actor) {
+        return item == CustomItem.ENERGY_BOTTLE ? bottles.create("admin", actor) : ItemCatalog.custom(item);
+    }
+
+    /** Nach Änderungen an Kristall, Tier oder Energie: Item abgleichen, Tab-Liste neu senden. */
+    private void playerChanged(UUID uuid) {
+        crystalService.sync(uuid);
+        platform.player(uuid).ifPresent(PlayerHandle::refreshTabListName);
     }
 
     /** Lädt Konfiguration und Events. Erst nach der Registrierung eigener Erweiterungen aufrufen. */
     public void start() {
         reload().forEach(logger::info);
+        bottleRegistry.load();
+        totem.load();
         logger.info("Xmas-SMP gestartet (" + crystals.ids().size() + " Kristalle)");
     }
 
@@ -143,6 +201,9 @@ public final class XmasCore {
         guarded("Effekte", effects::tick);
         guarded("Kristall-Items", () -> crystalService.tick(ticks));
         guarded("HUD", () -> hud.tick(ticks));
+        guarded("Energy Bottles", () -> bottles.tick(ticks));
+        guarded("Totem", () -> totem.tick(ticks));
+        guarded("Passive", () -> passives.tick(ticks));
         if (ticks % TICKS_PER_SECOND == 0) {
             guarded("Events", events::tick);
         }
@@ -174,6 +235,8 @@ public final class XmasCore {
     public void onPlayerJoin(PlayerHandle player) {
         players.get(player.uuid()).pruneCooldowns(clock.millis());
         dispatch("Join", l -> l.onJoin(player));
+        // Die Tab-Liste wurde schon vor dem Laden der Spielerdaten gesendet.
+        player.refreshTabListName();
     }
 
     public void onPlayerQuit(UUID uuid) {
@@ -190,6 +253,34 @@ public final class XmasCore {
 
     public void onPlayerRespawn(PlayerHandle player) {
         dispatch("Respawn", l -> l.onRespawn(player));
+    }
+
+    /** @param attacker verursachender Spieler oder {@code null} */
+    public void onPlayerDamaged(PlayerHandle victim, PlayerHandle attacker) {
+        PlayerHandle realAttacker = attacker != null && attacker.uuid().equals(victim.uuid()) ? null : attacker;
+        dispatch("Schaden", l -> l.onDamaged(victim, realAttacker));
+    }
+
+    /** @return {@code true}, wenn der Adapter das Vanilla-Verhalten unterdrücken soll */
+    public boolean onUseVanillaItem(PlayerHandle player, String itemId) {
+        return firstHandled("Vanilla-Item", l -> l.onUseVanillaItem(player, itemId));
+    }
+
+    /** Taste aus dem optionalen Client-Mod (Slot 1–3). */
+    public void onAbilityKey(PlayerHandle player, int slot) {
+        if (config.get().general.enabled) {
+            try {
+                controls.onKey(player, slot);
+            } catch (RuntimeException e) {
+                logger.error("Fehler beim Verarbeiten einer Fähigkeits-Taste", e);
+            }
+        }
+    }
+
+    /** Für die Tab-Liste: Spieler mit Tier-2-Kristall (gelber Name, {@code controls.tier2TabColor}). */
+    public boolean isTier2(UUID uuid) {
+        return config.get().controls.tier2TabColor && players.isLoaded(uuid)
+                && crystals.get(players.get(uuid).crystalId()).isPresent() && players.get(uuid).tier() >= 2;
     }
 
     /** @return {@code true}, wenn der Adapter den Zweithand-Tausch abbrechen soll */
@@ -240,6 +331,7 @@ public final class XmasCore {
     }
 
     public void shutdown() {
+        totem.save();
         effects.cancelAll();
         events.shutdown();
         players.saveAndUnloadAll();
@@ -304,5 +396,21 @@ public final class XmasCore {
 
     public HudService hud() {
         return hud;
+    }
+
+    public EnergyLedger ledger() {
+        return ledger;
+    }
+
+    public BottleService bottles() {
+        return bottles;
+    }
+
+    public RecipeService recipes() {
+        return recipes;
+    }
+
+    public TotemService totem() {
+        return totem;
     }
 }

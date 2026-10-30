@@ -150,7 +150,7 @@ class AdminGuiTest {
         assertEquals("§bSpieler", button(13).name());
         assertEquals("§aEvents", button(14).name());
         assertEquals("§fItems", button(15).name());
-        assertNull(button(16).onClick(), "Trader/Upgrader ist nur eine Anzeige");
+        assertEquals("§aGameplay", button(16).name());
         assertEquals("§cSchließen", button(26).name());
     }
 
@@ -171,6 +171,7 @@ class AdminGuiTest {
                 {"13", "§8Admin › §bSpieler", "45"},
                 {"14", "§8Admin › §aEvents", "45"},
                 {"15", "§8Admin › §fItems", "18"},
+                {"16", "§8Admin › §fGameplay", "36"},
         };
         for (String[] page : pages) {
             assertEquals("§6Xmas-SMP §8– Admin", view().title());
@@ -184,12 +185,28 @@ class AdminGuiTest {
 
     @Test
     void labelClickDoesNothingAndCloseCloses() {
-        gui.open(steve);
+        openPage(16);
         int before = host.opened;
+        assertNull(button(16).onClick(), "ohne Totem nur eine Anzeige");
         click(16);
         assertEquals(before, host.opened, "Anzeige-Feld öffnet keine neue Seite");
+        click(36);
         click(26);
         assertEquals(List.of(steve.uuid()), host.closed);
+    }
+
+    @Test
+    void gameplayPageTogglesRecipesAndTotemValues() throws IOException {
+        openPage(16);
+        assertEquals("§aRezept upgrader: an", button(19).name());
+        click(19);
+        assertFalse(core.config().get().recipes.get("upgrader").enabled);
+        assertEquals("§cRezept upgrader: aus", button(19).name());
+
+        assertEquals("§eRadius: §f15", button(11).name());
+        click(11, GuiClick.SHIFT_LEFT);
+        assertEquals(20, core.config().get().totem.radius);
+        assertEquals("totem.radius", lastAudit().get("target").getAsString());
     }
 
     // ------------------------------------------------------------------ Allgemein
@@ -409,16 +426,16 @@ class AdminGuiTest {
     void itemsPageGivesItemsToViewer() throws IOException {
         openPage(15);
         int before = steve.inventory.size();
-        assertEquals("§fWiederbelebungs-Foliant", button(0).name());
+        assertEquals("§fUpgrader", button(0).name());
         click(0);
         assertEquals(before + 1, steve.inventory.size());
         ItemSpec item = steve.inventory.get(steve.inventory.size() - 1);
         assertEquals("minecraft:enchanted_book", item.baseItem());
-        assertEquals(1, item.customModelData());
+        assertEquals(3001, item.customModelData());
         assertTrue(steve.messages.get(steve.messages.size() - 1).contains("erhalten"), steve.messages.toString());
         JsonObject entry = lastAudit();
         assertEquals("give", entry.get("action").getAsString());
-        assertEquals("item=revival_tome", entry.get("details").getAsString());
+        assertEquals("item=upgrader", entry.get("details").getAsString());
 
         String firstCrystal = new ArrayList<>(core.crystals().all()).get(0).id();
         click(9, GuiClick.SHIFT_LEFT);

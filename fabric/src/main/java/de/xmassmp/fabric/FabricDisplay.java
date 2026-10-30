@@ -3,6 +3,8 @@ package de.xmassmp.fabric;
 import de.xmassmp.effect.DisplayHandle;
 import de.xmassmp.effect.DisplaySpec;
 import de.xmassmp.effect.DisplayTransform;
+import de.xmassmp.item.CustomItem;
+import de.xmassmp.item.ItemCatalog;
 import de.xmassmp.util.Vec3;
 import eu.pb4.polymer.virtualentity.api.ElementHolder;
 import eu.pb4.polymer.virtualentity.api.attachment.ChunkAttachment;
@@ -15,6 +17,8 @@ import net.minecraft.util.Brightness;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+
+import java.util.Optional;
 
 /**
  * Display-Entity über Polymers Virtual Entities: Es existiert nur als Pakete bei den Clients,
@@ -33,7 +37,7 @@ final class FabricDisplay implements DisplayHandle {
         this.centerBlock = spec.kind() == DisplaySpec.Kind.BLOCK && spec.centered();
         this.element = spec.kind() == DisplaySpec.Kind.BLOCK
                 ? new BlockDisplayElement(BuiltInRegistries.BLOCK.getValue(McIds.parse(spec.id())).defaultBlockState())
-                : new ItemDisplayElement(new ItemStack(BuiltInRegistries.ITEM.getValue(McIds.parse(spec.id()))));
+                : new ItemDisplayElement(itemStack(spec.id()));
         if (spec.glowColor() != null) {
             element.setGlowing(true);
             element.setGlowColorOverride(spec.glowColor().value());
@@ -91,5 +95,16 @@ final class FabricDisplay implements DisplayHandle {
         element.setTranslation(translation);
         element.setScale(scale);
         element.setLeftRotation(rotation);
+    }
+
+    /** Eigene Items ({@code xmassmp:<typ>}) mit Modell aus dem Pack, sonst das Vanilla-Item. */
+    private static ItemStack itemStack(String id) {
+        if (id.startsWith(ItemCatalog.NAMESPACE + ":")) {
+            Optional<CustomItem> custom = CustomItem.byId(id.substring(ItemCatalog.NAMESPACE.length() + 1));
+            if (custom.isPresent()) {
+                return FabricItems.create(ItemCatalog.custom(custom.get()));
+            }
+        }
+        return new ItemStack(BuiltInRegistries.ITEM.getValue(McIds.parse(id)));
     }
 }

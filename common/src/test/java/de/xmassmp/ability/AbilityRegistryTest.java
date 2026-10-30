@@ -47,16 +47,16 @@ class AbilityRegistryTest {
     @Test
     void invalidSlotThrowsAndIsNotRegistered() {
         AbilityRegistry registry = new AbilityRegistry();
-        assertThrows(IllegalArgumentException.class, () -> registry.register(active("fire.spark", 3)));
+        assertThrows(IllegalArgumentException.class, () -> registry.register(active("fire.spark", 4)));
         assertFalse(registry.get("fire.spark").isPresent());
         assertTrue(registry.forCrystal("fire").isEmpty());
-        assertTrue(registry.active("fire", 3).isEmpty());
+        assertTrue(registry.active("fire", 4).isEmpty());
     }
 
     @Test
     void correctedRetryWithSameIdSucceeds() {
         AbilityRegistry registry = new AbilityRegistry();
-        assertThrows(IllegalArgumentException.class, () -> registry.register(active("fire.spark", 3)));
+        assertThrows(IllegalArgumentException.class, () -> registry.register(active("fire.spark", 4)));
 
         ActiveAbility fixed = active("fire.spark", 1);
         registry.register(fixed);

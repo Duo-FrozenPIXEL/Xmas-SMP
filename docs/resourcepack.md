@@ -7,6 +7,8 @@ python3 tools/resourcepack.py validate   # alle Modell-/Textur-/Font-Referenzen 
 python3 tools/resourcepack.py build      # prüfen + build/Xmas-SMP-resourcepack.zip (inkl. SHA-1)
 ```
 
+Für Bitmap-Fonts prüft der Validator zusätzlich: ascent ≤ height, Bildgröße durch das `chars`-Raster teilbar, gleich lange `chars`-Zeilen und keine doppelt belegten Zeichen.
+
 Ziel-Versionen: `pack.mcmeta` mit `min_format` 75 (1.21.11) bis `max_format` 97 (26.3 laut einer Quelle, noch zu verifizieren).
 
 ## Sprachdateien
@@ -55,7 +57,23 @@ Beispiel: Feuer (strength), Tier 2, makellos → `2047`.
 
 ## HUD-Icons (Font `minecraft:default`)
 
-``–``, je Gem zwei Icons in der Reihenfolge astra, fire, flux, life, puff, speed, strength, wealth.
+| Zeichen (Java `\uXXXX`) | Datei | ascent / height | Inhalt |
+|---|---|---|---|
+| `U+E010`–`U+E01F` | `icons/<gem>1.png`, `icons/<gem>2.png` | 8 / 16 | je Gem zwei Icons in der Reihenfolge astra, fire, flux, life, puff, speed, strength, wealth |
+| `U+E020` | `icons/ultimate_fire.png` | 8 / 16 | Ultimate Feuer (rot, Flamme) |
+| `U+E021` | `icons/ultimate_earth.png` | 8 / 16 | Ultimate Erde (orange, Fels) |
+| `U+E022` | `icons/ultimate_wind.png` | 8 / 16 | Ultimate Wind (weiß, Wirbel) |
+| `U+E023` | `icons/ultimate_shadow.png` | 8 / 16 | Ultimate Schatten (lila, Auge) |
+| `U+E024` | `icons/ultimate_nature.png` | 8 / 16 | Ultimate Natur (grün, Blatt) |
+| `U+E030`–`U+E03A` | `hud/bottle_progress.png` | 6 / 6 | Abfüll-Ladebalken der Energy Bottle: 0 %, 10 %, … 100 % (`U+E030` + Prozent / 10) |
+
+`U+E025`–`U+E02F` sind frei (Reserve für weitere Kristall-Icons).
+
+**Ultimate-Icons** (Platzhalter): Kristall-Raute mit Facetten, vier Strahlen und Funken in der Kristallfarbe (Original-Gem-Farbe, siehe „Kristalle“), in der Mitte ein Emblem je Kristall. Format wie die übrigen Icons (16×16, ascent 8, height 16).
+
+**Ladebalken:** Spritesheet `hud/bottle_progress.png`, 32×66 px = 11 Zellen à 32×6 px untereinander (eine `chars`-Zeile pro Zelle). Dunkler Rahmen mit abgerundeten Ecken, innen 30×4 px; die türkise Füllung (Verlauf oben hell → unten dunkel, leicht links → rechts) wächst um 3 px pro Stufe. Alle Stufen haben denselben Rahmen und damit dieselbe Breite (Vorschub 33), der Untertitel springt also nicht.
+
+Position (ascent 6, height 6): Vanilla zeichnet den Untertitel 2× skaliert bei y = 5 relativ zur Bildschirmmitte, also 10 GUI-px darunter. Eine Bitmap-Glyphe beginnt `7 − ascent` Pixel unter der Textzeile; die Oberkante liegt damit bei `Mitte + 2 · (5 + 7 − ascent)` = `Mitte + 24 − 2 · ascent`. `height` 6 = Zellenhöhe, d. h. Maßstab 1 ohne Verzerrung; da ascent nicht größer als height sein darf, ist 6 der höchste mögliche Wert. Der Balken liegt so bei Mitte + 12 bis Mitte + 24 GUI-px (64 px breit), das 15 px große Fadenkreuz endet bei Mitte + 7 – rund 4 px Abstand. Jeder Schritt kleineres (bzw. negatives) ascent schiebt den Balken 2 GUI-px tiefer.
 
 ## Korrekturen gegenüber dem Original
 
