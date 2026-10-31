@@ -6,6 +6,8 @@ Spieler brauchen **keinen Client-Mod**: Der Server liefert das Ressourcenpaket a
 
 > **Stand:** Grundgerüst. Kern, Event-System, Admin-Befehle und Ressourcenpaket sind fertig. Kräfte, Energie-Regeln, Trader und Admin-GUI folgen (siehe [`todo.md`](todo.md)).
 
+> **Benutzen und testen:** Die ausführliche Schritt-für-Schritt-Anleitung (Testserver aufsetzen, alle Funktionen, kompletter Testplan, automatische Tests, Fehlersuche) steht in [`ANLEITUNG.md`](ANLEITUNG.md).
+
 ## Unterstützte Versionen
 
 | Plattform | Status | Minecraft |
