@@ -3,6 +3,8 @@
 Diese Datei beschreibt Schritt für Schritt, wie man die Mod **baut, installiert, benutzt und testet** – vom leeren Ordner bis zum abgehakten Testprotokoll. Sie richtet sich an Server-Betreiber, Admins und Tester. Alle Angaben stammen aus dem Code (Stand Version `0.9.0`, Fabric, Minecraft `1.21.11`).
 
 > **Kurzfassung für Eilige:** JAR bauen oder aus der CI laden → mit der Fabric API in `mods/` eines Fabric-1.21.11-Servers → Server starten → OP geben → `/xmas` eintippen. Der Testplan steht in [Abschnitt 9](#9-manueller-testplan-im-spiel).
+>
+> **Direkt zu:** [alle Befehle](#81-befehlsreferenz) · [Crafting-Rezepte](#78-crafting-rezepte) · [Schnelltest in 45 Schritten](#91-schnelltest-ca-30-minuten-alle-kernfunktionen) · [ausführliche Testfälle](#92-ausführliche-testfälle) · [automatische Tests](#10-automatische-tests-entwickler)
 
 ---
 
@@ -404,22 +406,149 @@ Abfüllen ist **gesperrt**:
 
 **Dupe-Schutz:** Jede Flasche hat eine eigene ID in `world/xmassmp/bottles.json`. Wird eine Kopie getrunken, verschwindet sie mit `Diese Energy Bottle ist ungültig und wurde entfernt.`, und im Energie-Protokoll steht ein rot markierter Eintrag `suspicious`.
 
-### 7.8 Rezepte (Standard, in `config.jsonc` änderbar)
+### 7.8 Crafting-Rezepte
 
-Legende: Zeile für Zeile, wie im 3×3-Feld der Werkbank.
+Alle Rezepte sind die **Standardwerte** aus `config/xmassmp/config.jsonc` (Abschnitt `recipes`). Sie lassen sich dort ohne Neubau ändern (siehe unten). Jedes Rezept funktioniert in der **Werkbank** und im **Crafter**-Block. Geformte Rezepte passen auch **gespiegelt** (wie in Vanilla). Im Rezeptbuch tauchen sie nicht zwingend auf – einfach von Hand einlegen.
 
-**Upgrader** – `F B F / B W B / F B F`
-F = Kristall-Splitter, B = Drachenatem, W = Witherskelettschädel
+Die Raster unten zeigen das 3×3-Feld der Werkbank von oben links nach unten rechts.
 
-**Kristall-Händler** – `D B D / B F B / D B D`
-D = Diamant, B = Drachenatem, F = Kristall-Splitter
+#### 7.8.1 Kristall-Splitter (aus der Energy Bottle)
 
-**Repair Kit** – `F A F / D T D / F A F`
-F = Kristall-Splitter, A = Amboss, D = Diamantblock, T = Netherit-Schmiedevorlage
+Die **einzige** Quelle für Kristall-Splitter.
 
-**Kristall-Splitter** – 1 Energy Bottle, formlos → 9 Splitter
+| | | |
+|:---:|:---:|:---:|
+| | | |
+| | Energy Bottle | |
+| | | |
 
-Alle Rezepte funktionieren auch im **Crafter**-Block. Alle Xmas-Items sind eigene Server-Items ohne Vanilla-Funktion (kein Brauen, kein Platzieren als Leuchtfeuer, kein Handel mit Dorfbewohnern).
+- **Zutaten:** genau **1 Energy Bottle** – formlos, in **irgendein** Feld. Es darf **nichts anderes** im Gitter liegen.
+- **Geht auch im 2×2-Feld** des Inventars.
+- **Ergebnis:** **9 × Kristall-Splitter** (`xmassmp:gem_fragment`, stapelbar bis 64). Anzahl einstellbar: `recipes.gem_fragments.count`.
+- **Rest:** Die leere **Glasflasche** bleibt im Feld liegen.
+- **Bedingung:** Die Flasche muss im Flaschen-Register **aktiv** sein. Kopien, Fälschungen und unregistrierte Flaschen aus dem Kreativ-Tab zeigen **kein Ergebnis**. Beim Herausnehmen wird die Flasche im Register geschlossen (Grund `craft`).
+- **Schalter:** `recipes.gem_fragments.enabled` und zusätzlich `energyBottle.enabled`.
+
+#### 7.8.2 Upgrader
+
+| | | |
+|:---:|:---:|:---:|
+| Kristall-Splitter | Drachenatem | Kristall-Splitter |
+| Drachenatem | Witherskelettschädel | Drachenatem |
+| Kristall-Splitter | Drachenatem | Kristall-Splitter |
+
+| Zeichen in der Config | Item | ID | Anzahl |
+|:---:|---|---|:---:|
+| `F` | Kristall-Splitter | `xmassmp:gem_fragment` | 4 |
+| `B` | Drachenatem | `minecraft:dragon_breath` | 4 |
+| `W` | Witherskelettschädel | `minecraft:wither_skeleton_skull` | 1 |
+
+**Ergebnis:** 1 × Upgrader (`xmassmp:upgrader`). Config: `"pattern": ["FBF", "BWB", "FBF"]`.
+
+#### 7.8.3 Kristall-Händler
+
+| | | |
+|:---:|:---:|:---:|
+| Diamant | Drachenatem | Diamant |
+| Drachenatem | Kristall-Splitter | Drachenatem |
+| Diamant | Drachenatem | Diamant |
+
+| Zeichen in der Config | Item | ID | Anzahl |
+|:---:|---|---|:---:|
+| `D` | Diamant | `minecraft:diamond` | 4 |
+| `B` | Drachenatem | `minecraft:dragon_breath` | 4 |
+| `F` | Kristall-Splitter | `xmassmp:gem_fragment` | 1 |
+
+**Ergebnis:** 1 × Kristall-Händler (`xmassmp:gem_trader`). Config: `"pattern": ["DBD", "BFB", "DBD"]`.
+
+#### 7.8.4 Repair Kit
+
+| | | |
+|:---:|:---:|:---:|
+| Kristall-Splitter | Amboss | Kristall-Splitter |
+| Diamantblock | Netherit-Schmiedevorlage | Diamantblock |
+| Kristall-Splitter | Amboss | Kristall-Splitter |
+
+| Zeichen in der Config | Item | ID | Anzahl |
+|:---:|---|---|:---:|
+| `F` | Kristall-Splitter | `xmassmp:gem_fragment` | 4 |
+| `A` | Amboss | `minecraft:anvil` | 2 |
+| `D` | Diamantblock | `minecraft:diamond_block` | 2 |
+| `T` | Netherit-Schmiedevorlage | `minecraft:netherite_upgrade_smithing_template` | 1 |
+
+**Ergebnis:** 1 × Repair Kit / Reparatur-Set (`xmassmp:repair_kit`). Config: `"pattern": ["FAF", "DTD", "FAF"]`.
+
+#### 7.8.5 Was kostet was? (Gesamtrechnung)
+
+| Ziel | Energy Bottles (= Energie) | Weitere Zutaten |
+|---|:---:|---|
+| 9 Kristall-Splitter | 1 | – |
+| Upgrader | 1 (4 von 9 Splittern) | 4 Drachenatem, 1 Witherskelettschädel |
+| Kristall-Händler | 1 (1 von 9 Splittern) | 4 Diamanten, 4 Drachenatem |
+| Repair Kit | 1 (4 von 9 Splittern) | 2 Ambosse, 2 Diamantblöcke, 1 Netherit-Schmiedevorlage |
+
+Aus **einer** Energy Bottle reichen die 9 Splitter z. B. für Upgrader + Repair Kit + Händler (4 + 4 + 1).
+
+Woher die Vanilla-Zutaten kommen:
+
+| Zutat | Beschaffung im Überlebensmodus |
+|---|---|
+| Drachenatem | Leere Glasflasche in die lila Atemwolke des Enderdrachen halten (oder Drachenfeuerball-Wolke) |
+| Witherskelettschädel | Seltener Drop von Witherskeletten (Netherfestung); Plünderung erhöht die Chance |
+| Netherit-Schmiedevorlage | Truhen in Bastionsruinen; vervielfältigen: 7 Diamanten + 1 Netherrack + 1 Vorlage → 2 Vorlagen |
+| Amboss | 3 Eisenblöcke + 4 Eisenbarren |
+| Diamantblock | 9 Diamanten |
+
+#### 7.8.6 Zutaten zum Testen schnell besorgen
+
+Als OP im Chat (oder in der Konsole ohne `/` und mit Spielernamen statt `@s`):
+
+```
+/give @s minecraft:dragon_breath 8
+/give @s minecraft:wither_skeleton_skull 1
+/give @s minecraft:diamond 4
+/give @s minecraft:anvil 2
+/give @s minecraft:diamond_block 2
+/give @s minecraft:netherite_upgrade_smithing_template 1
+/give @s minecraft:glass_bottle 16
+/give @s minecraft:crafter 1
+/give @s minecraft:crafting_table 1
+/xmas give @s item energy_bottle
+/xmas give @s item gem_fragment
+```
+
+Hinweise:
+
+- `/xmas give … item gem_fragment` gibt **einen** Splitter pro Aufruf. Für 9 Splitter einfach eine Energy Bottle geben und zerlegen, oder einen ganzen Stapel aus dem Kreativ-Tab nehmen.
+- **Nicht** `/give @s xmassmp:<item>` benutzen: So entstehen Items **ohne** die internen Daten der Mod (falscher Name, kein eigenes Aussehen; Upgrader, Händler, Repair Kit und Energy Bottle reagieren nicht). Immer `/xmas give`, die Admin-GUI (Seite Items) oder den Kreativ-Tab nehmen.
+
+#### 7.8.7 Rezepte ändern
+
+In `config/xmassmp/config.jsonc`, Abschnitt `recipes`:
+
+- `pattern`: 1 bis 3 Zeilen mit je 1 bis 3 Zeichen; **Leerzeichen = leeres Feld**.
+- `key`: Zeichen → Item-ID (`minecraft:…` oder `xmassmp:gem_fragment`).
+- `enabled`: Rezept an/aus (auch in der Admin-GUI → Gameplay).
+- Beim Splitter-Rezept nur `enabled` und `count`.
+
+Beispiel – Upgrader mit Netherstern statt Witherskelettschädel:
+
+```jsonc
+"upgrader": {
+  "enabled": true,
+  "pattern": ["FBF", "BWB", "FBF"],
+  "key": { "F": "xmassmp:gem_fragment", "B": "minecraft:dragon_breath", "W": "minecraft:nether_star" }
+},
+```
+
+Danach `/xmas reload`. Ist ein Rezept ungültig (z. B. Zeichen im `pattern` ohne Eintrag in `key`), meldet der Reload `recipes.<id>: … – Rezept abgeschaltet` und **nur dieses** Rezept ist aus.
+
+#### 7.8.8 Kein Rezept (nur per Befehl/Kreativ-Tab)
+
+- **Kristalle** – gibt es nur über den ersten Join, `/xmas set` (aktiver Kristall) oder als ungebundenes Deko-Item über `/xmas give … crystal` bzw. den Kreativ-Tab.
+- **Energy Bottle** – nur durch Abfüllen ([7.7](#77-energy-bottle)), als Überlauf beim PvP-Kill, per `/xmas give … item energy_bottle`, Admin-GUI oder Kreativ-Tab.
+
+Alle Xmas-Items sind eigene Server-Items ohne Vanilla-Funktion (kein Brauen, kein Platzieren als Leuchtfeuer, kein Handel mit Dorfbewohnern, keine Vanilla-Rezepte mit den Basis-Items).
 
 ### 7.9 Upgrader
 
@@ -453,33 +582,330 @@ Händler in die Haupthand, **Rechtsklick** → Truhen-GUI `Kristall-Händler ›
 
 ## 8. Benutzen – Admin-Sicht
 
-### 8.1 Alle Befehle
+### 8.1 Befehlsreferenz
 
-Alle mit Tab-Completion. `<…>` = Pflicht, `[…]` = optional.
+#### 8.1.1 Grundregeln für alle `/xmas`-Befehle
 
-| Befehl | Wirkung | Beispiel |
+- **Recht:** `xmassmp.admin`. Ohne Permission-Plugin genügt **OP-Level 2** (`/op <name>`). Spieler ohne das Recht sehen `/xmas` nicht (auch nicht in der Tab-Completion).
+- **Wo:** im Chat (mit `/`), in der **Server-Konsole** (ohne `/`), per **RCON**, aus **Befehlsblöcken** und Funktionen. Einzige Ausnahme: `/xmas admin` geht nur als Spieler.
+- **Tab-Completion:** Jeder Teil lässt sich mit der Tab-Taste ergänzen (Kristalle, Items, Zustände, Event-IDs, Datumsvorschläge).
+- **Schreibweise hier:** `<…>` = Pflicht, `[…]` = optional, `a|b` = eins davon.
+- **`<spieler>`:** muss **online** sein. Erlaubt sind Namen und Minecraft-Selektoren wie `@s` (du selbst), `@p` (nächster Spieler). Selektoren für mehrere Spieler (`@a`) gehen nicht.
+- **Antworten:** Erfolg mit dem Präfix der Mod in grau/weiß, Fehler in **rot**. Erfolgsmeldungen gehen wie bei Vanilla-Befehlen zusätzlich grau an andere OPs und ins Server-Log.
+- **Kern nicht gestartet:** Jeder Befehl antwortet `Xmas-SMP ist nicht gestartet – Details im Server-Log` → `logs/latest.log` prüfen.
+- **Protokoll:** Alle ändernden Befehle schreiben eine Zeile in `world/xmassmp/audit.log` (Wer, Was, Ziel, Zeit). `Wer` ist dein Spielername, `Konsole` für die Server-Konsole, sonst der Name der Quelle.
+
+#### 8.1.2 Übersicht
+
+| # | Befehl | Kurz |
+|:---:|---|---|
+| 1 | `/xmas` | Hilfe anzeigen |
+| 2 | `/xmas admin` | Admin-GUI öffnen |
+| 3 | `/xmas give <spieler> crystal <kristall> [tier] [zustand]` | Deko-Kristall geben |
+| 4 | `/xmas give <spieler> item <item>` | Hilfs-Item geben |
+| 5 | `/xmas set <spieler> crystal <kristall>` | Aktiven Kristall setzen |
+| 6 | `/xmas set <spieler> tier <1-2>` | Tier setzen |
+| 7 | `/xmas set <spieler> energy <wert>` | Energie setzen |
+| 8 | `/xmas reload` | Config und Events neu laden |
+| 9 | `/xmas event list` | Events anzeigen |
+| 10 | `/xmas event start <id>` | Event sofort starten |
+| 11 | `/xmas event stop <id>` | Event beenden |
+| 12 | `/xmas event simulate <yyyy-MM-dd> <HH:mm> [dry]` | Testmodus mit simulierter Uhrzeit |
+| 13 | `/xmas event simulate off` | Testmodus beenden |
+| 14 | `/xmas energy audit [spieler]` | Energie-Protokoll anzeigen |
+| 15 | `/xmas energy bottles` | Aktive Energy Bottles anzeigen |
+| 16 | `/xmas totem status` | Laufendes Totem anzeigen |
+| 17 | `/xmas totem cancel` | Laufendes Totem abbrechen |
+
+#### 8.1.3 Jeder Befehl im Detail
+
+---
+
+##### 1 · `/xmas`
+
+Zeigt die Kurzhilfe mit allen Befehlen (9 Zeilen). Ändert nichts.
+
+---
+
+##### 2 · `/xmas admin`
+
+Öffnet die Admin-GUI (Truhen-Menü, siehe [8.2](#82-admin-gui-xmas-admin)). **Nur als Spieler** – aus Konsole/RCON kommt die Vanilla-Fehlermeldung, dass ein Spieler nötig ist. Schlägt das Öffnen fehl: `Admin-GUI konnte nicht geöffnet werden`.
+
+---
+
+##### 3 · `/xmas give <spieler> crystal <kristall> [tier] [zustand]`
+
+Legt ein **Kristall-Item** ins Inventar des Spielers.
+
+| Parameter | Werte | Standard |
 |---|---|---|
-| `/xmas` | Hilfe (Befehlsliste) | |
-| `/xmas admin` | Admin-GUI öffnen (nur als Spieler, nicht aus der Konsole) | |
-| `/xmas give <spieler> crystal <kristall> [tier] [zustand]` | **Ungebundenes** Kristall-Item geben (nur Anzeige/Deko, ändert keine Spielerdaten). Kristalle: `fire`, `earth`, `wind`, `shadow`, `nature`. Tier `1`–`2`. Zustand: `broken`, `damaged`, `scratched`, `pristine`. Standard: Tier 1, `pristine` | `/xmas give Steve crystal fire 2 scratched` |
-| `/xmas give <spieler> item <item>` | Hilfs-Item geben: `upgrader`, `energy_bottle` (mit Register-Eintrag), `gem_trader`, `repair_kit`, `gem_fragment` | `/xmas give Steve item repair_kit` |
-| `/xmas set <spieler> crystal <kristall>` | Aktiven Kristall setzen | `/xmas set Steve crystal shadow` |
-| `/xmas set <spieler> tier <1-2>` | Tier setzen | `/xmas set Steve tier 2` |
-| `/xmas set <spieler> energy <wert>` | Energie setzen (nur innerhalb `energy.min`–`energy.max`) | `/xmas set Steve energy 0` |
-| `/xmas reload` | `config.jsonc` und `events.jsonc` neu laden. Bei Fehlern bleibt die alte Config aktiv, die Fehler werden aufgelistet | |
-| `/xmas event list` | Alle Events mit Status und nächstem Start | |
-| `/xmas event start <id>` | Event sofort starten (auch deaktivierte) | `/xmas event start xmas_eve` |
-| `/xmas event stop <id>` | Laufendes Event beenden (mit End-Aktionen) | |
-| `/xmas event simulate <yyyy-MM-dd> <HH:mm> [dry]` | Testmodus: simulierte Uhrzeit. `dry` = Aktionen nur ins Log | `/xmas event simulate 2026-12-24 17:55 dry` |
-| `/xmas event simulate off` | Testmodus beenden | |
-| `/xmas energy audit [spieler]` | Letzte 15 Energieänderungen (alle oder eines Spielers) | `/xmas energy audit Steve` |
-| `/xmas energy bottles` | Aktive Energy Bottles im Register (neueste 15) | |
-| `/xmas totem status` | Laufendes Totem: Ort, Restzeit, Teilnehmer, wer es aufgestellt hat | |
-| `/xmas totem cancel` | Laufendes Totem ohne Wirkung beenden | |
+| `<kristall>` | `fire` (Feuer), `earth` (Erde), `wind` (Wind), `shadow` (Schatten), `nature` (Natur) | – |
+| `[tier]` | `1` oder `2` | `1` |
+| `[zustand]` | `pristine` (makellos), `scratched` (zerkratzt), `damaged` (beschädigt), `broken` (zerbrochen) | `pristine` |
 
-`<spieler>` muss **online** sein (Minecraft-Spielerauswahl, auch `@p`, `@s` möglich).
+**Wichtig:** Dieses Item ist **ungebunden** – es gehört niemandem, hat **keine Kräfte** und ändert **nicht** den Kristall des Spielers. Es dient als Deko, zum Ansehen der Texturen oder für Tests. Den echten Kristall ändert Befehl 5. (Der Tooltip zeigt trotzdem „Seelengebunden“ – bekannte Unschönheit.) Einen Zustand kann man nur zusammen mit dem Tier angeben.
 
-Antworten: Erfolg in grau/weiß mit Präfix, Fehler in **rot**. Ist der Kern nicht gestartet, kommt `Xmas-SMP ist nicht gestartet – Details im Server-Log`.
+Beispiele:
+
+```
+/xmas give Steve crystal fire
+/xmas give Steve crystal shadow 2
+/xmas give @s crystal earth 2 broken
+```
+
+| Antwort | Bedeutung |
+|---|---|
+| `Steve hat einen Feuer-Kristall (Tier 1, pristine) erhalten` | OK |
+| `Unbekannter Kristall: lava` | Kristall-ID falsch |
+| `Unbekannter Zustand: kaputt (broken, damaged, scratched, pristine)` | Zustand falsch |
+
+Audit: `give`, Details `crystal=… tier=… stage=…`.
+
+---
+
+##### 4 · `/xmas give <spieler> item <item>`
+
+Legt ein Hilfs-Item ins Inventar. Pro Aufruf **ein** Stück.
+
+| `<item>` | Item | Hinweis |
+|---|---|---|
+| `upgrader` | Upgrader | voll funktionsfähig |
+| `energy_bottle` | Energy Bottle | wird **im Flaschen-Register angelegt** (Herkunft `admin`, Ersteller = du) und ist damit gültig |
+| `gem_trader` | Kristall-Händler | voll funktionsfähig |
+| `repair_kit` | Repair Kit (Reparatur-Set) | voll funktionsfähig |
+| `gem_fragment` | Kristall-Splitter | 1 Stück |
+
+Beispiele:
+
+```
+/xmas give Steve item repair_kit
+/xmas give @s item energy_bottle
+```
+
+| Antwort | Bedeutung |
+|---|---|
+| `Steve hat Reparatur-Set erhalten` (bzw. `Upgrader`, `Energieflasche`, `Kristall-Händler`, `Kristall-Splitter`) | OK |
+| `Unbekanntes Item: schwert` | Item-ID falsch |
+
+Audit: `give`, Details `item=…`.
+
+---
+
+##### 5 · `/xmas set <spieler> crystal <kristall>`
+
+Setzt den **aktiven** Kristall des Spielers (die Spielerdaten). Das Kristall-Item im Inventar passt sich sofort an, die HUD-Farbe wechselt. Tier, Energie und Cooldowns bleiben.
+
+```
+/xmas set Steve crystal nature
+```
+
+| Antwort | Bedeutung |
+|---|---|
+| `Kristall von Steve ist jetzt Natur` | OK |
+| `… (Kristall ist in der Config deaktiviert)` (gelb angehängt) | Gesetzt, aber der Kristall ist in `crystals.<id>.enabled` aus |
+| `Unbekannter Kristall: …` | ID falsch |
+
+Audit: `set_crystal`, Details `alt -> neu`.
+
+---
+
+##### 6 · `/xmas set <spieler> tier <1-2>`
+
+Setzt das Tier. Item passt sich an; Tier 2 = gelber Name in der Tab-Liste (`controls.tier2TabColor`). Werte außer 1 und 2 lehnt schon die Eingabe ab.
+
+```
+/xmas set Steve tier 2
+```
+
+Antwort: `Tier von Steve ist jetzt 2`. Audit: `set_tier`.
+
+---
+
+##### 7 · `/xmas set <spieler> energy <wert>`
+
+Setzt die Energie auf genau diesen Wert. Erlaubt ist nur `energy.min` bis `energy.max` (Standard 0–10). Das Item wechselt ggf. die Bruchstufe (mit Animation), bei 10 schimmert es.
+
+```
+/xmas set Steve energy 0
+/xmas set Steve energy 10
+```
+
+| Antwort | Bedeutung |
+|---|---|
+| `Energie von Steve ist jetzt 0` | OK |
+| `Energie muss 0–10 sein` | Wert außerhalb der Grenzen |
+
+Audit: `set_energy`. Zusätzlich ein Eintrag im **Energie-Protokoll** mit Grund `admin` und deinem Namen.
+
+---
+
+##### 8 · `/xmas reload`
+
+Lädt `config/xmassmp/config.jsonc` **und** `config/xmassmp/events.jsonc` neu.
+
+| Antwort | Bedeutung |
+|---|---|
+| `Neu geladen` + ggf. graue Zeilen `· …` | OK; die Zeilen sind Warnungen (z. B. ein ungültiger Wert, der auf einen Standard gesetzt wurde) |
+| `Neu laden fehlgeschlagen – vorherige Einstellungen bleiben aktiv:` + Zeilen `· …` | Datei kaputt (z. B. JSON-Fehler); **nichts** wurde übernommen |
+
+Audit: `reload` (bei Fehler mit `FEHLER: …`). Änderungen über die Admin-GUI brauchen **keinen** Reload.
+
+---
+
+##### 9 · `/xmas event list`
+
+Listet alle Events aus `events.jsonc`.
+
+```
+Events (Zeitzone Europe/Berlin) [Testmodus: 25.12.2026 19:54]
+xmas_week (Weihnachtswoche) – deaktiviert
+advent_evening (Weihnachtsabend-Bonus) – nächster Start 25.12.2026 20:00
+xmas_eve (Heiligabend) – läuft bis 24.12.2026 20:00
+```
+
+Mögliche Status: `läuft bis <Datum Zeit>`, `läuft bis zum Stopp`, `deaktiviert`, `nächster Start <Datum Zeit>`, `kein weiterer Termin`. Ohne Events: `Keine Events in events.jsonc`. Der Zusatz `[Testmodus: …]` erscheint nur bei aktivem Testmodus.
+
+---
+
+##### 10 · `/xmas event start <id>`
+
+Startet ein Event **sofort** mit seinen `onStart`-Aktionen und Modifikatoren – auch wenn es `enabled: false` ist. Dauer laut `durationMinutes`.
+
+```
+/xmas event start xmas_eve
+```
+
+| Antwort | Bedeutung |
+|---|---|
+| `Event xmas_eve gestartet (120 min)` | OK |
+| `Event new_year ausgelöst` | OK, punktuelles Event (Dauer 0) |
+| `Event xmas_eve läuft bereits` | läuft schon |
+| `Unbekanntes Event: …` | ID falsch |
+
+Audit: `event_start`.
+
+---
+
+##### 11 · `/xmas event stop <id>`
+
+Beendet ein laufendes Event **mit** seinen `onEnd`-Aktionen. Die Tab-Completion schlägt nur laufende Events vor.
+
+Antworten: `Event xmas_eve beendet` bzw. `Event xmas_eve läuft nicht`. Audit: `event_stop`.
+
+---
+
+##### 12 · `/xmas event simulate <yyyy-MM-dd> <HH:mm> [dry]`
+
+Startet den **Testmodus**: Ein eigener Event-Plan läuft ab der angegebenen Uhrzeit (Zeitzone `events.timezone`) und **zählt ab da in Echtzeit weiter**. Der echte Plan läuft unverändert im Hintergrund weiter.
+
+| Variante | Was passiert |
+|---|---|
+| ohne `dry` | Aktionen werden **wirklich** ausgeführt (Chat, Titel, Sounds, Befehle, Modifikatoren). Antwort endet mit `– Aktionen werden ausgeführt!` |
+| mit `dry` (Trockenlauf) | Aktionen landen **nur im Server-Log** als `[Trockenlauf] Broadcast: …`, `[Trockenlauf] Titel: …`, `[Trockenlauf] Sound: …`, `[Trockenlauf] Befehl: /…`. Modifikatoren wirken nicht. Antwort: `– Aktionen werden nur geloggt` |
+
+**Nur Events mit `enabled: true` laufen im Testmodus.** Ein erneuter `simulate`-Befehl beendet die vorherige Simulation sauber und startet eine neue. Datum genau als `yyyy-MM-dd`, Uhrzeit als `HH:mm`.
+
+```
+/xmas event simulate 2026-12-24 17:55 dry
+/xmas event simulate 2026-12-31 23:59
+```
+
+Tab-Vorschläge: heute, 24.12., 25.12., 31.12. dieses Jahres, 01.01. nächstes Jahr; Uhrzeiten `18:00`, `17:59 dry`, `23:59 dry`, `00:00`.
+
+| Antwort | Bedeutung |
+|---|---|
+| `Testmodus aktiv: simulierte Zeit 24.12.2026 17:55 – Aktionen werden nur geloggt Beenden mit /xmas event simulate off` | OK |
+| `Format: /xmas event simulate yyyy-MM-dd HH:mm [dry]` | Datum/Uhrzeit falsch geschrieben oder unbekanntes drittes Wort |
+
+Audit: `event_simulate`.
+
+---
+
+##### 13 · `/xmas event simulate off`
+
+Beendet den Testmodus. Simulierte Events, die gerade laufen, enden **mit** ihren End-Aktionen.
+
+Antworten: `Testmodus beendet – simulierte Events wurden mit ihren End-Aktionen beendet` bzw. `Testmodus ist nicht aktiv`. Audit: `event_simulate_off`.
+
+---
+
+##### 14 · `/xmas energy audit [spieler]`
+
+Zeigt die **letzten 15** Energieänderungen aus `world/xmassmp/energy.log` – für alle oder nur für einen (Online-)Spieler. Neueste stehen unten.
+
+Beispiel (IDs gekürzt):
+
+```
+[Xmas-SMP] Energie-Protokoll von Steve (neueste unten):
+2026-12-24 17:02:11 Steve 5 → 4 (death, Alex)
+2026-12-24 17:05:40 Steve 4 → 3 (bottle_fill, 1f0c…)
+2026-12-24 17:06:02 Steve 3 → 3 (suspicious, 1f0c… bereits verbraucht (Kopie))
+```
+
+- Zeitangaben in **UTC** (Berlin im Winter = UTC + 1 h).
+- Gründe: `kill` (Bezug: Opfer), `death` (Bezug: Täter oder leer), `bottle_fill`, `bottle_drink` (Bezug: Flaschen-ID), `totem` (Bezug: wer es aufgestellt hat), `admin` (Bezug: Admin), `suspicious` (rot: ungültige Flasche, Energie unverändert).
+- Ohne Einträge: `Keine Einträge im Energie-Protokoll.`
+
+---
+
+##### 15 · `/xmas energy bottles`
+
+Zeigt, wie viele Energy Bottles im Register **aktiv** (noch nicht getrunken/zerlegt) sind, und die neuesten 15:
+
+```
+[Xmas-SMP] 3 aktive Energy Bottles:
+1f0c2a9b fill · Steve · 2026-12-24T16:05:40.512Z
+7d81e0c4 admin · Konsole · 2026-12-24T16:10:00.087Z
+a3b9f210 creative · Alex · 2026-12-24T16:12:31.904Z
+```
+
+Spalten: erste 8 Zeichen der ID · Herkunft (`fill`, `admin`, `overflow`, `creative`) · Ersteller · Erstellzeit (UTC).
+
+---
+
+##### 16 · `/xmas totem status`
+
+```
+[Xmas-SMP] Totem bei 120 64 -35 (overworld) · noch 7:42 · 3 Teilnehmer · aufgestellt von Steve
+```
+
+Ohne Totem: `Kein Repair-Totem aktiv.`
+
+---
+
+##### 17 · `/xmas totem cancel`
+
+Beendet das laufende Totem **ohne Wirkung** (niemand bekommt Energie, das Kit ist weg). An alle geht `Das Repair-Totem bei … wurde von <dein Name> beendet.`. Ohne Totem: rot `Kein Repair-Totem aktiv`. Audit: `totem_cancel`. Dasselbe geht in der Admin-GUI → Gameplay → „Totem beenden“.
+
+#### 8.1.4 Weitere Befehle, die du zum Testen brauchst
+
+Diese gehören nicht zur Mod, sind aber für Tests nützlich.
+
+**Polymer** (in der Mod enthalten):
+
+| Befehl | Wofür |
+|---|---|
+| `/polymer creative` | Kreativ-Tabs (auch **Xmas-SMP**) mit einem Vanilla-Client öffnen – nur im Kreativmodus |
+| `/polymer generate-pack` | Ressourcenpaket erzeugen (Ausgabeort laut Polymer-Doku) |
+
+**Vanilla** (OP nötig):
+
+| Befehl | Wofür |
+|---|---|
+| `/op <name>` / `/deop <name>` | Admin-Recht (OP-Level) geben/nehmen |
+| `/gamemode survival <name>` / `/gamemode creative <name>` | Modus wechseln – Spielfunktionen immer in **survival** testen |
+| `/give <name> minecraft:glass_bottle 16` | Glasflaschen zum Abfüllen |
+| `/give <name> minecraft:dragon_breath 8` usw. | Rezept-Zutaten, siehe [7.8.6](#786-zutaten-zum-testen-schnell-besorgen) |
+| `/kill <name>` | Tod ohne Gegner (Energie −1) |
+| `/tp <name> <x> <y> <z>` | Spieler in/aus dem Totem-Kreis bewegen |
+| `/effect give <name> minecraft:haste 60 2` | Eile, um die feste Totem-Abbauzeit zu prüfen |
+| `/enchant <name> minecraft:efficiency 5` | Effizienz auf das Werkzeug in der Hand |
+| `/summon minecraft:tnt ~ ~1 ~` | TNT neben das Totem (Explosionsschutz testen) |
+| `/summon minecraft:zombie` | Schaden durch Mobs (Abfüllen abbrechen, Tod durch Mob) |
+| `/time set day` / `/weather clear` | Bessere Sicht für Animationen |
+| `/gamerule keepInventory true` | **Nicht** setzen, wenn die Seelenbindung beim Tod getestet wird |
+
+**Client-Mod-Tasten** (keine Befehle): **R** = Primär, **G** = Sekundär, **V** = Ultimate (frei belegbar, siehe [6.2](#62-optionaler-client-mod-eigene-tasten)). Ohne Client-Mod: **F**, **Schleichen + F**, **Schleichen + Rechtsklick** mit dem Kristall.
 
 ### 8.2 Admin-GUI (`/xmas admin`)
 
@@ -552,7 +978,7 @@ Die mitgelieferte Weihnachtswoche (`xmas_week`, `xmas_eve`, `advent_evening`, `n
 
 `Wer` im Audit-Log: Spielername, `Konsole` für die Server-Konsole, sonst der Name der Quelle (RCON, Befehlsblock).
 
-Herkunft (`origin`) einer Energy Bottle in `/xmas energy bottles`: `fill` (abgefüllt), `admin` bzw. Name des Admins (`/xmas give`, Admin-GUI), `overflow` (Sieger mit voller Energie), `creative` (aus dem Kreativ-Tab registriert).
+Herkunft (`origin`) einer Energy Bottle in `/xmas energy bottles`: `fill` (abgefüllt), `admin` (`/xmas give`, Admin-GUI; Ersteller = Name des Admins), `overflow` (Sieger mit voller Energie), `creative` (aus dem Kreativ-Tab registriert).
 
 ### 8.6 Kreativ-Tab
 
@@ -604,7 +1030,81 @@ Jeder Testfall hat **Schritte** und **Erwartung**. Ergebnis im [Testprotokoll](#
 
 ---
 
-### T01 – Server-Start
+### 9.1 Schnelltest (ca. 30 Minuten, alle Kernfunktionen)
+
+Ein durchgehender Ablauf, der jede wichtige Funktion einmal anfasst. Du brauchst **zwei Spieler**: **A** (OP) und **B** (kein OP). Befehle tippt A im Chat. Hake jeden Schritt ab; weicht etwas ab, gehe zum passenden ausführlichen Testfall (T01–T22).
+
+**Teil 1 – Start und Rechte**
+
+1. [ ] Server starten → Log zeigt `Xmas-SMP gestartet (5 Kristalle)`.
+2. [ ] A joint → Chat `Du hast den …-Kristall erhalten. Er ist an dich gebunden.`, Spirale, Kristall im Inventar.
+3. [ ] Konsole: `op A` (A durch den echten Namen ersetzen).
+4. [ ] A: `/xmas` → 9 Hilfezeilen.
+5. [ ] B joint → bekommt ebenfalls einen Kristall. B tippt `/xmas` → unbekannter Befehl.
+6. [ ] Beide: `/gamemode survival` (A setzt das für beide).
+
+**Teil 2 – Kristall, HUD, Seelenbindung**
+
+7. [ ] Actionbar bei B: drei graue Icons mit `–`, dahinter `✦ 5/10`.
+8. [ ] B drückt Q auf den Kristall → spätestens nach 1 s wieder im Inventar.
+9. [ ] B hält den Kristall, Schleichen + Rechtsklick → `Die Ultimate gibt es noch nicht.`
+10. [ ] `/xmas set B crystal shadow` → B's Kristall wird lila.
+11. [ ] `/xmas set B energy 2` → Item „beschädigt“, Bruch-Animation. `/xmas set B energy 5` → „makellos“, Reparatur-Animation.
+12. [ ] `/xmas set B tier 2` → B steht gelb in der Tab-Liste. `/xmas set B tier 1` → wieder weiß.
+
+**Teil 3 – Energie durch PvP**
+
+13. [ ] A tötet B → A `+1 Energie`, B `-1 Energie`.
+14. [ ] A tötet B sofort noch mal → A: `Keine Energie: Du hast B erst vor kurzem besiegt.`
+15. [ ] `/kill B` → B verliert 1, niemand gewinnt.
+16. [ ] `/xmas energy audit` → Einträge `kill`, `death`, `admin`.
+
+**Teil 4 – Energy Bottle**
+
+17. [ ] `/xmas set B energy 5`, `/give B minecraft:glass_bottle 4`.
+18. [ ] B: Glasflasche in die Haupthand, **Schleichen + Rechtsklick 5 s halten** → Ladebalken, dann `+1 Energy Bottle`, Energie 4.
+19. [ ] B startet erneut und läuft los → `Abfüllen abgebrochen: Du hast dich bewegt.`
+20. [ ] B trinkt die Flasche (Rechtsklick) → `+1 Energie (5/10)`, leere Glasflasche zurück.
+21. [ ] `/xmas give B item energy_bottle`, B legt sie ins 2×2-Feld → 9 Kristall-Splitter, Glasflasche bleibt liegen.
+22. [ ] `/xmas energy bottles` → Liste stimmt (zerlegte/getrunkene Flaschen sind nicht mehr aktiv).
+
+**Teil 5 – Rezepte, Upgrader, Händler**
+
+23. [ ] A besorgt Zutaten ([7.8.6](#786-zutaten-zum-testen-schnell-besorgen)) und 9 Splitter (Energy Bottle zerlegen).
+24. [ ] A craftet in der Werkbank: **Upgrader** (4 Splitter, 4 Drachenatem, 1 Witherskelettschädel) → Ergebnis erscheint.
+25. [ ] A craftet **Kristall-Händler** (4 Diamanten, 4 Drachenatem, 1 Splitter).
+26. [ ] A craftet **Repair Kit** (4 Splitter, 2 Ambosse, 2 Diamantblöcke, 1 Netherit-Schmiedevorlage).
+27. [ ] A benutzt den Upgrader (Rechtsklick) → Titel `Tier 2`, Animation, Name gelb.
+28. [ ] A benutzt den Händler → GUI, anderen Kristall wählen → Tausch-Animation, Tier 2 bleibt.
+
+**Teil 6 – Repair-Totem**
+
+29. [ ] Vorher in der Admin-GUI (`/xmas admin` → Gameplay → „Dauer (min)“) auf **1** stellen.
+30. [ ] `/xmas set B energy 2`. A stellt das Repair Kit auf den Boden (Rechtsklick auf einen Block) → Titel mit Koordinaten bei allen.
+31. [ ] B stellt sich innerhalb von 30 s in den Kreis → `Du nimmst am Repair-Totem teil.`
+32. [ ] `/xmas totem status` → Ort, Restzeit, Teilnehmer.
+33. [ ] Nach 1 min → B bekommt `✚ 5 Energie`, Totem zerfällt.
+34. [ ] Zweites Kit (`/xmas give A item repair_kit`) aufstellen, B baut es in Survival ab und hält 10 s → `… hat das Repair-Totem … zerstört. Niemand bekommt Energie.`
+35. [ ] Dauer in der GUI wieder auf **10** stellen.
+
+**Teil 7 – Admin, Config, Events, Kreativ-Tab**
+
+36. [ ] `/xmas admin` → alle 7 Seiten einmal öffnen; auf „Allgemein“ den Schalter „HUD“ aus- und wieder einschalten → HUD verschwindet/kommt zurück.
+37. [ ] `config.jsonc` öffnen: Kommentare sind noch da, `hud.enabled` steht auf `true`.
+38. [ ] `/xmas reload` → `Neu geladen`.
+39. [ ] `/xmas event list` → 4 Events, alle `deaktiviert`.
+40. [ ] `/xmas event start xmas_eve` → Titel `Frohe Weihnachten!`; `/xmas event stop xmas_eve` → beendet.
+41. [ ] Admin-GUI → Events → **Rechtsklick** auf „Weihnachtsabend-Bonus“ (automatischen Start einschalten), dann `/xmas event simulate 2026-12-25 19:59` → nach ca. 1 min Chat `Weihnachtsabend-Bonus: Fähigkeiten laden doppelt so schnell – 60 Minuten lang!`
+42. [ ] `/xmas event simulate off` → Testmodus beendet; Event in der GUI wieder per Rechtsklick deaktivieren.
+43. [ ] A im Kreativmodus: `/polymer creative` → Tab **Xmas-SMP** mit 40 Kristallen und den Hilfs-Items.
+44. [ ] `world/xmassmp/audit.log` öffnen → Einträge für alle Admin-Aktionen dieses Tests.
+45. [ ] Server stoppen und starten → A und B haben Kristall, Tier und Energie wie vorher.
+
+Wenn alle 45 Schritte passen, funktionieren die Kernfunktionen. Für eine vollständige Abnahme danach die ausführlichen Testfälle T01–T22 durchgehen.
+
+### 9.2 Ausführliche Testfälle
+
+#### T01 – Server-Start
 
 | Schritt | Erwartung |
 |---|---|
@@ -612,7 +1112,7 @@ Jeder Testfall hat **Schritte** und **Erwartung**. Ergebnis im [Testprotokoll](#
 | Dateien prüfen | `config/xmassmp/config.jsonc` und `events.jsonc` existieren und sind kommentiert |
 | Server stoppen (`stop`) | Log: `Xmas-SMP gestoppt`, kein Stacktrace |
 
-### T02 – Rechte
+#### T02 – Rechte
 
 | Schritt | Erwartung |
 |---|---|
@@ -622,7 +1122,7 @@ Jeder Testfall hat **Schritte** und **Erwartung**. Ergebnis im [Testprotokoll](#
 | Konsole: `xmas event list` | Funktioniert aus der Konsole |
 | Konsole: `xmas admin` | Fehler (nur für Spieler) |
 
-### T03 – Erster Join und Kristall
+#### T03 – Erster Join und Kristall
 
 | Schritt | Erwartung |
 |---|---|
@@ -633,7 +1133,7 @@ Jeder Testfall hat **Schritte** und **Erwartung**. Ergebnis im [Testprotokoll](#
 | Mehrfach mit neuen Konten joinen (optional) | Kristalle sind zufällig verteilt |
 | A schaltet in der GUI „Kristall beim ersten Join“ aus, neues Konto joint | Kein Kristall, kein HUD |
 
-### T04 – Seelenbindung
+#### T04 – Seelenbindung
 
 Mit `crystalItem.soulbound = true`:
 
@@ -647,7 +1147,7 @@ Mit `crystalItem.soulbound = true`:
 | A setzt `crystalItem.soulbound` auf `aus` (GUI) und B droppt den Kristall | Kristall bleibt am Boden liegen, die Daten (HUD) bleiben unverändert |
 | Wieder `an` schalten | Kristall erscheint wieder im Inventar |
 
-### T05 – HUD
+#### T05 – HUD
 
 | Schritt | Erwartung |
 |---|---|
@@ -658,7 +1158,7 @@ Mit `crystalItem.soulbound = true`:
 | A setzt `hud.updateTicks` auf `40`, `/xmas reload` | HUD aktualisiert spürbar seltener (alle 2 s) |
 | `hud.updateTicks` auf `99`, `/xmas reload` | Warnung `hud.updateTicks muss 1–40 sein – 10 verwendet` |
 
-### T06 – Steuerung (Stand ohne Kräfte)
+#### T06 – Steuerung (Stand ohne Kräfte)
 
 | Schritt | Erwartung |
 |---|---|
@@ -670,7 +1170,7 @@ Mit `crystalItem.soulbound = true`:
 | A setzt `controls.clientKeys = false`, `/xmas reload`, B drückt R | Keine Reaktion |
 | Client-Mod auf einem Vanilla-Server (ohne Xmas-SMP) | Kein Fehler, kein Kick |
 
-### T07 – Admin-Befehle `give` und `set`
+#### T07 – Admin-Befehle `give` und `set`
 
 | Schritt | Erwartung |
 |---|---|
@@ -688,7 +1188,7 @@ Mit `crystalItem.soulbound = true`:
 | `world/xmassmp/audit.log` | Für jeden Befehl eine JSON-Zeile mit Wer=A |
 | `/xmas energy audit B` | Die `set energy`-Änderungen mit Grund `admin` |
 
-### T08 – Energie durch PvP
+#### T08 – Energie durch PvP
 
 Vorbereitung: A und B auf Energie 5, `energy.sameVictimCooldownMinutes = 1`.
 
@@ -705,7 +1205,7 @@ Vorbereitung: A und B auf Energie 5, `energy.sameVictimCooldownMinutes = 1`.
 | `energy.pvpEnabled` aus (GUI), A tötet B | Keine Energieänderung, keine Nachricht |
 | `/xmas energy audit` | Einträge `kill`, `death` mit Gegnernamen |
 
-### T09 – Energy Bottle: Abfüllen
+#### T09 – Energy Bottle: Abfüllen
 
 Vorbereitung: B in Survival, Energie 5, 5 leere Glasflaschen.
 
@@ -727,7 +1227,7 @@ Vorbereitung: B in Survival, Energie 5, 5 leere Glasflaschen.
 | GUI: Ladezeit auf 2 | Abfüllen dauert 2 s |
 | `/xmas energy bottles` | Neue Flasche mit Herkunft `fill` und Ersteller B |
 
-### T10 – Energy Bottle: Trinken, Zerlegen, Exploits
+#### T10 – Energy Bottle: Trinken, Zerlegen, Exploits
 
 | Schritt | Erwartung |
 |---|---|
@@ -746,11 +1246,11 @@ Vorbereitung: B in Survival, Energie 5, 5 leere Glasflaschen.
 | `logs/latest.log` | Warnung `Ungültige Energy Bottle bei A: …` |
 | Energy Bottle in einen Braustand legen | Geht nicht (keine Brau-Zutat) |
 
-### T11 – Rezepte
+#### T11 – Rezepte
 
 | Schritt | Erwartung |
 |---|---|
-| Upgrader-Rezept in die Werkbank legen (siehe [7.8](#78-rezepte-standard-in-configjsonc-änderbar)) | Ergebnis: Upgrader |
+| Upgrader-Rezept in die Werkbank legen (siehe [7.8](#78-crafting-rezepte)) | Ergebnis: Upgrader |
 | Händler-Rezept | Ergebnis: Kristall-Händler |
 | Repair-Kit-Rezept | Ergebnis: Reparatur-Set |
 | Rezept mit **normalen** Prismarinscherben statt Splittern | **Kein** Ergebnis |
@@ -763,7 +1263,7 @@ Vorbereitung: B in Survival, Energie 5, 5 leere Glasflaschen.
 
 Danach Config wieder zurücksetzen.
 
-### T12 – Upgrader
+#### T12 – Upgrader
 
 | Schritt | Erwartung |
 |---|---|
@@ -774,7 +1274,7 @@ Danach Config wieder zurücksetzen.
 | `config.jsonc`: `controls.tier2TabColor = false`, `/xmas reload` (nicht in der GUI) | Name wieder weiß |
 | Upgrader in der Zweithand, Rechtsklick | Nichts (nur Haupthand) |
 
-### T13 – Kristall-Händler
+#### T13 – Kristall-Händler
 
 | Schritt | Erwartung |
 |---|---|
@@ -789,7 +1289,7 @@ Danach Config wieder zurücksetzen.
 | GUI: Händler aus | `Der Kristall-Händler ist gerade abgeschaltet.` |
 | Händler einem Dorfbewohner anbieten | Kein Handel (kein Smaragd) |
 
-### T14 – Repair-Totem
+#### T14 – Repair-Totem
 
 Vorbereitung: `totem.durationMinutes = 1`, A hat ein Repair Kit (`/xmas give A item repair_kit`), B auf Energie 2, beide in Survival.
 
@@ -824,7 +1324,7 @@ Vorbereitung: `totem.durationMinutes = 1`, A hat ein Repair Kit (`/xmas give A i
 
 Hinweis: Die Dauer wird beim **Aufstellen** festgelegt. Eine Änderung von `durationMinutes` wirkt erst beim nächsten Totem.
 
-### T15 – Admin-GUI
+#### T15 – Admin-GUI
 
 | Schritt | Erwartung |
 |---|---|
@@ -844,7 +1344,7 @@ Hinweis: Die Dauer wird beim **Aufstellen** festgelegt. Eine Änderung von `dura
 | Items aus der GUI per Shift-Klick / Ziehen in das eigene Inventar „stehlen“ (Deko-Buttons) | Nicht möglich |
 | `audit.log` | Jede GUI-Änderung als Eintrag `config`, Wer=A |
 
-### T16 – Reload und kaputte Config
+#### T16 – Reload und kaputte Config
 
 | Schritt | Erwartung |
 |---|---|
@@ -855,7 +1355,7 @@ Hinweis: Die Dauer wird beim **Aufstellen** festgelegt. Eine Änderung von `dura
 | `events.jsonc` kaputt machen, reload | Fehler gemeldet, Events ruhen bzw. alte bleiben aktiv |
 | Server mit kaputter `config.jsonc` starten | Server startet trotzdem, Fehler im Log |
 
-### T17 – Events
+#### T17 – Events
 
 Vorbereitung: in der GUI-Seite **Events** (Rechtsklick) oder in `events.jsonc` das Event **`advent_evening`** auf `enabled: true` setzen (Bereich 25.–30.12., 20:00, 60 min, Ankündigung 5 min vorher, Modifikator `cooldown_multiplier 0.5`).
 
@@ -884,7 +1384,7 @@ Vorbereitung: in der GUI-Seite **Events** (Rechtsklick) oder in `events.jsonc` d
 
 Nach den Tests alle Events wieder deaktivieren und Testmodus beenden.
 
-### T18 – Hauptschalter
+#### T18 – Hauptschalter
 
 | Schritt | Erwartung |
 |---|---|
@@ -893,7 +1393,7 @@ Nach den Tests alle Events wieder deaktivieren und Testmodus beenden.
 | Admin-Befehle (`/xmas set …`) | Funktionieren weiter; Änderungen werden gespeichert (Autosave läuft weiter) |
 | Plugin wieder **an** | Alles läuft wieder |
 
-### T19 – Persistenz
+#### T19 – Persistenz
 
 | Schritt | Erwartung |
 |---|---|
@@ -901,7 +1401,7 @@ Nach den Tests alle Events wieder deaktivieren und Testmodus beenden.
 | `playerdata/<uuid>.json` von Hand kaputt machen (Unsinn reinschreiben), Server starten, B joint | Datei wird als `<uuid>.broken-<zeit>.json` gesichert, B bekommt frische Daten (und ggf. einen neuen Kristall), Warnung im Log |
 | Server hart beenden (Prozess killen) mit laufendem Totem | Nach dem Start läuft das Totem weiter (Stand der letzten vollen Sekunde) |
 
-### T20 – Ressourcenpaket im Spiel
+#### T20 – Ressourcenpaket im Spiel
 
 | Schritt | Erwartung |
 |---|---|
@@ -912,7 +1412,7 @@ Nach den Tests alle Events wieder deaktivieren und Testmodus beenden.
 | Totem | Sieht wie ein aktiver, unheilvoller Tresor aus |
 | Sprache Deutsch und Englisch umstellen | Item-Namen übersetzt |
 
-### T21 – Mehrspieler und Last (optional)
+#### T21 – Mehrspieler und Last (optional)
 
 | Schritt | Erwartung |
 |---|---|
@@ -921,7 +1421,7 @@ Nach den Tests alle Events wieder deaktivieren und Testmodus beenden.
 | `effects.quality` auf `LOW` | Spürbar weniger Partikel |
 | TPS beobachten (z. B. mit der Mod „spark“) während Totem + Animationen | Keine merklichen Einbrüche |
 
-### T22 – Kreativ-Tab
+#### T22 – Kreativ-Tab
 
 Vorbereitung: A ist OP und im **Kreativmodus**, B ist kein OP. Optional ein Client mit Polymer ([6.3](#63-optional-polymer-im-client-kreativ-tab-als-echter-tab)).
 
