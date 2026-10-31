@@ -1,10 +1,15 @@
 package de.xmassmp.fabric;
 
 import de.xmassmp.XmasCore;
+import de.xmassmp.admin.AdminService;
 import de.xmassmp.bottle.BottleService;
+import de.xmassmp.item.CustomItem;
+import de.xmassmp.item.ItemCatalog;
+import de.xmassmp.item.ItemSpec;
 import de.xmassmp.util.BlockPos;
 import eu.pb4.polymer.core.api.block.PolymerBlockUtils;
 import eu.pb4.polymer.resourcepack.api.PolymerResourcePackUtils;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -54,6 +59,7 @@ public final class XmasSmpFabric implements ModInitializer {
     @Override
     public void onInitialize() {
         XmasRegistry.register();
+        XmasCreativeTab.register();
         // Modelle, Texturen und Sprachdateien aus assets/ ins Server-Ressourcenpaket.
         PolymerResourcePackUtils.addModAssets(XmasCore.MOD_ID);
         PolymerResourcePackUtils.markAsRequired();
@@ -133,6 +139,7 @@ public final class XmasSmpFabric implements ModInitializer {
             if (hand != InteractionHand.MAIN_HAND) {
                 return InteractionResult.PASS;
             }
+            data = registerCreativeBottle(instance, serverPlayer, hand, data);
             return instance.onUseItem(platform.handle(serverPlayer), data)
                     ? InteractionResult.SUCCESS : InteractionResult.PASS;
         });
@@ -143,6 +150,28 @@ public final class XmasSmpFabric implements ModInitializer {
                 instance.onPlayerDamaged(platform.handle(victim), attacker == null ? null : platform.handle(attacker));
             }
         });
+    }
+
+    /**
+     * Energy Bottle aus dem Kreativ-Tab: Sie hat keine ID im Flaschen-Register und wäre wirkungslos.
+     * Ein Admin im Kreativmodus bekommt beim Rechtsklick stattdessen eine registrierte Flasche – wie
+     * mit {@code /xmas give} (Herkunft {@code creative}, Eintrag im Audit-Log). Alle anderen behalten
+     * die ungültige Flasche; der Kern entfernt sie dann wie jede Fälschung.
+     */
+    private static Map<String, String> registerCreativeBottle(XmasCore instance, ServerPlayer player,
+                                                              InteractionHand hand, Map<String, String> data) {
+        if (!CustomItem.ENERGY_BOTTLE.id().equals(data.get(ItemSpec.DATA_TYPE))
+                || data.containsKey(ItemCatalog.DATA_BOTTLE)
+                || !player.isCreative()
+                || !Permissions.check(player, AdminService.PERMISSION, AdminService.FALLBACK_OP_LEVEL)) {
+            return data;
+        }
+        String name = player.getName().getString();
+        ItemSpec spec = instance.bottles().create("creative", name);
+        ItemStack registered = FabricItems.create(spec);
+        player.setItemInHand(hand, registered);
+        instance.audit().record(name, "creative_bottle", name, "bottle=" + spec.data().get(ItemCatalog.DATA_BOTTLE));
+        return FabricItems.data(registered);
     }
 
     private static void registerGameplayEvents() {

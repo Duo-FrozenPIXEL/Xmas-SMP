@@ -8,6 +8,7 @@
   "stage.xmassmp.damaged": "damaged",
   "stage.xmassmp.scratched": "scratched",
   "stage.xmassmp.pristine": "pristine",
+  "itemGroup.xmassmp.items": "Xmas-SMP",
   "item.xmassmp.crystal": "%s Crystal",
   "item.xmassmp.revival_tome": "Revival Tome",
   "item.xmassmp.upgrader": "Upgrader",

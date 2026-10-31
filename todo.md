@@ -168,6 +168,8 @@ Ergebnisse mit Quellen und Sicherheit je Aussage: `docs/bliss-original.md`. Die 
 - [x] Kristall ist seelengebunden: kann nicht gedroppt/in Kisten gelegt/verloren werden (`crystalItem.soulbound`) – Abgleich jede Sekunde, Kopien in Behältern/Item-Rahmen sind wirkungslos
 - [x] Nur ein Kristall pro Spieler aktiv (Spielerdaten sind die Wahrheit, das Item nur Anzeige)
 - [x] Erster Join → zufälliger aktivierter Kristall mit kleinem Effekt (`crystalItem.giveOnJoin`)
+- [x] Kreativ-Tab `xmassmp:items` (Polymer-Item-Gruppe) mit allen Kristallen (Tier 1/2, alle Zustände) und Hilfs-Items; Energy Bottle nur für OPs, wird beim Rechtsklick eines Admins im Kreativmodus registriert
+  - [ ] Im Spiel prüfen: Tab mit Polymer-Client, `/polymer creative` mit Vanilla-Client, Flasche aus dem Tab trinken
 
 ### 4.2 Breaking-Pristine-System (Energie)
 - [x] Energie-Wert pro Spieler (0–10, Start 5 = „Makellos“)

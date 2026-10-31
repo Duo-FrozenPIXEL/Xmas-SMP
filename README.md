@@ -97,6 +97,14 @@ Alle Befehle brauchen das Recht `xmassmp.admin`. Ohne Permission-Plugin (z. B. L
 
 Jede Änderung über `give`, `set`, `reload`, `event` und die Admin-GUI landet in `<welt>/xmassmp/audit.log` (eine JSON-Zeile pro Eintrag: Zeit, Wer, Was, Ziel). Abschaltbar mit `audit.enabled`.
 
+### Kreativ-Tab
+
+Alle Items der Mod stehen im Kreativ-Tab **Xmas-SMP** (`xmassmp:items`): jeder Kristall in Tier 1 und 2 und in jedem Zustand, dazu Upgrader, Energy Bottle, Kristall-Händler, Repair Kit und Kristall-Splitter.
+
+- Mit installiertem [Polymer](https://modrinth.com/mod/polymer) im Client erscheint er als normaler Tab im Kreativinventar. Vanilla-Clients öffnen ihn im Kreativmodus mit `/polymer creative`.
+- Die Kristalle aus dem Tab sind **ungebunden** (wie bei `/xmas give … crystal`): Deko- und Anzeige-Items ohne Kräfte. Den aktiven Kristall eines Spielers setzt `/xmas set`.
+- Die **Energy Bottle** steht nur für Operatoren im Tab. Beim ersten Rechtsklick eines Admins (`xmassmp.admin` bzw. OP 2) im Kreativmodus wird sie ins Flaschen-Register eingetragen (Herkunft `creative`, Eintrag im `audit.log`) und wirkt dann normal. Bei allen anderen bleibt sie ungültig und wird beim Benutzen entfernt.
+
 ### Admin-GUI
 
 `/xmas admin` öffnet ein Kisten-Menü (Vanilla-Client genügt):

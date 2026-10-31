@@ -8,6 +8,7 @@
   "stage.xmassmp.damaged": "beschädigt",
   "stage.xmassmp.scratched": "zerkratzt",
   "stage.xmassmp.pristine": "makellos",
+  "itemGroup.xmassmp.items": "Xmas-SMP",
   "item.xmassmp.crystal": "%s-Kristall",
   "item.xmassmp.revival_tome": "Wiederbelebungs-Foliant",
   "item.xmassmp.upgrader": "Upgrader",
