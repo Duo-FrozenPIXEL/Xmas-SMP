@@ -40,6 +40,7 @@ Bevor du testest, musst du wissen, was überhaupt fertig ist. Sonst meldest du f
 | Repair-Totem | Aufstellen, Teilnahme, Ausscheiden, Belohnung, Abbau in festen 10 s |
 | HUD | Actionbar mit drei Fähigkeits-Slots, Energie, Totem-Anzeige |
 | Admin | `/xmas`-Befehle, Admin-GUI, Audit-Log, Reload |
+| Kreativ-Tab | Tab „Xmas-SMP“ mit allen Kristallen (Tier 1/2, alle Zustände) und Hilfs-Items; Energy Bottle nur für OPs |
 | Events | Zeitplan, Ankündigungen, Countdown, Aktionen, Modifikatoren, Testmodus |
 | Client-Mod | Optionale Tasten R/G/V |
 
@@ -288,6 +289,16 @@ require-resource-pack=true
 
 Der Mod schickt dem Server nur „Slot X gedrückt“ (Paket `xmassmp:ability`). Der Server prüft alles selbst. Auf Servern ohne Xmas-SMP sendet der Mod nichts. Der Server ignoriert Tasten, wenn in der Config `controls.clientKeys` auf `false` steht, und verwirft mehr als eine Taste pro 2 Ticks (Spam-Schutz).
 
+### 6.3 Optional: Polymer im Client (Kreativ-Tab als echter Tab)
+
+Nur für Admins/Tester interessant, die den Kreativ-Tab der Mod (siehe [8.6](#86-kreativ-tab)) als normalen Tab im Kreativinventar sehen wollen:
+
+1. Fabric Loader und Fabric API wie in [6.2](#62-optionaler-client-mod-eigene-tasten) Schritt 1–2 einrichten.
+2. Zusätzlich [Polymer](https://modrinth.com/mod/polymer) in der Version für **1.21.11** in `.minecraft/mods/` legen (passend zur Server-Version `0.15.0+1.21.11`).
+3. Im Kreativinventar gibt es dann einen Tab **Xmas-SMP**.
+
+Ohne Polymer im Client funktioniert der Tab trotzdem: im Kreativmodus `/polymer creative` eintippen.
+
 ---
 
 ## 7. Benutzen – Spieler-Sicht
@@ -533,13 +544,45 @@ Die mitgelieferte Weihnachtswoche (`xmas_week`, `xmas_eve`, `advent_evening`, `n
 
 | Datei | Inhalt | Format |
 |---|---|---|
-| `world/xmassmp/audit.log` | Jede Admin-Änderung (`give`, `set_*`, `reload`, `config`, `event_*`, `totem_cancel`, `reset_cooldowns`) | Eine JSON-Zeile pro Eintrag: Zeit, Wer, Was, Ziel. Abschaltbar mit `audit.enabled` |
+| `world/xmassmp/audit.log` | Jede Admin-Änderung (`give`, `set_*`, `reload`, `config`, `event_*`, `totem_cancel`, `reset_cooldowns`, `creative_bottle`) | Eine JSON-Zeile pro Eintrag: Zeit, Wer, Was, Ziel. Abschaltbar mit `audit.enabled` |
 | `world/xmassmp/energy.log` | Jede Energieänderung | `{"time":"…","player":"<uuid>","name":"…","from":4,"to":5,"reason":"…","ref":"…"}` |
 | `logs/latest.log` | Server-Log, Logger `Xmas-SMP` | Text |
 
 `reason` im Energie-Protokoll: `kill`, `death`, `bottle_fill`, `bottle_drink`, `totem`, `admin`, `suspicious` (ungültige Flasche, Energie unverändert).
 
 `Wer` im Audit-Log: Spielername, `Konsole` für die Server-Konsole, sonst der Name der Quelle (RCON, Befehlsblock).
+
+Herkunft (`origin`) einer Energy Bottle in `/xmas energy bottles`: `fill` (abgefüllt), `admin` bzw. Name des Admins (`/xmas give`, Admin-GUI), `overflow` (Sieger mit voller Energie), `creative` (aus dem Kreativ-Tab registriert).
+
+### 8.6 Kreativ-Tab
+
+Alle Items der Mod stehen im Kreativ-Tab **Xmas-SMP** (ID `xmassmp:items`).
+
+**Öffnen:**
+
+- Mit Polymer im Client ([6.3](#63-optional-polymer-im-client-kreativ-tab-als-echter-tab)): Kreativinventar öffnen (`E` im Kreativmodus), Tab **Xmas-SMP** wählen. Das Tab-Icon ist ein makelloser Tier-2-Feuer-Kristall.
+- Mit Vanilla-Client: im **Kreativmodus** `/polymer creative` eintippen, dann den Tab Xmas-SMP wählen.
+
+**Inhalt und Reihenfolge:**
+
+1. Für jeden Kristall (Feuer, Erde, Wind, Schatten, Natur) erst Tier 1, dann Tier 2, jeweils in der Reihenfolge **makellos → zerkratzt → beschädigt → zerbrochen** (5 × 2 × 4 = **40 Kristalle**).
+2. Danach die Hilfs-Items: Upgrader, Energy Bottle (nur für Operatoren), Kristall-Händler, Repair Kit, Kristall-Splitter.
+
+**Regeln:**
+
+- Die Kristalle aus dem Tab sind **ungebunden** (kein Besitzer), genau wie bei `/xmas give … crystal`: reine Deko-/Anzeige-Items **ohne Kräfte**. Der Abgleich der Seelenbindung fasst sie nicht an, sie verschwinden also nicht. Den **aktiven** Kristall eines Spielers ändert nur `/xmas set` bzw. die Admin-GUI.
+- Upgrader, Kristall-Händler, Repair Kit und Splitter aus dem Tab sind **voll funktionsfähig** (wie gecraftet).
+- Die **Energy Bottle** steht nur für Operatoren im Tab. Frisch aus dem Tab hat sie **keine ID im Flaschen-Register**. Was beim Rechtsklick (Haupthand) passiert:
+
+| Wer klickt | Ergebnis |
+|---|---|
+| Admin (`xmassmp.admin` bzw. OP-Level 2) **im Kreativmodus** | Die Flasche wird gegen eine registrierte ausgetauscht (Herkunft `creative`, Audit-Eintrag `creative_bottle` mit der Flaschen-ID) und **im selben Klick getrunken**, sofern der Admin einen Kristall und weniger als volle Energie hat. Bei voller Energie (`Deine Energie ist schon voll.`) oder ohne Kristall bleibt die nun **registrierte** Flasche in der Hand und kann weitergegeben werden |
+| Admin im **Überlebensmodus** | Keine Registrierung → `Diese Energy Bottle ist ungültig und wurde entfernt.`, Eintrag `suspicious` (`ohne-id … unbekannt (Fälschung)`) im Energie-Protokoll |
+| Jeder andere Spieler (egal welcher Modus) | Wie oben: ungültig, wird entfernt, `suspicious` im Protokoll |
+
+  Eine **unregistrierte** Tab-Flasche liefert in der Werkbank **keine Splitter**.
+
+> **Tipp für Tester:** Wer eine gültige Flasche zum Weitergeben braucht, ohne sie zu trinken: vorher `/xmas set <DeinName> energy 10`, dann im Kreativmodus einmal mit der Tab-Flasche rechtsklicken. Einfacher geht es mit `/xmas give <spieler> item energy_bottle`.
 
 ---
 
@@ -862,7 +905,7 @@ Nach den Tests alle Events wieder deaktivieren und Testmodus beenden.
 
 | Schritt | Erwartung |
 |---|---|
-| Alle 5 Kristalle × 2 Tiers × 4 Zustände per `/xmas give` ansehen (40 Items) | Keine lila-schwarzen Texturen, Tier 2 sieht anders aus als Tier 1, Zustände unterscheidbar |
+| Alle 5 Kristalle × 2 Tiers × 4 Zustände ansehen (40 Items) – am schnellsten im Kreativ-Tab (T22), sonst per `/xmas give` | Keine lila-schwarzen Texturen, Tier 2 sieht anders aus als Tier 1, Zustände unterscheidbar |
 | Alle 5 Hilfs-Items ansehen | Eigene Texturen |
 | HUD-Icons aller 5 Kristalle (per `/xmas set B crystal …` durchschalten) | Drei passende Icons je Kristall |
 | Ladebalken beim Abfüllen | Sitzt sichtbar unter dem Fadenkreuz (Position dokumentieren) |
@@ -877,6 +920,28 @@ Nach den Tests alle Events wieder deaktivieren und Testmodus beenden.
 | Mehrere Spieler füllen gleichzeitig ab | Jeder Vorgang unabhängig |
 | `effects.quality` auf `LOW` | Spürbar weniger Partikel |
 | TPS beobachten (z. B. mit der Mod „spark“) während Totem + Animationen | Keine merklichen Einbrüche |
+
+### T22 – Kreativ-Tab
+
+Vorbereitung: A ist OP und im **Kreativmodus**, B ist kein OP. Optional ein Client mit Polymer ([6.3](#63-optional-polymer-im-client-kreativ-tab-als-echter-tab)).
+
+| Schritt | Erwartung |
+|---|---|
+| Client **mit** Polymer: A öffnet das Kreativinventar | Tab **Xmas-SMP** vorhanden, Icon = makelloser Tier-2-Feuer-Kristall, Tab-Name auf Deutsch und Englisch „Xmas-SMP“ |
+| Vanilla-Client: A tippt `/polymer creative` | Polymer-Kreativ-Menü öffnet sich, Tab Xmas-SMP wählbar |
+| Inhalt zählen | 40 Kristalle (je Kristall Tier 1 makellos → zerbrochen, dann Tier 2 makellos → zerbrochen), danach Upgrader, Energy Bottle, Kristall-Händler, Repair Kit, Kristall-Splitter |
+| Alle Texturen ansehen | Keine lila-schwarzen Texturen, Namen korrekt |
+| Spieler **ohne** OP öffnet den Tab (B im Kreativmodus) | Tab ohne Energy Bottle |
+| A nimmt einen Kristall aus dem Tab, wartet 2 s | Kristall bleibt im Inventar (ungebunden, wird nicht entfernt), A's eigener Kristall bleibt unverändert |
+| A: Schleichen + Rechtsklick mit dem Tab-Kristall | Nichts (keine Ultimate-Meldung) |
+| A legt den Tab-Kristall in eine Truhe | Bleibt in der Truhe liegen |
+| A (Kreativ, Energie 5, hat Kristall) nimmt die Energy Bottle aus dem Tab und rechtsklickt | Flasche wird getrunken: `+1 Energie (6/10)`; `audit.log` enthält `creative_bottle` mit `bottle=<id>`; `/xmas energy audit A` zeigt `bottle_drink` |
+| `/xmas set A energy 10`, neue Tab-Flasche rechtsklicken | `Deine Energie ist schon voll.`; Flasche bleibt; `/xmas energy bottles` listet sie mit Herkunft `creative` |
+| Diese registrierte Flasche B geben, B (Survival, Energie < 10) trinkt | `+1 Energie`, gültig |
+| A nimmt eine Tab-Flasche, wechselt in **Survival**, rechtsklickt | `Diese Energy Bottle ist ungültig und wurde entfernt.`; `/xmas energy audit A` zeigt roten Eintrag `suspicious`, `ohne-id … unbekannt (Fälschung)` |
+| A gibt B eine **unregistrierte** Tab-Flasche, B rechtsklickt | Ungültig, entfernt, `suspicious` |
+| Unregistrierte Tab-Flasche in die Werkbank | Kein Ergebnis |
+| Upgrader / Händler / Repair Kit aus dem Tab benutzen (in Survival) | Funktionieren wie gecraftete Items |
 
 ---
 
@@ -1020,6 +1085,9 @@ Vor einem Merge müssen alle drei Jobs grün sein. Bei roten Tests: Artefakt `co
 | Event startet zur falschen Uhrzeit | `events.timezone` prüfen (Standard `Europe/Berlin`) |
 | Änderung in `config.jsonc` wirkt nicht | `/xmas reload` vergessen, oder Reload fehlgeschlagen (Antwort lesen) |
 | Gradle: `Could not resolve …` / `429 Too Many Requests` | Kein oder gedrosselter Zugriff auf Maven-Repositories → später erneut versuchen; ohne `maven.fabricmc.net` nur `-Pxmassmp.skipFabric` |
+| Kreativ-Tab fehlt im Kreativinventar | Ohne Polymer im Client gibt es keinen echten Tab → `/polymer creative` im Kreativmodus benutzen oder Polymer installieren ([6.3](#63-optional-polymer-im-client-kreativ-tab-als-echter-tab)) |
+| Energy Bottle fehlt im Kreativ-Tab | Nur Operatoren sehen sie. Im Vanilla-Kreativinventar zählt dafür außerdem die Client-Option „Operator-Gegenstände-Tab“ (Optionen → Steuerung) – einschalten und Tab neu öffnen |
+| Energy Bottle aus dem Kreativ-Tab „ungültig und entfernt“ | Erwartet, wenn sie nicht von einem Admin **im Kreativmodus** zuerst rechtsgeklickt wurde, siehe [8.6](#86-kreativ-tab) |
 | Client-Mod-Tasten tun nichts | `controls.clientKeys` aus, Fabric API auf dem Client fehlt, oder Taste doppelt belegt (Optionen → Steuerung) |
 
 Log-Stellen: `logs/latest.log` (Server), `.minecraft/logs/latest.log` (Client). Die Mod loggt unter dem Namen `Xmas-SMP`. Ein einzelner Fehler in einem Teil (z. B. HUD) bringt den Server nicht zum Absturz; er wird einmal geloggt, bis der Teil wieder läuft.
@@ -1064,6 +1132,7 @@ In eine neue Datei kopieren (z. B. `testlauf-2026-11-01.md`) und ausfüllen.
 | T19 Persistenz | | |
 | T20 Ressourcenpaket | | |
 | T21 Mehrspieler/Last | | |
+| T22 Kreativ-Tab | | |
 
 ## Gefundene Fehler
 
