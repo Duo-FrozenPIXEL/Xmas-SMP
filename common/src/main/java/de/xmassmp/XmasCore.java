@@ -4,6 +4,7 @@ import de.xmassmp.ability.AbilityControls;
 import de.xmassmp.ability.AbilityRegistry;
 import de.xmassmp.ability.AbilityService;
 import de.xmassmp.ability.PassiveService;
+import de.xmassmp.ability.PlaceholderAbility;
 import de.xmassmp.admin.AdminGui;
 import de.xmassmp.admin.AdminService;
 import de.xmassmp.admin.AuditLog;
@@ -98,6 +99,8 @@ public final class XmasCore {
         this.config = new ConfigManager(platform.configDirectory());
         this.crystals = CrystalRegistry.withDefaults();
         this.abilities = new AbilityRegistry();
+        // Bis die echten Kräfte freigegeben sind: nur Partikel (docs/kraefte-entwurf.md).
+        PlaceholderAbility.registerAll(abilities, crystals.all());
         this.eventActions = EventActionRegistry.withDefaults();
         this.players = new PlayerDataStore(platform.dataDirectory(), () -> config.get().energy.start,
                 () -> config.get().energy.min, () -> config.get().energy.max, logger);

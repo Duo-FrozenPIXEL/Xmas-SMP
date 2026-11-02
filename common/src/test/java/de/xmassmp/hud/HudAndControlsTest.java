@@ -73,6 +73,7 @@ class HudAndControlsTest {
     void setUp() {
         platform = new TestPlatform(dir);
         core = new XmasCore(platform, clock);
+        core.abilities().clearPlaceholders();
         core.abilities().register(ability("fire.flame_burst", 1, 1, 10));
         core.abilities().register(ability("fire.meteor", 2, 2, 90));
         core.start();

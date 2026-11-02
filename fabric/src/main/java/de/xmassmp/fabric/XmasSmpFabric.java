@@ -23,6 +23,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -174,22 +175,44 @@ public final class XmasSmpFabric implements ModInitializer {
         return FabricItems.data(registered);
     }
 
+    /**
+     * Nimmt bewusst {@link CustomPacketPayload} statt {@link AbilityKeyPayload}: Im Einzelspieler
+     * werden Pakete nicht serialisiert, der Server bekommt dann das Objekt aus dem Client-Mod – eine
+     * andere Klasse mit derselben ID. Ein typisierter Handler würde mit ClassCastException die
+     * Verbindung trennen.
+     */
+    private static void onAbilityKey(CustomPacketPayload payload, ServerPlayNetworking.Context context) {
+        XmasCore instance = core;
+        ServerPlayer player = context.player();
+        int slot = slotOf(payload);
+        if (instance == null || slot < 0) {
+            return;
+        }
+        int now = context.server().getTickCount();
+        Integer last = lastKey.put(player.getUUID(), now);
+        if (last != null && now - last < 2) {
+            return;
+        }
+        instance.onAbilityKey(platform.handle(player), slot);
+    }
+
+    private static int slotOf(CustomPacketPayload payload) {
+        if (payload instanceof AbilityKeyPayload key) {
+            return key.slot();
+        }
+        try {
+            // Record des Client-Mods: gleiche Struktur, öffentliche Methode slot().
+            return (int) payload.getClass().getMethod("slot").invoke(payload);
+        } catch (ReflectiveOperationException | ClassCastException e) {
+            LOGGER.warn("Unbekanntes Fähigkeits-Paket {}", payload.getClass().getName());
+            return -1;
+        }
+    }
+
     private static void registerGameplayEvents() {
         // Optionaler Client-Mod: Tasten für Primär/Sekundär/Ultimate. Vanilla-Clients senden das nie.
         PayloadTypeRegistry.playC2S().register(AbilityKeyPayload.TYPE, AbilityKeyPayload.CODEC);
-        ServerPlayNetworking.registerGlobalReceiver(AbilityKeyPayload.TYPE, (payload, context) -> {
-            XmasCore instance = core;
-            ServerPlayer player = context.player();
-            if (instance == null) {
-                return;
-            }
-            int now = context.server().getTickCount();
-            Integer last = lastKey.put(player.getUUID(), now);
-            if (last != null && now - last < 2) {
-                return;
-            }
-            instance.onAbilityKey(platform.handle(player), payload.slot());
-        });
+        ServerPlayNetworking.registerGlobalReceiver(AbilityKeyPayload.TYPE, XmasSmpFabric::onAbilityKey);
 
         // Totem: Abbau-Fortschritt und Bruch.
         PolymerBlockUtils.BREAKING_PROGRESS_UPDATE.register((player, pos, state, stage) -> {

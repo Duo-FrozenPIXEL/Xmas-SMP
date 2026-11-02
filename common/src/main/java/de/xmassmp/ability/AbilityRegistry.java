@@ -20,8 +20,18 @@ public final class AbilityRegistry {
         if (ability instanceof ActiveAbility active && (active.slot() < 1 || active.slot() > Crystal.SLOTS)) {
             throw new IllegalArgumentException(ability.id() + ": slot muss 1–" + Crystal.SLOTS + " sein");
         }
+        // Eine echte Kraft verdrängt den Platzhalter ihres Slots
+        if (ability instanceof ActiveAbility active && !(ability instanceof PlaceholderAbility)) {
+            byId.values().removeIf(old -> old instanceof PlaceholderAbility p
+                    && p.crystalId().equals(active.crystalId()) && p.slot() == active.slot());
+        }
         // Erst nach allen Prüfungen eintragen, damit ungültige Fähigkeiten nicht in der Map landen
         byId.put(ability.id(), ability);
+    }
+
+    /** Entfernt alle {@link PlaceholderAbility Platzhalter}; leere Slots bleiben dann leer. */
+    public void clearPlaceholders() {
+        byId.values().removeIf(ability -> ability instanceof PlaceholderAbility);
     }
 
     public Optional<Ability> get(String id) {
